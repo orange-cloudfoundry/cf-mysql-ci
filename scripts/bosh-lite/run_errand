@@ -3,15 +3,21 @@
 set -eux
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-DEPLOYMENTS_DIR="$( cd ${MY_DIR}/.. && pwd )"
 WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
-SCRIPTS_DIR="$( cd "${MY_DIR}/../" && pwd )"
 
 DIRECTOR_IP_FILE="${DIRECTOR_IP_FILE:?}"
 BOSH_PASSWORD_FILE="${BOSH_PASSWORD_FILE:?}"
 export BOSH_USER=${BOSH_USER:?}
 
-source ${SCRIPTS_DIR}/utils.sh
+# ensure DEPLOYMENTS_DIR is an absolute path
+DEPLOYMENTS_DIR="${DEPLOYMENTS_DIR:?}"
+if [[ "${DEPLOYMENTS_DIR}" != /* ]]; then
+  DEPLOYMENTS_DIR="${WORKSPACE_DIR}/${DEPLOYMENTS_DIR}"
+fi
+
+echo "ENV: ${ENV:?}"
+
+source ${DEPLOYMENTS_DIR}/utils.sh
 
 pushd ${WORKSPACE_DIR}
   DIRECTOR_IP=$(cat ${DIRECTOR_IP_FILE})
