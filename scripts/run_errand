@@ -3,14 +3,21 @@
 set -eux
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-DEPLOYMENTS_DIR="$( cd ${MY_DIR}/.. && pwd )"
+WORKSPACE_DIR="$( cd ${MY_DIR}/../.. && pwd )"
+
+# ensure DEPLOYMENTS_DIR is an absolute path
+DEPLOYMENTS_DIR="${DEPLOYMENTS_DIR:?}"
+if [[ "${DEPLOYMENTS_DIR}" != /* ]]; then
+  DEPLOYMENTS_DIR="${WORKSPACE_DIR}/${DEPLOYMENTS_DIR}"
+fi
 
 echo "ENV: ${ENV:?}"
+
+source ${DEPLOYMENTS_DIR}/utils.sh
+source_bosh_environment
+
 echo "DEPLOYMENT_NAME: ${DEPLOYMENT_NAME:?}"
 echo "ERRAND: ${ERRAND:?}"
-
-source ${MY_DIR}/utils.sh
-source_bosh_environment
 
 bosh -n target bosh.${ENV}.cf-app.com
 
