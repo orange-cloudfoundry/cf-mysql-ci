@@ -13,7 +13,7 @@ stub_location=/tmp/cf-mysql-acceptance-tests-stub.yml
 
 echo "ENV: ${ENV:?}"
 
-source ${SCRIPTS_DIR}/utils.sh
+source ${SCRIPTS_DIR}/scripts/utils.sh
 
 echo "args: $*"
 

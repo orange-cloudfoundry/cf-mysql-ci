@@ -17,7 +17,7 @@ fi
 
 echo "ENV: ${ENV:?}"
 
-source ${DEPLOYMENTS_DIR}/utils.sh
+source ${DEPLOYMENTS_DIR}/scripts/utils.sh
 
 pushd ${WORKSPACE_DIR}
   DIRECTOR_IP=$(cat ${DIRECTOR_IP_FILE})

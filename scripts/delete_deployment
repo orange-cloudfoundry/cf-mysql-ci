@@ -13,7 +13,7 @@ fi
 
 echo "ENV: ${ENV:?}"
 
-source ${DEPLOYMENTS_DIR}/utils.sh
+source ${DEPLOYMENTS_DIR}/scripts/utils.sh
 source_bosh_environment
 
 bosh -n target bosh.${ENV}.cf-app.com
