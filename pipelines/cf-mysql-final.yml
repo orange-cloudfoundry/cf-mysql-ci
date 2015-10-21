@@ -1,0 +1,108 @@
+---
+resources:
+- name: cf-mysql-develop
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/cf-mysql-release.git
+    branch: develop
+    private_key: {{git-writer-private-key}}
+
+- name: cf-mysql-release-candidate
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/cf-mysql-release.git
+    branch: release-candidate
+    private_key: {{git-writer-private-key}}
+
+- name: cf-mysql-master
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/cf-mysql-release.git
+    branch: master
+    private_key: {{git-writer-private-key}}
+
+- name: deployments-config
+  type: git
+  source:
+    uri: {{deployments_oss_config_repo_uri}}
+    private_key: {{git-private-key}}
+
+- name: s3-resource-final-release
+  type: s3
+  source:
+    bucket: cf-mysql-releases
+    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
+    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
+
+- name: release-notes
+  type: s3
+  source:
+    bucket: cf-mysql-release-notes
+    regexp: RELEASE_NOTES_v(\d+)
+    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
+    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
+
+- name: publish-github-release
+  type: github-release
+  source:
+    user: cloudfoundry
+    repository: cf-mysql-release
+    access_token: {{git-writer-github-access-token}}
+
+jobs:
+  - name: final-release
+    plan:
+      - aggregate:
+        - get: cf-mysql-master
+          params:
+            fetch:
+            - release-candidate
+        - get: deployments-config
+        - get: release-notes
+          trigger: true
+      - task: final-release
+        config:
+          platform: linux
+          image: docker:///cloudfoundry/cf-mysql-ci
+          inputs:
+          - name: deployments-config
+          - name: cf-mysql-master
+            path: cf-mysql-release
+          - name: release-notes
+          run:
+            path: deployments-config/scripts/cf-mysql/cut-final-release
+          params:
+            RELEASE_NOTES_DIRECTORY: release-notes
+            OUTPUT_RELEASE_ARTIFACTS: release-artifacts
+            OUTPUT_RELEASE_TAG: cf-mysql-tag
+            OUTPUT_RELEASE_NOTES: generated-release-notes
+            OUTPUT_RELEASE_COMMIT: git-commit
+            RELEASE_ACCESS_KEY: {{cf-mysql-publish-blobs-aws-access-key-id}}
+            RELEASE_SECRET_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
+      - task: merge-master-into-develop
+        config:
+          platform: linux
+          image: docker:///cloudfoundry/cf-mysql-ci
+          inputs:
+          - name: deployments-config
+          - name: final-release
+          run:
+            path: deployments-config/scripts/cf-mysql/merge-master-into-develop
+      - put: cf-mysql-master
+        params:
+          repository: final-release/cf-mysql-release
+      - put: cf-mysql-develop
+        params:
+          repository: merge-master-into-develop/final-release/cf-mysql-release
+      - put: publish-github-release
+        params:
+          name: final-release/cf-mysql-tag
+          tag: final-release/cf-mysql-tag
+          body: final-release/generated-release-notes
+          commitish: final-release/git-commit
+          globs:
+          - final-release/release-artifacts/*.tgz
+      - put: s3-resource-final-release
+        params:
+          from: final\-release\/release\-artifacts\/.*\.tgz
+          to: final\/

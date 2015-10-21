@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DEPLOYMENTS_DIR="$( cd ${MY_DIR}/.. && pwd )"
+
+echo "ENV: ${ENV:?}"
+echo "DEPLOYMENT_NAME: ${DEPLOYMENT_NAME:?}"
+echo "ERRAND: ${ERRAND:?}"
+
+source ${MY_DIR}/utils.sh
+source_bosh_environment
+
+bosh -n target bosh.${ENV}.cf-app.com
+
+set +e
+check_if_deployment_exists ${DEPLOYMENT_NAME}
+DEPLOYMENT_GREP_RESULT=$?
+set -e
+
+# A value of 0 indicates grep matched successfully,
+# and hence the deployment exists
+if [ ${DEPLOYMENT_GREP_RESULT} -eq 0 ]; then
+  MANIFEST=${DEPLOYMENTS_DIR}/deployment.yml
+  bosh download manifest ${DEPLOYMENT_NAME} ${MANIFEST}
+  bosh deployment ${MANIFEST}
+  bosh run errand ${ERRAND}
+else
+  echo "deployment ${DEPLOYMENT_NAME} not found"
+  exit 1
+fi

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+set +e
+ERRAND_OUTPUT=$(ERRAND="broker-deregistrar" "${MY_DIR}/run_errand")
+ERRAND_EXIT_CODE=$?
+set -e
+
+if [ "${ERRAND_EXIT_CODE}" -ne 0 ]; then
+  # Exit 1 if it failed for a reason OTHER than deployment not found
+  echo "${ERRAND_OUTPUT}" | grep "deployment ${DEPLOYMENT_NAME} not found"
+fi

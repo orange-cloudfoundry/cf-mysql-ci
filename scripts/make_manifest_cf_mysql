@@ -1,0 +1,39 @@
+#!/bin/bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+WORKSPACE_DIR="$( cd ${MY_DIR}/../.. && pwd )"
+RELEASE_DIR="$( cd ${WORKSPACE_DIR}/cf-mysql-release && pwd )"
+
+# ensure DEPLOYMENTS_DIR is an absolute path
+DEPLOYMENTS_DIR="${DEPLOYMENTS_DIR:?}"
+if [[ "${DEPLOYMENTS_DIR}" != /* ]]; then
+  DEPLOYMENTS_DIR="${WORKSPACE_DIR}/${DEPLOYMENTS_DIR}"
+fi
+
+echo "ENV: ${ENV:?}"
+
+source ${MY_DIR}/utils.sh
+source_bosh_environment
+
+bosh -n target bosh.${ENV}.cf-app.com
+
+echo "args: $*"
+
+pushd ${RELEASE_DIR}
+  ./generate_deployment_manifest \
+    aws \
+    ${DEPLOYMENTS_DIR}/${ENV}/cf-aws-stub.yml \
+    ${DEPLOYMENTS_DIR}/${ENV}/cf-networks-stub.yml \
+    ${DEPLOYMENTS_DIR}/${ENV}/cf-shared-secrets.yml \
+    ${DEPLOYMENTS_DIR}/${ENV}/cf-mysql-plans-stub.yml \
+    ${DEPLOYMENTS_DIR}/${ENV}/cf-properties.yml \
+    ${DEPLOYMENTS_DIR}/${ENV}/cf-mysql-secrets.yml \
+    "$@" > deployment.yml
+
+  bosh deployment deployment.yml
+  cat deployment.yml
+popd
+
+echo "Manifest generated successfully"

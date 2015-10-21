@@ -1,0 +1,90 @@
+#!/bin/bash
+
+set -eux
+
+function close-ssh-tunnels() {
+  echo "Closing SSH tunnels ..."
+  OLD_TUNNELS=`ps aux | grep "ssh" | \
+    grep "\-L ${BROKER_0_LOCAL_PORT} \| \-L ${BROKER_1_LOCAL_PORT} \| \-L ${MYSQL_NODE_0_LOCAL_PORT}" | \
+    awk '{print $2}'`
+  [[ -z "${OLD_TUNNELS}" ]] || kill ${OLD_TUNNELS}
+}
+
+function bosh-ip() {
+  bosh -n vms cf-warden-mysql | grep $1 | awk '{ print $8 }'
+}
+
+function setup_infrastructure_variables() {
+  pushd "${WORKSPACE_DIR}"
+
+    DIRECTOR_IP="${DIRECTOR_IP:-192.168.50.4}"
+    BOSH_USER="${BOSH_USER:-admin}"
+    BOSH_PASSWORD="${BOSH_PASSWORD:-admin}"
+    DIRECTOR_IP_FILE="${DIRECTOR_IP_FILE:-}"
+
+    if [ ! -z "${DIRECTOR_IP_FILE}" ]; then
+      DIRECTOR_IP=$(cat "${DIRECTOR_IP_FILE}")
+      BOSH_PASSWORD_FILE="${BOSH_PASSWORD_FILE:?}"
+      BOSH_PASSWORD="$(cat ${BOSH_PASSWORD_FILE} | jq -r '.director_password')"
+      BOSH_LITE_PRIVATE_IP_FILE="${BOSH_LITE_PRIVATE_IP_FILE:?}"
+      BOSH_LITE_PRIVATE_IP="$(cat ${BOSH_LITE_PRIVATE_IP_FILE} | jq -r '.private_ip')"
+    fi
+
+    bosh -n target "${DIRECTOR_IP}"
+    bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
+
+    export BROKER_0_REMOTE_IP=$(bosh-ip cf-mysql-broker_z1/0)
+    export BROKER_1_REMOTE_IP=$(bosh-ip cf-mysql-broker_z2/0)
+    export MYSQL_NODE_0_REMOTE_IP=$(bosh-ip mysql_z1/0)
+
+    if [ ! -z "${DIRECTOR_IP_FILE}" ]; then
+      # assumes we are running against a remote bosh-lite
+      export BROKER_0_LOCAL_PORT="43306"
+      export BROKER_1_LOCAL_PORT="43307"
+      export MYSQL_NODE_0_LOCAL_PORT="43305"
+
+      BOSH_LITE_KEY_FILE="/tmp/id_rsa"
+      echo "${BOSH_LITE_KEY:?}" > "${BOSH_LITE_KEY_FILE}"
+      chmod 600 "${BOSH_LITE_KEY_FILE}"
+      trap close-ssh-tunnels EXIT
+      ssh -L ${BROKER_0_LOCAL_PORT}:${BROKER_0_REMOTE_IP}:22 \
+        -NnTf \
+        -i "${BOSH_LITE_KEY_FILE}" \
+        -o StrictHostKeyChecking=no \
+        "ubuntu@${DIRECTOR_IP}"
+
+      ssh -L ${BROKER_1_LOCAL_PORT}:${BROKER_1_REMOTE_IP}:22 \
+        -NnTf \
+        -i "${BOSH_LITE_KEY_FILE}" \
+        -o StrictHostKeyChecking=no \
+         "ubuntu@${DIRECTOR_IP}"
+
+      ssh  -L ${MYSQL_NODE_0_LOCAL_PORT}:${MYSQL_NODE_0_REMOTE_IP}:22 \
+        -NnTf \
+        -i "${BOSH_LITE_KEY_FILE}" \
+        -o StrictHostKeyChecking=no \
+        "ubuntu@${DIRECTOR_IP}"
+    else
+      export BROKER_0_LOCAL_PORT="22"
+      export BROKER_1_LOCAL_PORT="22"
+      export MYSQL_NODE_0_LOCAL_PORT="22"
+    fi
+  popd
+}
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
+RELEASE_DIR="$(cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
+
+setup_infrastructure_variables
+export CONFIG_LOCATION="${RELEASE_DIR}/integration_config.json"
+export BOSH_LITE_PRIVATE_IP_FILE
+export BOSH_LITE_PRIVATE_IP
+${RELEASE_DIR}/bosh-lite/create_integration_test_config
+
+source ${RELEASE_DIR}/.envrc # To set GOPATH to release dir
+pushd ${RELEASE_DIR}/src/github.com/cloudfoundry-incubator/cf-mysql-acceptance-tests/
+  export CONFIG="${CONFIG_LOCATION}"
+  echo "Running tests ..."
+  ./bin/test-failover --noColor
+popd

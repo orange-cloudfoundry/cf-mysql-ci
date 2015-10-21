@@ -1,0 +1,41 @@
+#!/bin/bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DEPLOYMENTS_DIR="$( cd ${MY_DIR}/.. && pwd )"
+WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
+SCRIPTS_DIR="$( cd "${MY_DIR}/../" && pwd )"
+
+DIRECTOR_IP_FILE="${DIRECTOR_IP_FILE:?}"
+BOSH_PASSWORD_FILE="${BOSH_PASSWORD_FILE:?}"
+export BOSH_USER=${BOSH_USER:?}
+
+source ${SCRIPTS_DIR}/utils.sh
+
+pushd ${WORKSPACE_DIR}
+  DIRECTOR_IP=$(cat ${DIRECTOR_IP_FILE})
+  export BOSH_PASSWORD=$(cat ${BOSH_PASSWORD_FILE} | jq -r '.director_password')
+popd
+
+bosh -n target "${DIRECTOR_IP}"
+
+echo "DEPLOYMENT_NAME: ${DEPLOYMENT_NAME:?}"
+echo "ERRAND: ${ERRAND:?}"
+
+set +e
+check_if_deployment_exists ${DEPLOYMENT_NAME}
+DEPLOYMENT_GREP_RESULT=$?
+set -e
+
+# A value of 0 indicates grep matched successfully,
+# and hence the deployment exists
+if [ ${DEPLOYMENT_GREP_RESULT} -eq 0 ]; then
+  MANIFEST=${DEPLOYMENTS_DIR}/deployment.yml
+  bosh download manifest ${DEPLOYMENT_NAME} ${MANIFEST}
+  bosh deployment ${MANIFEST}
+  bosh run errand ${ERRAND}
+else
+  echo "deployment ${DEPLOYMENT_NAME} not found"
+  exit 1
+fi

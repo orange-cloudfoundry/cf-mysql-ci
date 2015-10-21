@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+echo "ENV: ${ENV:?}"
+
+source ${MY_DIR}/utils.sh
+source_bosh_environment
+
+bosh -n target bosh.${ENV}.cf-app.com
+
+
+echo "DEPLOYMENT_NAME: ${DEPLOYMENT_NAME:?}"
+
+set +e
+check_if_deployment_exists ${DEPLOYMENT_NAME}
+DEPLOYMENT_GREP_RESULT=$?
+set -e
+
+# A value of 0 indicates grep matched successfully,
+# and hence the deployment exists
+if [ ${DEPLOYMENT_GREP_RESULT} -eq 0 ]; then
+  bosh -n delete deployment ${DEPLOYMENT_NAME} --force
+else
+  echo "deployment ${DEPLOYMENT_NAME} not found - nothing to delete"
+fi

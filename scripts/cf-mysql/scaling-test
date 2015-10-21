@@ -1,0 +1,167 @@
+#!/bin/bash
+
+set -eux
+
+function close-ssh-tunnels() {
+  echo "Closing SSH tunnels ..."
+  OLD_TUNNELS=`ps aux | grep "ssh" | \
+    grep "\-L $NODE_0_PORT \| \-L $NODE_1_PORT \| \-L $NODE_2_PORT" | \
+    awk '{print $2}'`
+  [[ -z "${OLD_TUNNELS}" ]] || kill ${OLD_TUNNELS}
+}
+
+function setup_infrastructure_variables() {
+  pushd "${WORKSPACE_DIR}"
+
+    BOSH_USER="${BOSH_USER:-admin}"
+    BOSH_PASSWORD="${BOSH_PASSWORD:-admin}"
+
+    if [ ! -z "${DIRECTOR_IP_FILE}" ]; then
+      # assumes we are running against a remote bosh-lite
+      DIRECTOR_IP=$(cat "${DIRECTOR_IP_FILE}")
+
+      BOSH_PASSWORD_FILE="${BOSH_PASSWORD_FILE:?}"
+      BOSH_PASSWORD="$(cat ${BOSH_PASSWORD_FILE} | jq -r '.director_password')"
+
+      NODE_0_IP="127.0.0.1"
+      NODE_1_IP="127.0.0.1"
+      NODE_2_IP="127.0.0.1"
+
+      NODE_0_PORT="43306"
+      NODE_1_PORT="43307"
+      NODE_2_PORT="43308"
+
+      BOSH_LITE_KEY_FILE="/tmp/id_rsa"
+      echo "${BOSH_LITE_KEY:?}" > "${BOSH_LITE_KEY_FILE}"
+      chmod 600 "${BOSH_LITE_KEY_FILE}"
+
+      trap close-ssh-tunnels EXIT
+      ssh -L ${NODE_0_PORT}:10.244.7.2:3306 \
+        -NnTf \
+        -i "${BOSH_LITE_KEY_FILE}" \
+        -o StrictHostKeyChecking=no \
+        "ubuntu@${DIRECTOR_IP}"
+
+      ssh -L ${NODE_1_PORT}:10.244.8.2:3306 \
+        -NnTf \
+        -i "${BOSH_LITE_KEY_FILE}" \
+        -o StrictHostKeyChecking=no \
+         "ubuntu@${DIRECTOR_IP}"
+
+      ssh  -L ${NODE_2_PORT}:10.244.9.2:3306 \
+        -NnTf \
+        -i "${BOSH_LITE_KEY_FILE}" \
+        -o StrictHostKeyChecking=no \
+        "ubuntu@${DIRECTOR_IP}"
+
+    else
+      # assumes we are running against a local bosh-lite
+      DIRECTOR_IP="${DIRECTOR_IP:-192.168.50.4}"
+
+      NODE_0_IP="10.244.7.2"
+      NODE_1_IP="10.244.8.2"
+      NODE_2_IP="10.244.9.2"
+
+      NODE_0_PORT="3306"
+      NODE_1_PORT="3306"
+      NODE_2_PORT="3306"
+    fi
+  popd
+}
+
+function verify_replicated_row_count_is() {
+  pushd "${SCALING_DIR}"
+
+    NODE_0_COUNT=$(bundle exec ruby mariadb_crud.rb select --host ${NODE_0_IP} --port $NODE_0_PORT)
+    if [[ "${NODE_0_COUNT}" != $1 ]]; then
+      echo "Node 0 did write data correctly:"
+      echo "Expected count: $1"
+      echo "Actual count: $NODE_0_COUNT"
+      exit 1
+    fi
+
+    NODE_1_COUNT=$(bundle exec ruby mariadb_crud.rb select --host ${NODE_1_IP} --port $NODE_1_PORT)
+    if [[ "${NODE_1_COUNT}" != $1 ]]; then
+      echo "Node 1 did not replicate correctly:"
+      echo "Expected count: $1"
+      echo "Actual count: $NODE_1_COUNT"
+      exit 1
+    fi
+
+    NODE_2_COUNT=$(bundle exec ruby mariadb_crud.rb select --host $NODE_2_IP --port $NODE_2_PORT)
+    if [[ "${NODE_2_COUNT}" != $1 ]]; then
+      echo "Node 2 did not replicate correctly:"
+      echo "Expected count: $1"
+      echo "Actual count: $NODE_2_COUNT"
+      exit 1
+    fi
+
+  popd
+}
+
+function scale_to() {
+  echo "Scaling to $1 nodes"
+    export NODE_COUNT=$1
+    export OUTPUT_FILE="cf-mysql-release/deployment.yml"
+  ${RELEASE_DIR}/bosh-lite/make_manifest_concourse
+  update_director_uuid
+  bosh deployment "${WORKSPACE_DIR}/${OUTPUT_FILE}"
+  bosh -n deploy
+}
+
+function write_some_data() {
+  pushd "${SCALING_DIR}"
+    echo "Writing some data to Node 0"
+    bundle exec ruby mariadb_crud.rb insert $1 --host "${NODE_0_IP}" --port "${NODE_0_PORT}"
+  popd
+}
+
+function verify_first_node_row_count_is() {
+  pushd "${SCALING_DIR}"
+    NODE_0_COUNT=$(bundle exec ruby mariadb_crud.rb select --host "${NODE_0_IP}" --port "${NODE_0_PORT}")
+    if [ ! "${NODE_0_COUNT}" -eq $1 ] ; then
+      echo "Expected record count is not equal to ${NODE_0_COUNT}"
+      exit 1
+    fi
+  popd
+}
+
+function clear_data() {
+  pushd "${SCALING_DIR}"
+    echo "Removing test data from Node 0"
+    bundle exec ruby mariadb_crud.rb delete --host "${NODE_0_IP}" --port "${NODE_0_PORT}"
+  popd
+}
+
+function update_director_uuid (){
+  DIRECTOR_UUID=$(bosh status | grep UUID | awk '{print $2}')
+  echo ${DIRECTOR_UUID}
+  sed -i.bak 's/director_uuid: null/director_uuid: '"${DIRECTOR_UUID}"'/' ${OUTPUT_FILE}
+}
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
+RELEASE_DIR="$(cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
+SCALING_DIR="$( cd "${MY_DIR}/scaling/" && pwd )"
+
+setup_infrastructure_variables
+
+pushd "${SCALING_DIR}"
+  bundle install
+popd
+
+bosh -n target "${DIRECTOR_IP}"
+bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
+
+scale_to 1
+clear_data
+write_some_data 1000
+
+scale_to 3
+verify_replicated_row_count_is 1000
+
+scale_to 1
+write_some_data 1000
+verify_first_node_row_count_is 2000
+
+echo "Success!"

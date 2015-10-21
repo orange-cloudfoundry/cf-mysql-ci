@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e -x
+
+cd cf-mysql-release
+
+git checkout release-candidate
+
+git rebase develop
