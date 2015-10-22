@@ -4,7 +4,7 @@ set -eux
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKSPACE_DIR="$( cd ${MY_DIR}/../../.. && pwd )"
-SCRIPTS_DIR="$( cd "${MY_DIR}/../" && pwd )"
+
 DEPLOYMENTS_DIR="${WORKSPACE_DIR}/${DEPLOYMENTS_RELATIVE_DIR:?}"
 RELEASE_DIR="${WORKSPACE_DIR}/${RELEASE_RELATIVE_DIR:?}"
 OUTPUT_FILE_LOCATION="${WORKSPACE_DIR}/${OUTPUT_FILE_RELATIVE_LOCATION:?}"
@@ -12,8 +12,6 @@ stub_location=/tmp/cf-mysql-acceptance-tests-stub.yml
 
 
 echo "ENV: ${ENV:?}"
-
-source ${DEPLOYMENTS_DIR}/scripts/utils.sh
 
 echo "args: $*"
 
