@@ -145,7 +145,6 @@ jobs:
     - get: deployments-scripts
     - get: deployments-configuration
   - task: run-broker-registrar
-    file: deployments-scripts/ci/tasks/bosh/run-errand.yml
     config:
       platform: linux
       image: docker:///cloudfoundry/cf-mysql-ci
