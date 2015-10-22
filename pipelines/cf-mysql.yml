@@ -275,6 +275,8 @@ jobs:
         - name: deployments-scripts
       params:
         ENV: {{initial_env_name}}
+        BOSH_USER: {{initial_env_bosh_username}}
+        BOSH_PASSWORD: {{initial_env_bosh_password}}
         DEPLOYMENT_NAME: {{initial_env_deployment_name}}
         DEPLOYMENTS_DIR: deployments-configuration
         ERRAND: broker-registrar
@@ -289,6 +291,8 @@ jobs:
         - name: deployments-scripts
       params:
         ENV: {{initial_env_name}}
+        BOSH_USER: {{initial_env_bosh_username}}
+        BOSH_PASSWORD: {{initial_env_bosh_password}}
         DEPLOYMENT_NAME: {{initial_env_deployment_name}}
         DEPLOYMENTS_DIR: deployments-configuration
         ERRAND: acceptance-tests
@@ -334,6 +338,8 @@ jobs:
         - name: deployments-scripts
       params:
         ENV: {{initial_env_name}}
+        BOSH_USER: {{initial_env_bosh_username}}
+        BOSH_PASSWORD: {{initial_env_bosh_password}}
         DEPLOYMENT_NAME: {{initial_env_deployment_name}}
         DEPLOYMENTS_DIR: deployments-configuration
         ERRAND: acceptance-tests
