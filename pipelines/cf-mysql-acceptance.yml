@@ -73,6 +73,8 @@ jobs:
       params:
         ENV: {{acceptance_env_name}}
         DEPLOYMENT_NAME: {{acceptance_env_deployment_name}}
+        BOSH_USER: {{acceptance_env_bosh_username}}
+        BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         DEPLOYMENTS_DIR: deployments-configuration
       run:
         path: deployments-scripts/scripts/run_errand_broker_deregistrar
@@ -86,6 +88,8 @@ jobs:
       params:
         ENV: {{acceptance_env_name}}
         DEPLOYMENT_NAME: {{acceptance_env_deployment_name}}
+        BOSH_USER: {{acceptance_env_bosh_username}}
+        BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         DEPLOYMENTS_DIR: deployments-configuration
       run:
         path: deployments-scripts/scripts/delete_deployment
@@ -112,6 +116,8 @@ jobs:
         - name: cf-mysql-release
         params:
           RELEASE_RELATIVE_DIR: cf-mysql-release/
+          BOSH_USER: {{acceptance_env_bosh_username}}
+          BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         run:
           path: deployments-scripts/scripts/create_release_cf_mysql_release
     - task: make-manifest
@@ -124,6 +130,8 @@ jobs:
         - name: cf-mysql-release
         params:
           ENV: {{acceptance_env_name}}
+          BOSH_USER: {{acceptance_env_bosh_username}}
+          BOSH_PASSWORD: {{acceptance_env_bosh_password}}
           DEPLOYMENTS_DIR: deployments-configuration
         run:
           path: deployments-scripts/scripts/make_manifest_cf_mysql
@@ -154,6 +162,8 @@ jobs:
       params:
         ENV: {{acceptance_env_name}}
         DEPLOYMENT_NAME: {{acceptance_env_deployment_name}}
+        BOSH_USER: {{acceptance_env_bosh_username}}
+        BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         DEPLOYMENTS_DIR: deployments-configuration
         ERRAND: broker-registrar
       run:
@@ -168,6 +178,8 @@ jobs:
       params:
         ENV: {{acceptance_env_name}}
         DEPLOYMENT_NAME: {{acceptance_env_deployment_name}}
+        BOSH_USER: {{acceptance_env_bosh_username}}
+        BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         DEPLOYMENTS_DIR: deployments-configuration
         ERRAND: acceptance-tests
       run:
