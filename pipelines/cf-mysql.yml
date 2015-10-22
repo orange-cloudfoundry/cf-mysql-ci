@@ -1019,6 +1019,8 @@ jobs:
       params:
         ENV: {{integration_env_name}}
         DEPLOYMENT_NAME: {{integration_env_deployment_name}}
+        BOSH_USER: {{integration_env_bosh_username}}
+        BOSH_PASSWORD: {{integration_env_bosh_password}}
         DEPLOYMENTS_DIR: deployments-configuration
         ERRAND: broker-registrar
       run:
@@ -1033,6 +1035,8 @@ jobs:
       params:
         ENV: {{integration_env_name}}
         DEPLOYMENT_NAME: {{integration_env_deployment_name}}
+        BOSH_USER: {{integration_env_bosh_username}}
+        BOSH_PASSWORD: {{integration_env_bosh_password}}
         DEPLOYMENTS_DIR: deployments-configuration
         ERRAND: acceptance-tests
       run:
