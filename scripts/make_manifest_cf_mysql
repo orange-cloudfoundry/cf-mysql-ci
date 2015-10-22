@@ -3,18 +3,13 @@
 set -eux
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CI_DIR="$( cd ${MY_DIR}/../ && pwd )"
 WORKSPACE_DIR="$( cd ${MY_DIR}/../.. && pwd )"
 RELEASE_DIR="$( cd ${WORKSPACE_DIR}/cf-mysql-release && pwd )"
 
-# ensure DEPLOYMENTS_DIR is an absolute path
-DEPLOYMENTS_DIR="${DEPLOYMENTS_DIR:?}"
-if [[ "${DEPLOYMENTS_DIR}" != /* ]]; then
-  DEPLOYMENTS_DIR="${WORKSPACE_DIR}/${DEPLOYMENTS_DIR}"
-fi
-
 echo "ENV: ${ENV:?}"
 
-source ${DEPLOYMENTS_DIR}/scripts/utils.sh
+source ${CI_DIR}/scripts/utils.sh
 
 bosh -n target bosh.${ENV}.cf-app.com
 

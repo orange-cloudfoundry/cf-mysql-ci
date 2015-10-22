@@ -3,17 +3,12 @@
 set -eux
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-WORKSPACE_DIR="$( cd ${MY_DIR}/../.. && pwd )"
-
-# ensure DEPLOYMENTS_DIR is an absolute path
-DEPLOYMENTS_DIR="${DEPLOYMENTS_DIR:?}"
-if [[ "${DEPLOYMENTS_DIR}" != /* ]]; then
-  DEPLOYMENTS_DIR="${WORKSPACE_DIR}/${DEPLOYMENTS_DIR}"
-fi
+CI_DIR="$( cd ${MY_DIR}/../ && pwd )"
+WORKSPACE_DIR="$( cd ${MY_DIR}/../../ && pwd )"
 
 echo "ENV: ${ENV:?}"
 
-source ${DEPLOYMENTS_DIR}/scripts/utils.sh
+source ${CI_DIR}/scripts/utils.sh
 
 echo "DEPLOYMENT_NAME: ${DEPLOYMENT_NAME:?}"
 echo "ERRAND: ${ERRAND:?}"
