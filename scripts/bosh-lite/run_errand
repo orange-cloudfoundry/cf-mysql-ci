@@ -15,8 +15,6 @@ if [[ "${DEPLOYMENTS_DIR}" != /* ]]; then
   DEPLOYMENTS_DIR="${WORKSPACE_DIR}/${DEPLOYMENTS_DIR}"
 fi
 
-echo "ENV: ${ENV:?}"
-
 source ${DEPLOYMENTS_DIR}/scripts/utils.sh
 
 pushd ${WORKSPACE_DIR}
