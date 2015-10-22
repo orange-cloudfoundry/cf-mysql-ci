@@ -900,6 +900,7 @@ jobs:
       passed: [claim-bosh-lite-standalone]
       trigger: true
     - get: deployments-configuration
+    - get: deployments-scripts
   - *delete-deployment-bosh-lite
 
 - name: deploy-to-standalone
