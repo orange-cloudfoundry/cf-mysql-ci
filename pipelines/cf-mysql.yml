@@ -798,18 +798,28 @@ jobs:
       trigger: true
   - *smoke-tests-bosh-lite
 
-#- name: test-data-write-before-upgrade
-#  plan:
-#  - aggregate:
-#    - get: deployments-configuration
-#    - get: cf-mysql-ci
-#    - get: cf-mysql-release
-#      passed: [broker-registrar-previous-on-upgrade]
-#      trigger: true
-#    - get: bosh-lite-environment
-#      passed: [broker-registrar-previous-on-upgrade]
-#      trigger: true
-#  - *smoke-tests-bosh-lite
+- name: persistence-test-data-write-before-upgrade
+  plan:
+  - aggregate:
+    - get: cf-mysql-ci
+    - get: cf-mysql-release
+      passed: [smoke-tests-previous-on-upgrade]
+      trigger: true
+    - get: bosh-lite-environment
+      passed: [smoke-tests-previous-on-upgrade]
+      trigger: true
+  - task: persistence-test-data-write-before-upgrade
+    config:
+      platform: *platform
+      image: *docker-image
+      inputs:
+      - name: bosh-lite-environment
+      - name: cf-mysql-ci
+      params:
+        DIRECTOR_IP_FILE: bosh-lite-environment/name
+        BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
+      run:
+        path: cf-mysql-ci/scripts/persistence/load-test-data
 
 - name: deploy-current-to-upgrade
   plan:
@@ -817,16 +827,39 @@ jobs:
     - get: deployments-configuration
     - get: cf-mysql-ci
     - get: cf-mysql-release
-      passed: [smoke-tests-previous-on-upgrade]
+      passed: [persistence-test-data-write-before-upgrade]
       trigger: true
     - get: bosh-lite-stemcell
     - get: bosh-lite-environment
-      passed: [smoke-tests-previous-on-upgrade]
+      passed: [persistence-test-data-write-before-upgrade]
       trigger: true
   - aggregate:
     - *create-release
     - *make-manifest-bosh-lite
   - *deploy-to-bosh-lite
+
+- name: persistence-test-data-read-after-upgrade
+  plan:
+  - aggregate:
+    - get: cf-mysql-ci
+    - get: cf-mysql-release
+      passed: [deploy-current-to-upgrade]
+      trigger: true
+    - get: bosh-lite-environment
+      passed: [deploy-current-to-upgrade]
+      trigger: true
+  - task: persistence-test-data-read-after-upgrade
+    config:
+      platform: *platform
+      image: *docker-image
+      inputs:
+      - name: bosh-lite-environment
+      - name: cf-mysql-ci
+      params:
+        DIRECTOR_IP_FILE: bosh-lite-environment/name
+        BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
+      run:
+        path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data
 
 - name: smoke-tests-current-on-upgrade
   plan:
@@ -873,10 +906,10 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [smoke-tests-current-on-upgrade, dashboard-test-bosh-lite]
+      passed: [smoke-tests-current-on-upgrade, dashboard-test-bosh-lite, persistence-test-data-read-after-upgrade]
       trigger: true
     - get: bosh-lite-environment
-      passed: [smoke-tests-current-on-upgrade, dashboard-test-bosh-lite]
+      passed: [smoke-tests-current-on-upgrade, dashboard-test-bosh-lite, persistence-test-data-read-after-upgrade]
       trigger: true
   - put: bosh-lite-environment
     params:
