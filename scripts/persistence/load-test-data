@@ -3,14 +3,14 @@
 set -eux
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-WORKSPACE_DIR="$( cd ${MY_DIR}/../.. && pwd )"
+WORKSPACE_DIR="$( cd ${MY_DIR}/../../.. && pwd )"
 
 # SQL_QUERY_DIR lives 1 level below.
 SQL_QUERY_DIR=$( cd ${MY_DIR}/test-data && pwd )
 
 MYSQL_TUNNEL_IP=127.0.0.1
 MYSQL_TUNNEL_PORT=3307
-MYSQL_VM_IP=10.244.21.2
+MYSQL_VM_IP=10.244.7.2
 MYSQL_VM_PORT=3306
 
 DIRECTOR_TARGET_FILE=${DIRECTOR_TARGET_FILE:-}

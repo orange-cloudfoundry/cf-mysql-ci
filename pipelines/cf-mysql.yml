@@ -816,7 +816,7 @@ jobs:
       - name: bosh-lite-environment
       - name: cf-mysql-ci
       params:
-        DIRECTOR_IP_FILE: bosh-lite-environment/name
+        DIRECTOR_TARGET_FILE: bosh-lite-environment/name
         BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
       run:
         path: cf-mysql-ci/scripts/persistence/load-test-data
