@@ -3,7 +3,7 @@
 set -eux
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-WORKSPACE_DIR="$( cd ${MY_DIR}/../.. && pwd )"
+WORKSPACE_DIR="$( cd ${MY_DIR}/../../.. && pwd )"
 
 # SQL_QUERY_DIR lives 1 level below.
 SQL_QUERY_DIR=$( cd ${MY_DIR}/test-data && pwd )
