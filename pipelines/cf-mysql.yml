@@ -25,11 +25,10 @@ resources:
     uri: {{deployments_config_repo_uri}}
     private_key: {{git-private-key}}
 
-- name: deployments-scripts
+- name: cf-mysql-ci
   type: git
   source:
-    uri: {{deployments_oss_config_repo_uri}}
-    private_key: {{git-private-key}}
+    uri: git@github.com:cloudfoundry-incubator/cf-mysql-ci
 
 - name: cf-mysql-release
   type: git
@@ -184,39 +183,39 @@ jobs:
       passed: [claim-intial-environment]
       trigger: true
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
   - task: run-broker-deregistrar
     config:
       platform: *platform
       image: *docker-image
       inputs:
       - name: deployments-configuration
-      - name: deployments-scripts
+      - name: cf-mysql-ci
       params:
         ENV: {{initial_env_name}}
         DEPLOYMENT_NAME: {{initial_env_deployment_name}}
         ERRAND: broker-deregistrar
         SKIP_IF_NO_DEPLOYMENT: true
       run:
-        path: deployments-scripts/scripts/run_errand
+        path: cf-mysql-ci/scripts/bosh/run_errand
   - task: delete-initial-deployment
     config:
       platform: *platform
       image: *docker-image
       inputs:
       - name: deployments-configuration
-      - name: deployments-scripts
+      - name: cf-mysql-ci
       params:
         ENV: {{initial_env_name}}
         DEPLOYMENT_NAME: {{initial_env_deployment_name}}
       run:
-        path: deployments-scripts/scripts/delete_deployment
+        path: cf-mysql-ci/scripts/bosh/delete_deployment
 
 - name: deploy-to-initial
   plan:
   - aggregate:
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [delete-initial-deployment]
       trigger: true
@@ -231,25 +230,25 @@ jobs:
         image: *docker-image
         inputs:
         - name: deployments-configuration
-        - name: deployments-scripts
+        - name: cf-mysql-ci
         - name: cf-mysql-release
         params:
           RELEASE_RELATIVE_DIR: cf-mysql-release/
         run:
-          path: deployments-scripts/scripts/create_release_cf_mysql_release
+          path: cf-mysql-ci/scripts/create_release_cf_mysql_release
     - task: make-manifest
       config:
         platform: *platform
         image: *docker-image
         inputs:
         - name: deployments-configuration
-        - name: deployments-scripts
+        - name: cf-mysql-ci
         - name: cf-mysql-release
         params:
           ENV: {{initial_env_name}}
           DEPLOYMENTS_DIR: deployments-configuration
         run:
-          path: deployments-scripts/scripts/make_manifest_cf_mysql
+          path: cf-mysql-ci/scripts/make_manifest_cf_mysql
   - put: initial-deployment
     params:
       manifest: make-manifest/cf-mysql-release/deployment.yml
@@ -265,14 +264,14 @@ jobs:
       passed: [deploy-to-initial]
       trigger: true
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
   - task: run-broker-registrar
     config:
       platform: *platform
       image: *docker-image
       inputs:
         - name: deployments-configuration
-        - name: deployments-scripts
+        - name: cf-mysql-ci
       params:
         ENV: {{initial_env_name}}
         BOSH_USER: {{initial_env_bosh_username}}
@@ -280,14 +279,14 @@ jobs:
         DEPLOYMENT_NAME: {{initial_env_deployment_name}}
         ERRAND: broker-registrar
       run:
-        path: deployments-scripts/scripts/run_errand
+        path: cf-mysql-ci/scripts/bosh/run_errand
   - task: run-smoke-tests
     config:
       platform: *platform
       image: *docker-image
       inputs:
         - name: deployments-configuration
-        - name: deployments-scripts
+        - name: cf-mysql-ci
       params:
         ENV: {{initial_env_name}}
         BOSH_USER: {{initial_env_bosh_username}}
@@ -295,7 +294,7 @@ jobs:
         DEPLOYMENT_NAME: {{initial_env_deployment_name}}
         ERRAND: acceptance-tests
       run:
-        path: deployments-scripts/scripts/run_errand
+        path: cf-mysql-ci/scripts/bosh/run_errand
 
 - name: run-acceptance-tests-initial
   plan:
@@ -306,7 +305,7 @@ jobs:
       passed: [run-smoke-tests-initial]
       trigger: true
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
   - task: recreate-manifest-to-run-acceptance-tests
     config:
       platform: *platform
@@ -314,14 +313,15 @@ jobs:
       inputs:
         - name: cf-mysql-release
         - name: deployments-configuration
-        - name: deployments-scripts
+        - name: cf-mysql-ci
       params:
         ENV: {{initial_env_name}}
         RELEASE_RELATIVE_DIR: cf-mysql-release
         DEPLOYMENTS_RELATIVE_DIR: deployments-configuration
         OUTPUT_FILE_RELATIVE_LOCATION: cf-mysql-release/deployment.yml
+        RUN_ALL_ACCEPTANCE_TESTS: true
       run:
-        path: deployments-scripts/scripts/cf-mysql/recreate_manifest_to_run_acceptance_tests
+        path: cf-mysql-ci/scripts/make_manifest_cf_mysql
   - put: initial-deployment
     params:
       manifest: recreate-manifest-to-run-acceptance-tests/cf-mysql-release/deployment.yml
@@ -333,7 +333,7 @@ jobs:
       image: *docker-image
       inputs:
         - name: deployments-configuration
-        - name: deployments-scripts
+        - name: cf-mysql-ci
       params:
         ENV: {{initial_env_name}}
         BOSH_USER: {{initial_env_bosh_username}}
@@ -341,7 +341,7 @@ jobs:
         DEPLOYMENT_NAME: {{initial_env_deployment_name}}
         ERRAND: acceptance-tests
       run:
-        path: deployments-scripts/scripts/run_errand
+        path: cf-mysql-ci/scripts/bosh/run_errand
 
 - name: dashboard-test-initial
   plan:
@@ -410,7 +410,7 @@ jobs:
       passed: [claim-bosh-lite-scaling]
       trigger: true
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
   - try: &broker-deregistrar-bosh-lite
       task: run-broker-deregistrar
       config:
@@ -419,7 +419,7 @@ jobs:
         inputs:
           - name: bosh-lite-environment
           - name: deployments-configuration
-          - name: deployments-scripts
+          - name: cf-mysql-ci
         params:
           DIRECTOR_IP_FILE: bosh-lite-environment/name
           BOSH_USER: {{bosh-lite-username}}
@@ -427,7 +427,7 @@ jobs:
           DEPLOYMENT_NAME: cf-warden-mysql
           ERRAND: broker-deregistrar
         run:
-          path: deployments-scripts/scripts/bosh-lite/run_errand
+          path: cf-mysql-ci/scripts/bosh-lite/run_errand
   - &delete-deployment-bosh-lite
     task: delete-deployment
     config:
@@ -436,14 +436,14 @@ jobs:
       inputs:
         - name: bosh-lite-environment
         - name: deployments-configuration
-        - name: deployments-scripts
+        - name: cf-mysql-ci
       params:
         DIRECTOR_IP_FILE: bosh-lite-environment/name
         BOSH_USER: {{bosh-lite-username}}
         BOSH_PASSWORD_FILE: bosh-lite-environment/metadata
         DEPLOYMENT_NAME: cf-warden-mysql
       run:
-        path: deployments-scripts/scripts/bosh-lite/delete-deployment
+        path: cf-mysql-ci/scripts/bosh-lite/delete-deployment
 
 - name: deploy-to-scaling
   plan:
@@ -453,7 +453,7 @@ jobs:
       passed: [delete-scaling-deployment]
       trigger: true
     - get: bosh-lite-stemcell
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: bosh-lite-environment
       passed: [delete-scaling-deployment]
       trigger: true
@@ -487,7 +487,7 @@ jobs:
   plan:
   - aggregate:
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [deploy-to-scaling]
       trigger: true
@@ -501,7 +501,7 @@ jobs:
       image: *docker-image
       inputs:
         - name: deployments-configuration
-        - name: deployments-scripts
+        - name: cf-mysql-ci
         - name: bosh-lite-environment
       params:
         DIRECTOR_IP_FILE: bosh-lite-environment/name
@@ -510,13 +510,13 @@ jobs:
         DEPLOYMENT_NAME: cf-warden-mysql
         ERRAND: broker-registrar
       run:
-        path: deployments-scripts/scripts/bosh-lite/run_errand
+        path: cf-mysql-ci/scripts/bosh-lite/run_errand
 
 - name: scaling-smoke-tests
   plan:
   - aggregate:
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [scaling-broker-registrar]
       trigger: true
@@ -530,7 +530,7 @@ jobs:
       image: *docker-image
       inputs:
         - name: deployments-configuration
-        - name: deployments-scripts
+        - name: cf-mysql-ci
         - name: bosh-lite-environment
       params:
         DIRECTOR_IP_FILE: bosh-lite-environment/name
@@ -539,12 +539,12 @@ jobs:
         DEPLOYMENT_NAME: cf-warden-mysql
         ERRAND: acceptance-tests
       run:
-        path: deployments-scripts/scripts/bosh-lite/run_errand
+        path: cf-mysql-ci/scripts/bosh-lite/run_errand
 
 - name: scaling-tests
   plan:
   - aggregate:
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [scaling-smoke-tests]
       trigger: true
@@ -556,7 +556,7 @@ jobs:
       platform: *platform
       image: *docker-image
       inputs:
-        - name: deployments-scripts
+        - name: cf-mysql-ci
         - name: bosh-lite-environment
         - name: cf-mysql-release
       params:
@@ -566,7 +566,7 @@ jobs:
         BOSH_LITE_KEY: {{bosh-lite-private-key}}
         BOSH_LITE_PRIVATE_IP_FILE: bosh-lite-environment/metadata
       run:
-        path: deployments-scripts/scripts/cf-mysql/scaling-test
+        path: cf-mysql-ci/scripts/scaling/scaling-test
 
 - name: release-scaling-environment
   plan:
@@ -611,7 +611,7 @@ jobs:
       passed: [claim-bosh-lite-failover]
       trigger: true
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
   - try: *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
 
@@ -619,7 +619,7 @@ jobs:
   plan:
   - aggregate:
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [delete-failover-deployment]
       trigger: true
@@ -650,7 +650,7 @@ jobs:
   plan:
   - aggregate:
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [deploy-to-failover]
       trigger: true
@@ -663,7 +663,7 @@ jobs:
   plan:
   - aggregate:
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [failover-broker-registrar]
       trigger: true
@@ -675,7 +675,7 @@ jobs:
 - name: failover-tests
   plan:
   - aggregate:
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [failover-smoke-tests]
       trigger: true
@@ -688,7 +688,7 @@ jobs:
       platform: *platform
       image: *docker-image
       inputs:
-        - name: deployments-scripts
+        - name: cf-mysql-ci
         - name: bosh-lite-environment
         - name: cf-mysql-release
       params:
@@ -698,7 +698,7 @@ jobs:
         BOSH_LITE_KEY: {{bosh-lite-private-key}}
         BOSH_LITE_PRIVATE_IP_FILE: bosh-lite-environment/metadata
       run:
-        path: deployments-scripts/scripts/cf-mysql/failover-test
+        path: cf-mysql-ci/scripts/failover/failover-test
 
 - name: release-failover-environment
   plan:
@@ -743,7 +743,7 @@ jobs:
       passed: [claim-bosh-lite-upgrade]
       trigger: true
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
   - try: *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
 
@@ -751,7 +751,7 @@ jobs:
   plan:
   - aggregate:
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       resource: cf-mysql-release-master
     - get: bosh-lite-stemcell
@@ -771,7 +771,7 @@ jobs:
   plan:
   - aggregate:
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       # we don't use current cf-mysql in deploy stage
       passed: [delete-upgrade-deployment]
@@ -784,7 +784,7 @@ jobs:
   plan:
   - aggregate:
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [broker-registrar-previous-on-upgrade]
       trigger: true
@@ -793,11 +793,24 @@ jobs:
       trigger: true
   - *smoke-tests-bosh-lite
 
+#- name: test-data-write-before-upgrade
+#  plan:
+#  - aggregate:
+#    - get: deployments-configuration
+#    - get: cf-mysql-ci
+#    - get: cf-mysql-release
+#      passed: [broker-registrar-previous-on-upgrade]
+#      trigger: true
+#    - get: bosh-lite-environment
+#      passed: [broker-registrar-previous-on-upgrade]
+#      trigger: true
+#  - *smoke-tests-bosh-lite
+
 - name: deploy-current-to-upgrade
   plan:
   - aggregate:
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [smoke-tests-previous-on-upgrade]
       trigger: true
@@ -814,7 +827,7 @@ jobs:
   plan:
   - aggregate:
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [deploy-current-to-upgrade]
       trigger: true
@@ -899,14 +912,14 @@ jobs:
       passed: [claim-bosh-lite-standalone]
       trigger: true
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
   - *delete-deployment-bosh-lite
 
 - name: deploy-to-standalone
   plan:
   - aggregate:
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [delete-standalone-deployment]
       trigger: true
@@ -969,7 +982,7 @@ jobs:
   plan:
   - aggregate:
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [claim-integration-environment]
       trigger: true
@@ -985,13 +998,13 @@ jobs:
         image: *docker-image
         inputs:
         - name: deployments-configuration
-        - name: deployments-scripts
+        - name: cf-mysql-ci
         - name: cf-mysql-release
         params:
           ENV: {{integration_env_name}}
           DEPLOYMENTS_DIR: deployments-configuration
         run:
-          path: deployments-scripts/scripts/make_manifest_cf_mysql
+          path: cf-mysql-ci/scripts/make_manifest_cf_mysql
   - put: integration-deployment
     params:
       manifest: make-manifest/cf-mysql-release/deployment.yml
@@ -1007,14 +1020,14 @@ jobs:
       passed: [deploy-to-integration]
       trigger: true
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
   - task: run-broker-registrar
     config:
       platform: *platform
       image: *docker-image
       inputs:
         - name: deployments-configuration
-        - name: deployments-scripts
+        - name: cf-mysql-ci
       params:
         ENV: {{integration_env_name}}
         DEPLOYMENT_NAME: {{integration_env_deployment_name}}
@@ -1022,14 +1035,14 @@ jobs:
         BOSH_PASSWORD: {{integration_env_bosh_password}}
         ERRAND: broker-registrar
       run:
-        path: deployments-scripts/scripts/run_errand
+        path: cf-mysql-ci/scripts/bosh/run_errand
   - task: run-smoke-tests
     config:
       platform: *platform
       image: *docker-image
       inputs:
         - name: deployments-configuration
-        - name: deployments-scripts
+        - name: cf-mysql-ci
       params:
         ENV: {{integration_env_name}}
         DEPLOYMENT_NAME: {{integration_env_deployment_name}}
@@ -1037,7 +1050,7 @@ jobs:
         BOSH_PASSWORD: {{integration_env_bosh_password}}
         ERRAND: acceptance-tests
       run:
-        path: deployments-scripts/scripts/run_errand
+        path: cf-mysql-ci/scripts/bosh/run_errand
 
 - name: release-integration-environment
   plan:
@@ -1061,17 +1074,17 @@ jobs:
       params:
         fetch: [release-candidate]
     - get: deployments-configuration
-    - get: deployments-scripts
+    - get: cf-mysql-ci
   - task: merge-to-release-candidate
     config:
       platform: *platform
       image: *docker-image
       inputs:
         - name: deployments-configuration
-        - name: deployments-scripts
+        - name: cf-mysql-ci
         - name: cf-mysql-release
       run:
-        path: deployments-scripts/scripts/cf-mysql/merge-to-release-candidate
+        path: cf-mysql-ci/scripts/publish/merge-to-release-candidate
   - put: cf-mysql-release-rc
     params:
       repository: merge-to-release-candidate/cf-mysql-release

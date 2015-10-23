@@ -70,7 +70,7 @@ jobs:
             path: cf-mysql-release
           - name: release-notes
           run:
-            path: deployments-config/scripts/cf-mysql/cut-final-release
+            path: deployments-config/scripts/publish/cut-final-release
           params:
             RELEASE_NOTES_DIRECTORY: release-notes
             OUTPUT_RELEASE_ARTIFACTS: release-artifacts
@@ -87,7 +87,7 @@ jobs:
           - name: deployments-config
           - name: final-release
           run:
-            path: deployments-config/scripts/cf-mysql/merge-master-into-develop
+            path: deployments-config/scripts/publish/merge-master-into-develop
       - put: cf-mysql-master
         params:
           repository: final-release/cf-mysql-release

@@ -7,6 +7,8 @@ CI_DIR="$( cd ${MY_DIR}/../ && pwd )"
 WORKSPACE_DIR="$( cd ${MY_DIR}/../.. && pwd )"
 RELEASE_DIR="$( cd ${WORKSPACE_DIR}/cf-mysql-release && pwd )"
 
+RUN_ALL_ACCEPTANCE_TESTS="${RUN_ALL_ACCEPTANCE_TESTS:-false}"
+
 source ${CI_DIR}/scripts/utils.sh
 
 # ensure DEPLOYMENTS_DIR is an absolute path
@@ -20,6 +22,18 @@ echo "ENV: ${ENV:?}"
 bosh -n target bosh.${ENV}.cf-app.com
 
 echo "args: $*"
+
+CUSTOM_STUB=/tmp/cf-mysql-acceptance-tests-stub.yml
+rm -f ${CUSTOM_STUB} && touch ${CUSTOM_STUB}
+if [[ "${RUN_ALL_ACCEPTANCE_TESTS}" = "true" ]]; then
+  cat > ${CUSTOM_STUB} <<EOF
+---
+jobs:
+- name: acceptance-tests
+  properties:
+    smoke_tests_only: false
+EOF
+fi
 
 pushd ${RELEASE_DIR}
   ./generate_deployment_manifest \
