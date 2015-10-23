@@ -1,9 +1,9 @@
 ---
 resources:
-- name: aws-stemcell
+- name: acceptance-env-bosh-stemcell
   type: bosh-io-stemcell
   source:
-    name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
+    name: {{acceptance_env_stemcell_name}}
 
 - name: cf-mysql-ci
   type: git
@@ -102,7 +102,7 @@ jobs:
       resource: cf-mysql-release-rc
       passed: [delete-acceptance-deployment]
       trigger: true
-    - get: aws-stemcell
+    - get: acceptance-env-bosh-stemcell
     - get: aws-acceptance-environment
       passed: [delete-acceptance-deployment]
   - aggregate:
@@ -138,7 +138,7 @@ jobs:
     params:
       manifest: make-manifest/cf-mysql-release/deployment.yml
       releases: [create-release/cf-mysql-release/dev_releases/cf-mysql/*.tgz]
-      stemcells: [aws-stemcell/*.tgz]
+      stemcells: [acceptance-env-bosh-stemcell/*.tgz]
 
 - name: run-smoke-tests-acceptance
   plan:

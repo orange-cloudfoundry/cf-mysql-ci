@@ -9,10 +9,15 @@ resources:
     password: {{cf-docker-password}}
     repository: cloudfoundry/cf-mysql-ci
 
-- name: bosh-stemcell
+- name: initial-env-bosh-stemcell
   type: bosh-io-stemcell
   source:
-    name: {{oss_stemcell_name}}
+    name: {{initial_env_stemcell_name}}
+
+- name: integration-env-bosh-stemcell
+  type: bosh-io-stemcell
+  source:
+    name: {{integration_env_stemcell_name}}
 
 - name: bosh-lite-stemcell
   type: bosh-io-stemcell
@@ -219,7 +224,7 @@ jobs:
     - get: cf-mysql-release
       passed: [delete-initial-deployment]
       trigger: true
-    - get: bosh-stemcell
+    - get: initial-env-bosh-stemcell
     - get: intial-environment
       passed: [delete-initial-deployment]
   - aggregate:
@@ -253,7 +258,7 @@ jobs:
     params:
       manifest: make-manifest/cf-mysql-release/deployment.yml
       releases: [create-release/cf-mysql-release/dev_releases/cf-mysql/*.tgz]
-      stemcells: [bosh-stemcell/*.tgz]
+      stemcells: [initial-env-bosh-stemcell/*.tgz]
 
 - name: run-smoke-tests-initial
   plan:
@@ -986,7 +991,7 @@ jobs:
     - get: cf-mysql-release
       passed: [claim-integration-environment]
       trigger: true
-    - get: bosh-stemcell
+    - get: integration-env-bosh-stemcell
     - get: integration-environment
       passed: [claim-integration-environment]
       trigger: true
@@ -1009,7 +1014,7 @@ jobs:
     params:
       manifest: make-manifest/cf-mysql-release/deployment.yml
       releases: [create-release/cf-mysql-release/dev_releases/cf-mysql/*.tgz]
-      stemcells: [bosh-stemcell/*.tgz]
+      stemcells: [integration-env-bosh-stemcell/*.tgz]
 
 - name: run-smoke-tests-integration
   plan:
