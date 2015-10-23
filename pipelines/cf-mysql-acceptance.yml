@@ -8,7 +8,7 @@ resources:
 - name: cf-mysql-ci
   type: git
   source:
-    uri: git@github.com:cloudfoundry-incubator/cf-mysql-ci
+    uri: https://github.com/cloudfoundry-incubator/cf-mysql-ci.git
 
 - name: deployments-configuration
   type: git
