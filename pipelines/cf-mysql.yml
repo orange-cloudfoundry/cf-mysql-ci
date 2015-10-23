@@ -117,6 +117,13 @@ resources:
   source:
     repository: cloudfoundry/cf-mysql-release
 
+- name: cf-mysql-rc-artifacts
+  type: s3
+  source:
+    bucket: cf-mysql-releases
+    regexp: release\-candidate\/cf\-mysql\-.*\.tgz
+    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
+    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
 
 ### JOBS
 jobs:
@@ -1102,6 +1109,29 @@ jobs:
   - put: integration-environment
     params:
       release: integration-environment
+
+- name: upload-rc-artifacts
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      passed: [run-smoke-tests-integration]
+      trigger: true
+    - get: cf-mysql-ci
+  - task: create-rc-release-artifacts
+    config:
+      platform: *platform
+      image: *docker-image
+      inputs:
+        - name: cf-mysql-ci
+        - name: cf-mysql-release
+      params:
+        RELEASE_RELATIVE_DIR: cf-mysql-release
+      run:
+        path: cf-mysql-ci/scripts/create_release
+  - put: cf-mysql-rc-artifacts
+    params:
+      from: create\-rc\-release\-artifacts\/cf\-mysql\-release\/dev_releases\/cf\-mysql\/cf\-mysql.*\.tgz
+      to: release-candidate/
 
 - name: promote-to-rc
   plan:
