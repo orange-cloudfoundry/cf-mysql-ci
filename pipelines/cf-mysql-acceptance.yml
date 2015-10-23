@@ -119,7 +119,7 @@ jobs:
           BOSH_USER: {{acceptance_env_bosh_username}}
           BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         run:
-          path: deployments-scripts/scripts/create_release_cf_mysql_release
+          path: deployments-scripts/scripts/create_release
     - task: make-manifest
       config:
         platform: linux
@@ -134,7 +134,7 @@ jobs:
           BOSH_PASSWORD: {{acceptance_env_bosh_password}}
           DEPLOYMENTS_DIR: deployments-configuration
         run:
-          path: deployments-scripts/scripts/make_manifest_cf_mysql
+          path: deployments-scripts/scripts/make_manifeset
   - put: acceptance-deployment
     params:
       manifest: make-manifest/cf-mysql-release/deployment.yml

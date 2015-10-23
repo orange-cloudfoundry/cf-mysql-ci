@@ -235,7 +235,7 @@ jobs:
         params:
           RELEASE_RELATIVE_DIR: cf-mysql-release/
         run:
-          path: cf-mysql-ci/scripts/create_release_cf_mysql_release
+          path: cf-mysql-ci/scripts/create_release
     - task: make-manifest
       config:
         platform: *platform
@@ -248,7 +248,7 @@ jobs:
           ENV: {{initial_env_name}}
           DEPLOYMENTS_DIR: deployments-configuration
         run:
-          path: cf-mysql-ci/scripts/make_manifest_cf_mysql
+          path: cf-mysql-ci/scripts/make_manifest
   - put: initial-deployment
     params:
       manifest: make-manifest/cf-mysql-release/deployment.yml
@@ -321,7 +321,7 @@ jobs:
         OUTPUT_FILE_RELATIVE_LOCATION: cf-mysql-release/deployment.yml
         RUN_ALL_ACCEPTANCE_TESTS: true
       run:
-        path: cf-mysql-ci/scripts/make_manifest_cf_mysql
+        path: cf-mysql-ci/scripts/make_manifest
   - put: initial-deployment
     params:
       manifest: recreate-manifest-to-run-acceptance-tests/cf-mysql-release/deployment.yml
@@ -1004,7 +1004,7 @@ jobs:
           ENV: {{integration_env_name}}
           DEPLOYMENTS_DIR: deployments-configuration
         run:
-          path: cf-mysql-ci/scripts/make_manifest_cf_mysql
+          path: cf-mysql-ci/scripts/make_manifest
   - put: integration-deployment
     params:
       manifest: make-manifest/cf-mysql-release/deployment.yml
