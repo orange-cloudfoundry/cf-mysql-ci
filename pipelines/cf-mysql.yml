@@ -33,7 +33,7 @@ resources:
 - name: cf-mysql-ci
   type: git
   source:
-    uri: git@github.com:cloudfoundry-incubator/cf-mysql-ci
+    uri: https://github.com/cloudfoundry-incubator/cf-mysql-ci.git
 
 - name: cf-mysql-release
   type: git
@@ -811,7 +811,7 @@ jobs:
   - task: persistence-test-data-write-before-upgrade
     config:
       platform: *platform
-      image: *docker-image
+      image: docker:///pivotalcf/mysql-restore
       inputs:
       - name: bosh-lite-environment
       - name: cf-mysql-ci
@@ -851,7 +851,7 @@ jobs:
   - task: persistence-test-data-read-after-upgrade
     config:
       platform: *platform
-      image: *docker-image
+      image: docker:///pivotalcf/mysql-restore
       inputs:
       - name: bosh-lite-environment
       - name: cf-mysql-ci
