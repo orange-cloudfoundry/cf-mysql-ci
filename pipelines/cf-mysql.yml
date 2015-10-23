@@ -195,9 +195,10 @@ jobs:
       params:
         ENV: {{initial_env_name}}
         DEPLOYMENT_NAME: {{initial_env_deployment_name}}
-        DEPLOYMENTS_DIR: deployments-configuration
+        ERRAND: broker-deregistrar
+        SKIP_IF_NO_DEPLOYMENT: true
       run:
-        path: deployments-scripts/scripts/run_errand_broker_deregistrar
+        path: deployments-scripts/scripts/run_errand
   - task: delete-initial-deployment
     config:
       platform: *platform
@@ -208,7 +209,6 @@ jobs:
       params:
         ENV: {{initial_env_name}}
         DEPLOYMENT_NAME: {{initial_env_deployment_name}}
-        DEPLOYMENTS_DIR: deployments-configuration
       run:
         path: deployments-scripts/scripts/delete_deployment
 
@@ -278,7 +278,6 @@ jobs:
         BOSH_USER: {{initial_env_bosh_username}}
         BOSH_PASSWORD: {{initial_env_bosh_password}}
         DEPLOYMENT_NAME: {{initial_env_deployment_name}}
-        DEPLOYMENTS_DIR: deployments-configuration
         ERRAND: broker-registrar
       run:
         path: deployments-scripts/scripts/run_errand
@@ -294,7 +293,6 @@ jobs:
         BOSH_USER: {{initial_env_bosh_username}}
         BOSH_PASSWORD: {{initial_env_bosh_password}}
         DEPLOYMENT_NAME: {{initial_env_deployment_name}}
-        DEPLOYMENTS_DIR: deployments-configuration
         ERRAND: acceptance-tests
       run:
         path: deployments-scripts/scripts/run_errand
@@ -341,7 +339,6 @@ jobs:
         BOSH_USER: {{initial_env_bosh_username}}
         BOSH_PASSWORD: {{initial_env_bosh_password}}
         DEPLOYMENT_NAME: {{initial_env_deployment_name}}
-        DEPLOYMENTS_DIR: deployments-configuration
         ERRAND: acceptance-tests
       run:
         path: deployments-scripts/scripts/run_errand
@@ -428,7 +425,6 @@ jobs:
           BOSH_USER: {{bosh-lite-username}}
           BOSH_PASSWORD_FILE: bosh-lite-environment/metadata
           DEPLOYMENT_NAME: cf-warden-mysql
-          DEPLOYMENTS_DIR: deployments-configuration
           ERRAND: broker-deregistrar
         run:
           path: deployments-scripts/scripts/bosh-lite/run_errand
@@ -446,7 +442,6 @@ jobs:
         BOSH_USER: {{bosh-lite-username}}
         BOSH_PASSWORD_FILE: bosh-lite-environment/metadata
         DEPLOYMENT_NAME: cf-warden-mysql
-        DEPLOYMENTS_DIR: deployments-configuration
       run:
         path: deployments-scripts/scripts/bosh-lite/delete-deployment
 
@@ -513,7 +508,6 @@ jobs:
         BOSH_USER: {{bosh-lite-username}}
         BOSH_PASSWORD_FILE: bosh-lite-environment/metadata
         DEPLOYMENT_NAME: cf-warden-mysql
-        DEPLOYMENTS_DIR: deployments-configuration
         ERRAND: broker-registrar
       run:
         path: deployments-scripts/scripts/bosh-lite/run_errand
@@ -543,7 +537,6 @@ jobs:
         BOSH_USER: {{bosh-lite-username}}
         BOSH_PASSWORD_FILE: bosh-lite-environment/metadata
         DEPLOYMENT_NAME: cf-warden-mysql
-        DEPLOYMENTS_DIR: deployments-configuration
         ERRAND: acceptance-tests
       run:
         path: deployments-scripts/scripts/bosh-lite/run_errand
@@ -1027,7 +1020,6 @@ jobs:
         DEPLOYMENT_NAME: {{integration_env_deployment_name}}
         BOSH_USER: {{integration_env_bosh_username}}
         BOSH_PASSWORD: {{integration_env_bosh_password}}
-        DEPLOYMENTS_DIR: deployments-configuration
         ERRAND: broker-registrar
       run:
         path: deployments-scripts/scripts/run_errand
@@ -1043,7 +1035,6 @@ jobs:
         DEPLOYMENT_NAME: {{integration_env_deployment_name}}
         BOSH_USER: {{integration_env_bosh_username}}
         BOSH_PASSWORD: {{integration_env_bosh_password}}
-        DEPLOYMENTS_DIR: deployments-configuration
         ERRAND: acceptance-tests
       run:
         path: deployments-scripts/scripts/run_errand

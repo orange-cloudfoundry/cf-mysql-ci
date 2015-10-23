@@ -75,9 +75,10 @@ jobs:
         DEPLOYMENT_NAME: {{acceptance_env_deployment_name}}
         BOSH_USER: {{acceptance_env_bosh_username}}
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
-        DEPLOYMENTS_DIR: deployments-configuration
+        ERRAND: broker-deregistrar
+        SKIP_IF_NO_DEPLOYMENT: true
       run:
-        path: deployments-scripts/scripts/run_errand_broker_deregistrar
+        path: deployments-scripts/scripts/run_errand
   - task: delete-acceptance-deployment
     config:
       platform: linux
@@ -90,7 +91,6 @@ jobs:
         DEPLOYMENT_NAME: {{acceptance_env_deployment_name}}
         BOSH_USER: {{acceptance_env_bosh_username}}
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
-        DEPLOYMENTS_DIR: deployments-configuration
       run:
         path: deployments-scripts/scripts/delete_deployment
 
@@ -164,7 +164,6 @@ jobs:
         DEPLOYMENT_NAME: {{acceptance_env_deployment_name}}
         BOSH_USER: {{acceptance_env_bosh_username}}
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
-        DEPLOYMENTS_DIR: deployments-configuration
         ERRAND: broker-registrar
       run:
         path: deployments-scripts/scripts/run_errand
@@ -180,7 +179,6 @@ jobs:
         DEPLOYMENT_NAME: {{acceptance_env_deployment_name}}
         BOSH_USER: {{acceptance_env_bosh_username}}
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
-        DEPLOYMENTS_DIR: deployments-configuration
         ERRAND: acceptance-tests
       run:
         path: deployments-scripts/scripts/run_errand
