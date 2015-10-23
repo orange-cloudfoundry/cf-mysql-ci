@@ -21,11 +21,10 @@ resources:
     branch: master
     private_key: {{git-writer-private-key}}
 
-- name: deployments-config
+- name: cf-mysql-ci
   type: git
   source:
-    uri: {{deployments_oss_config_repo_uri}}
-    private_key: {{git-private-key}}
+    uri: git@github.com:cloudfoundry-incubator/cf-mysql-ci
 
 - name: s3-resource-final-release
   type: s3
@@ -57,7 +56,7 @@ jobs:
           params:
             fetch:
             - release-candidate
-        - get: deployments-config
+        - get: cf-mysql-ci
         - get: release-notes
           trigger: true
       - task: final-release
@@ -65,12 +64,12 @@ jobs:
           platform: linux
           image: docker:///cloudfoundry/cf-mysql-ci
           inputs:
-          - name: deployments-config
+          - name: cf-mysql-ci
           - name: cf-mysql-master
             path: cf-mysql-release
           - name: release-notes
           run:
-            path: deployments-config/scripts/publish/cut-final-release
+            path: cf-mysql-ci/scripts/publish/cut-final-release
           params:
             RELEASE_NOTES_DIRECTORY: release-notes
             OUTPUT_RELEASE_ARTIFACTS: release-artifacts
@@ -84,10 +83,10 @@ jobs:
           platform: linux
           image: docker:///cloudfoundry/cf-mysql-ci
           inputs:
-          - name: deployments-config
+          - name: cf-mysql-ci
           - name: final-release
           run:
-            path: deployments-config/scripts/publish/merge-master-into-develop
+            path: cf-mysql-ci/scripts/publish/merge-master-into-develop
       - put: cf-mysql-master
         params:
           repository: final-release/cf-mysql-release

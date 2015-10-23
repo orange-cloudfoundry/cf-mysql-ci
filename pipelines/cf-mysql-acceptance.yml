@@ -5,11 +5,10 @@ resources:
   source:
     name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
 
-- name: deployments-scripts
+- name: cf-mysql-ci
   type: git
   source:
-    uri: {{deployments_oss_config_repo_uri}}
-    private_key: {{git-private-key}}
+    uri: git@github.com:cloudfoundry-incubator/cf-mysql-ci
 
 - name: deployments-configuration
   type: git
@@ -61,14 +60,14 @@ jobs:
       resource: cf-mysql-release-rc
       passed: [claim-aws-environment]
       trigger: true
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: deployments-configuration
   - task: run-broker-deregistrar
     config:
       platform: linux
       image: docker:///cloudfoundry/cf-mysql-ci
       inputs:
-        - name: deployments-scripts
+        - name: cf-mysql-ci
         - name: deployments-configuration
       params:
         ENV: {{acceptance_env_name}}
@@ -78,13 +77,13 @@ jobs:
         ERRAND: broker-deregistrar
         SKIP_IF_NO_DEPLOYMENT: true
       run:
-        path: deployments-scripts/scripts/run_errand
+        path: cf-mysql-ci/scripts/run_errand
   - task: delete-acceptance-deployment
     config:
       platform: linux
       image: docker:///cloudfoundry/cf-mysql-ci
       inputs:
-        - name: deployments-scripts
+        - name: cf-mysql-ci
         - name: deployments-configuration
       params:
         ENV: {{acceptance_env_name}}
@@ -92,12 +91,12 @@ jobs:
         BOSH_USER: {{acceptance_env_bosh_username}}
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
       run:
-        path: deployments-scripts/scripts/delete_deployment
+        path: cf-mysql-ci/scripts/delete_deployment
 
 - name: deploy-to-acceptance
   plan:
   - aggregate:
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: deployments-configuration
     - get: cf-mysql-release
       resource: cf-mysql-release-rc
@@ -112,20 +111,20 @@ jobs:
         platform: linux
         image: docker:///cloudfoundry/cf-mysql-ci
         inputs:
-        - name: deployments-scripts
+        - name: cf-mysql-ci
         - name: cf-mysql-release
         params:
           RELEASE_RELATIVE_DIR: cf-mysql-release/
           BOSH_USER: {{acceptance_env_bosh_username}}
           BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         run:
-          path: deployments-scripts/scripts/create_release
+          path: cf-mysql-ci/scripts/create_release
     - task: make-manifest
       config:
         platform: linux
         image: docker:///cloudfoundry/cf-mysql-ci
         inputs:
-        - name: deployments-scripts
+        - name: cf-mysql-ci
         - name: deployments-configuration
         - name: cf-mysql-release
         params:
@@ -134,7 +133,7 @@ jobs:
           BOSH_PASSWORD: {{acceptance_env_bosh_password}}
           DEPLOYMENTS_DIR: deployments-configuration
         run:
-          path: deployments-scripts/scripts/make_manifeset
+          path: cf-mysql-ci/scripts/make_manifeset
   - put: acceptance-deployment
     params:
       manifest: make-manifest/cf-mysql-release/deployment.yml
@@ -150,14 +149,14 @@ jobs:
       resource: cf-mysql-release-rc
       passed: [deploy-to-acceptance]
       trigger: true
-    - get: deployments-scripts
+    - get: cf-mysql-ci
     - get: deployments-configuration
   - task: run-broker-registrar
     config:
       platform: linux
       image: docker:///cloudfoundry/cf-mysql-ci
       inputs:
-        - name: deployments-scripts
+        - name: cf-mysql-ci
         - name: deployments-configuration
       params:
         ENV: {{acceptance_env_name}}
@@ -166,13 +165,13 @@ jobs:
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         ERRAND: broker-registrar
       run:
-        path: deployments-scripts/scripts/run_errand
+        path: cf-mysql-ci/scripts/run_errand
   - task: run-smoke-tests
     config:
       platform: linux
       image: docker:///cloudfoundry/cf-mysql-ci
       inputs:
-        - name: deployments-scripts
+        - name: cf-mysql-ci
         - name: deployments-configuration
       params:
         ENV: {{acceptance_env_name}}
@@ -181,7 +180,7 @@ jobs:
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         ERRAND: acceptance-tests
       run:
-        path: deployments-scripts/scripts/run_errand
+        path: cf-mysql-ci/scripts/run_errand
 
 - name: release-acceptance-environment
   plan:
