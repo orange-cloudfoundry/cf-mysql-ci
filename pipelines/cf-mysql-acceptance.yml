@@ -77,7 +77,7 @@ jobs:
         ERRAND: broker-deregistrar
         SKIP_IF_NO_DEPLOYMENT: true
       run:
-        path: cf-mysql-ci/scripts/run_errand
+        path: cf-mysql-ci/scripts/bosh/run_errand
   - task: delete-acceptance-deployment
     config:
       platform: linux
@@ -165,7 +165,7 @@ jobs:
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         ERRAND: broker-registrar
       run:
-        path: cf-mysql-ci/scripts/run_errand
+        path: cf-mysql-ci/scripts/bosh/run_errand
   - task: run-smoke-tests
     config:
       platform: linux
@@ -180,7 +180,7 @@ jobs:
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         ERRAND: acceptance-tests
       run:
-        path: cf-mysql-ci/scripts/run_errand
+        path: cf-mysql-ci/scripts/bosh/run_errand
 
 - name: release-acceptance-environment
   plan:
