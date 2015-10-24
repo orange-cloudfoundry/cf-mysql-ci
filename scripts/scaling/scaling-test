@@ -70,7 +70,7 @@ function setup_infrastructure_variables() {
 }
 
 function verify_replicated_row_count_is() {
-  pushd "${SCALING_DIR}"
+  pushd "${MY_DIR}"
 
     NODE_0_COUNT=$(bundle exec ruby mariadb_crud.rb select --host ${NODE_0_IP} --port $NODE_0_PORT)
     if [[ "${NODE_0_COUNT}" != $1 ]]; then
@@ -110,14 +110,14 @@ function scale_to() {
 }
 
 function write_some_data() {
-  pushd "${SCALING_DIR}"
+  pushd "${MY_DIR}"
     echo "Writing some data to Node 0"
     bundle exec ruby mariadb_crud.rb insert $1 --host "${NODE_0_IP}" --port "${NODE_0_PORT}"
   popd
 }
 
 function verify_first_node_row_count_is() {
-  pushd "${SCALING_DIR}"
+  pushd "${MY_DIR}"
     NODE_0_COUNT=$(bundle exec ruby mariadb_crud.rb select --host "${NODE_0_IP}" --port "${NODE_0_PORT}")
     if [ ! "${NODE_0_COUNT}" -eq $1 ] ; then
       echo "Expected record count is not equal to ${NODE_0_COUNT}"
@@ -127,7 +127,7 @@ function verify_first_node_row_count_is() {
 }
 
 function clear_data() {
-  pushd "${SCALING_DIR}"
+  pushd "${MY_DIR}"
     echo "Removing test data from Node 0"
     bundle exec ruby mariadb_crud.rb delete --host "${NODE_0_IP}" --port "${NODE_0_PORT}"
   popd
@@ -142,11 +142,10 @@ function update_director_uuid (){
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
 RELEASE_DIR="$(cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
-SCALING_DIR="$( cd "${MY_DIR}/scaling/" && pwd )"
 
 setup_infrastructure_variables
 
-pushd "${SCALING_DIR}"
+pushd "${MY_DIR}"
   bundle install
 popd
 
