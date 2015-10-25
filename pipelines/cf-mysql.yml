@@ -689,7 +689,6 @@ jobs:
       passed: [failover-smoke-tests]
       trigger: true
   - task: run-failover-tests
-    tags: [bosh-lites-full-access]
     config:
       platform: *platform
       image: *docker-image
@@ -884,7 +883,6 @@ jobs:
         trigger: true
       - get: cf-mysql-ci
     - task: dashboard-test-bosh-lite
-      tags: [bosh-lites-full-access]
       config:
         platform: *platform
         image: *docker-image
