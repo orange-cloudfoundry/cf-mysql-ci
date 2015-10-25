@@ -91,7 +91,7 @@ jobs:
         BOSH_USER: {{acceptance_env_bosh_username}}
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
       run:
-        path: cf-mysql-ci/scripts/delete_deployment
+        path: cf-mysql-ci/scripts/bosh/delete_deployment
 
 - name: deploy-to-acceptance
   plan:
@@ -133,7 +133,7 @@ jobs:
           BOSH_PASSWORD: {{acceptance_env_bosh_password}}
           DEPLOYMENTS_DIR: deployments-configuration
         run:
-          path: cf-mysql-ci/scripts/make_manifeset
+          path: cf-mysql-ci/scripts/bosh/make_manifest
   - put: acceptance-deployment
     params:
       manifest: make-manifest/cf-mysql-release/deployment.yml

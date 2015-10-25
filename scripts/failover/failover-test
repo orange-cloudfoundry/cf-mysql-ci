@@ -24,10 +24,8 @@ function setup_infrastructure_variables() {
 
     if [ ! -z "${DIRECTOR_IP_FILE}" ]; then
       DIRECTOR_IP=$(cat "${DIRECTOR_IP_FILE}")
-      BOSH_PASSWORD_FILE="${BOSH_PASSWORD_FILE:?}"
-      BOSH_PASSWORD="$(cat ${BOSH_PASSWORD_FILE} | jq -r '.director_password')"
-      BOSH_LITE_PRIVATE_IP_FILE="${BOSH_LITE_PRIVATE_IP_FILE:?}"
-      BOSH_LITE_PRIVATE_IP="$(cat ${BOSH_LITE_PRIVATE_IP_FILE} | jq -r '.private_ip')"
+      BOSH_LITE_METADATA="${BOSH_LITE_METADATA:?}"
+      BOSH_PASSWORD="$(cat ${BOSH_LITE_METADATA} | jq -r '.director_password')"
     fi
 
     bosh -n target "${DIRECTOR_IP}"
@@ -73,14 +71,14 @@ function setup_infrastructure_variables() {
 }
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CI_DIR="$( cd "${MY_DIR}/../../" && pwd )"
 WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
 RELEASE_DIR="$(cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
 
 setup_infrastructure_variables
-export CONFIG_LOCATION="${RELEASE_DIR}/integration_config.json"
-export BOSH_LITE_PRIVATE_IP_FILE
-export BOSH_LITE_PRIVATE_IP
-${RELEASE_DIR}/bosh-lite/create_integration_test_config
+export CONFIG_LOCATION="${CI_DIR}/integration_config.json"
+export BOSH_LITE_METADATA
+${CI_DIR}/scripts/bosh-lite/create_integration_test_config
 
 source ${RELEASE_DIR}/.envrc # To set GOPATH to release dir
 pushd ${RELEASE_DIR}/src/github.com/cloudfoundry-incubator/cf-mysql-acceptance-tests/

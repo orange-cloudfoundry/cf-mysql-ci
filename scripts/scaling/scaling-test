@@ -20,8 +20,8 @@ function setup_infrastructure_variables() {
       # assumes we are running against a remote bosh-lite
       DIRECTOR_IP=$(cat "${DIRECTOR_IP_FILE}")
 
-      BOSH_PASSWORD_FILE="${BOSH_PASSWORD_FILE:?}"
-      BOSH_PASSWORD="$(cat ${BOSH_PASSWORD_FILE} | jq -r '.director_password')"
+      BOSH_LITE_METADATA="${BOSH_LITE_METADATA:?}"
+      BOSH_PASSWORD="$(cat ${BOSH_LITE_METADATA} | jq -r '.director_password')"
 
       NODE_0_IP="127.0.0.1"
       NODE_1_IP="127.0.0.1"
@@ -101,9 +101,9 @@ function verify_replicated_row_count_is() {
 
 function scale_to() {
   echo "Scaling to $1 nodes"
-    export NODE_COUNT=$1
-    export OUTPUT_FILE="cf-mysql-release/deployment.yml"
-  ${RELEASE_DIR}/bosh-lite/make_manifest_concourse
+  export NODE_COUNT=$1
+  export OUTPUT_FILE="deployment.yml"
+  ${CI_DIR}/scripts/bosh-lite/make_manifest
   update_director_uuid
   bosh deployment "${WORKSPACE_DIR}/${OUTPUT_FILE}"
   bosh -n deploy
@@ -140,8 +140,8 @@ function update_director_uuid (){
 }
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CI_DIR="$( cd "${MY_DIR}/../../" && pwd )"
 WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
-RELEASE_DIR="$(cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
 
 setup_infrastructure_variables
 

@@ -260,7 +260,7 @@ jobs:
           ENV: {{initial_env_name}}
           DEPLOYMENTS_DIR: deployments-configuration
         run:
-          path: cf-mysql-ci/scripts/make_manifest
+          path: cf-mysql-ci/scripts/bosh/make_manifest
   - put: initial-deployment
     params:
       manifest: make-manifest/cf-mysql-release/deployment.yml
@@ -328,12 +328,10 @@ jobs:
         - name: cf-mysql-ci
       params:
         ENV: {{initial_env_name}}
-        RELEASE_RELATIVE_DIR: cf-mysql-release
-        DEPLOYMENTS_RELATIVE_DIR: deployments-configuration
-        OUTPUT_FILE_RELATIVE_LOCATION: cf-mysql-release/deployment.yml
+        DEPLOYMENTS_DIR: deployments-configuration
         RUN_ALL_ACCEPTANCE_TESTS: true
       run:
-        path: cf-mysql-ci/scripts/make_manifest
+        path: cf-mysql-ci/scripts/bosh/make_manifest
   - put: initial-deployment
     params:
       manifest: recreate-manifest-to-run-acceptance-tests/cf-mysql-release/deployment.yml
@@ -363,23 +361,22 @@ jobs:
       - get: cf-mysql-release
         passed: [run-smoke-tests-initial]
         trigger: true
-      - get: deployments-configuration
+      - get: cf-mysql-ci
   - task: dashboard-test
     config:
       platform: *platform
       image: *docker-image
       inputs:
         - name: cf-mysql-release
+        - name: cf-mysql-ci
       params:
         CF_API_USER: {{initial_env_cf_username}}
         CF_API_PASSWORD: {{initial_env_cf_password}}
         PROXY_API_USER: {{initial_env_proxy_username}}
         PROXY_API_PASSWORD: {{initial_env_proxy_password}}
         DOMAIN: {{initial_env_domain}}
-        USE_SMALL_PLANS: false
-        USE_HTTPS: true
       run:
-        path: cf-mysql-release/scripts/test-dashboard
+        path: cf-mysql-ci/scripts/dashboard/test-dashboard
 
 - name: release-aws-environmment
   plan:
@@ -460,7 +457,6 @@ jobs:
 - name: deploy-to-scaling
   plan:
   - aggregate:
-    - get: deployments-configuration
     - get: cf-mysql-release
       passed: [delete-scaling-deployment]
       trigger: true
@@ -476,16 +472,16 @@ jobs:
         platform: *platform
         image: *docker-image
         inputs:
-        - name: deployments-configuration
+        - name: cf-mysql-ci
         - name: cf-mysql-release
         - name: bosh-lite-environment
         params:
           OUTPUT_FILE: cf-mysql-release/deployment.yml
           NODE_COUNT: 1
-          BOSH_LITE_PRIVATE_IP_FILE: bosh-lite-environment/metadata
+          BOSH_LITE_METADATA: bosh-lite-environment/metadata
           STANDALONE_MODE: false
         run:
-          path: cf-mysql-release/bosh-lite/make_manifest_concourse
+          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
 
   - &deploy-to-bosh-lite
     put: bosh-lite-deployment
@@ -573,10 +569,9 @@ jobs:
         - name: cf-mysql-release
       params:
         DIRECTOR_IP_FILE: bosh-lite-environment/name
+        BOSH_LITE_METADATA: bosh-lite-environment/metadata
         BOSH_USER: {{bosh-lite-username}}
-        BOSH_PASSWORD_FILE: bosh-lite-environment/metadata
         BOSH_LITE_KEY: {{bosh-lite-private-key}}
-        BOSH_LITE_PRIVATE_IP_FILE: bosh-lite-environment/metadata
       run:
         path: cf-mysql-ci/scripts/scaling/scaling-test
 
@@ -630,7 +625,6 @@ jobs:
 - name: deploy-to-failover
   plan:
   - aggregate:
-    - get: deployments-configuration
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [delete-failover-deployment]
@@ -647,15 +641,15 @@ jobs:
         platform: *platform
         image: *docker-image
         inputs:
-        - name: deployments-configuration
+        - name: cf-mysql-ci
         - name: cf-mysql-release
         - name: bosh-lite-environment
         params:
           OUTPUT_FILE: cf-mysql-release/deployment.yml
-          BOSH_LITE_PRIVATE_IP_FILE: bosh-lite-environment/metadata
+          BOSH_LITE_METADATA: bosh-lite-environment/metadata
           STANDALONE_MODE: false
         run:
-          path: cf-mysql-release/bosh-lite/make_manifest_concourse
+          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
 - name: failover-broker-registrar
@@ -705,10 +699,9 @@ jobs:
         - name: cf-mysql-release
       params:
         DIRECTOR_IP_FILE: bosh-lite-environment/name
+        BOSH_LITE_METADATA: bosh-lite-environment/metadata
         BOSH_USER: {{bosh-lite-username}}
-        BOSH_PASSWORD_FILE: bosh-lite-environment/metadata
         BOSH_LITE_KEY: {{bosh-lite-private-key}}
-        BOSH_LITE_PRIVATE_IP_FILE: bosh-lite-environment/metadata
       run:
         path: cf-mysql-ci/scripts/failover/failover-test
 
@@ -889,7 +882,7 @@ jobs:
       - get: cf-mysql-release
         passed: [deploy-current-to-upgrade]
         trigger: true
-      - get: deployments-configuration
+      - get: cf-mysql-ci
     - task: dashboard-test-bosh-lite
       tags: [bosh-lites-full-access]
       config:
@@ -898,16 +891,12 @@ jobs:
         inputs:
         - name: cf-mysql-release
         - name: bosh-lite-environment
+        - name: cf-mysql-ci
         params:
-          USE_SMALL_PLANS: false
-          USE_HTTPS: true
-          CF_API_USER: admin
-          CF_API_PASSWORD: admin
-          PROXY_API_USER: username
-          PROXY_API_PASSWORD: password
-          BOSH_LITE_PRIVATE_IP_FILE: bosh-lite-environment/metadata
+          IS_BOSH_LITE: true
+          BOSH_LITE_METADATA: bosh-lite-environment/metadata
         run:
-          path: cf-mysql-release/scripts/test-dashboard
+          path: cf-mysql-ci/scripts/dashboard/test-dashboard
 
 - name: release-upgrade-environment
   plan:
@@ -963,7 +952,6 @@ jobs:
 - name: deploy-to-standalone
   plan:
   - aggregate:
-    - get: deployments-configuration
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [delete-standalone-deployment]
@@ -980,15 +968,15 @@ jobs:
         platform: *platform
         image: *docker-image
         inputs:
-        - name: deployments-configuration
+        - name: cf-mysql-ci
         - name: cf-mysql-release
         - name: bosh-lite-environment
         params:
           OUTPUT_FILE: cf-mysql-release/deployment.yml
-          BOSH_LITE_PRIVATE_IP_FILE: bosh-lite-environment/metadata
+          BOSH_LITE_METADATA: bosh-lite-environment/metadata
           STANDALONE_MODE: true
         run:
-          path: cf-mysql-release/bosh-lite/make_manifest_concourse
+          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
 - name: release-standalone-environment
@@ -1049,7 +1037,7 @@ jobs:
           ENV: {{integration_env_name}}
           DEPLOYMENTS_DIR: deployments-configuration
         run:
-          path: cf-mysql-ci/scripts/make_manifest
+          path: cf-mysql-ci/scripts/bosh/make_manifest
   - put: integration-deployment
     params:
       manifest: make-manifest/cf-mysql-release/deployment.yml

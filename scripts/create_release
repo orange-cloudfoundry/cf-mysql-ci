@@ -26,9 +26,6 @@ pushd "${RELEASE_DIR}"
 
     CREATE_RELEASE="bosh -n create release --name cf-mysql --version ${VERSION} --with-tarball --force"
 
-    # TODO: This command is prone to frequent blobstore errors
-    # We can remove this once cf-release starts publishing a tarball to S3
-    # Story: #96301906
     set +e
     CF_MYSQL_OUTPUT=$(${CREATE_RELEASE} 2>&1)
     CF_MYSQL_EXIT_CODE=$?
