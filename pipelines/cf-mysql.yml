@@ -206,6 +206,8 @@ jobs:
       params:
         ENV: {{initial_env_name}}
         DEPLOYMENT_NAME: {{initial_env_deployment_name}}
+        BOSH_USER: {{initial_env_bosh_username}}
+        BOSH_PASSWORD: {{initial_env_bosh_password}}
         ERRAND: broker-deregistrar
         SKIP_IF_NO_DEPLOYMENT: true
       run:
@@ -220,6 +222,8 @@ jobs:
       params:
         ENV: {{initial_env_name}}
         DEPLOYMENT_NAME: {{initial_env_deployment_name}}
+        BOSH_USER: {{initial_env_bosh_username}}
+        BOSH_PASSWORD: {{initial_env_bosh_password}}
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
 
