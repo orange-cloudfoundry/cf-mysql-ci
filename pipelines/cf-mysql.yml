@@ -157,7 +157,6 @@ jobs:
     - get: cf-mysql-release
       passed: [cf-mysql-ci]
       trigger: true
-    - get: deployments-configuration
   - task: test-sample-stubs
     config:
       platform: *platform
@@ -194,14 +193,12 @@ jobs:
     - get: cf-mysql-release
       passed: [claim-intial-environment]
       trigger: true
-    - get: deployments-configuration
     - get: cf-mysql-ci
   - task: run-broker-deregistrar
     config:
       platform: *platform
       image: *docker-image
       inputs:
-      - name: deployments-configuration
       - name: cf-mysql-ci
       params:
         ENV: {{initial_env_name}}
@@ -217,7 +214,6 @@ jobs:
       platform: *platform
       image: *docker-image
       inputs:
-      - name: deployments-configuration
       - name: cf-mysql-ci
       params:
         ENV: {{initial_env_name}}
@@ -245,7 +241,6 @@ jobs:
         platform: *platform
         image: *docker-image
         inputs:
-        - name: deployments-configuration
         - name: cf-mysql-ci
         - name: cf-mysql-release
         params:
@@ -279,14 +274,12 @@ jobs:
     - get: cf-mysql-release
       passed: [deploy-to-initial]
       trigger: true
-    - get: deployments-configuration
     - get: cf-mysql-ci
   - task: run-broker-registrar
     config:
       platform: *platform
       image: *docker-image
       inputs:
-        - name: deployments-configuration
         - name: cf-mysql-ci
       params:
         ENV: {{initial_env_name}}
@@ -301,7 +294,6 @@ jobs:
       platform: *platform
       image: *docker-image
       inputs:
-        - name: deployments-configuration
         - name: cf-mysql-ci
       params:
         ENV: {{initial_env_name}}
@@ -346,7 +338,6 @@ jobs:
       platform: *platform
       image: *docker-image
       inputs:
-        - name: deployments-configuration
         - name: cf-mysql-ci
       params:
         ENV: {{initial_env_name}}
@@ -422,7 +413,6 @@ jobs:
     - get: cf-mysql-release
       passed: [claim-bosh-lite-scaling]
       trigger: true
-    - get: deployments-configuration
     - get: cf-mysql-ci
   - try: &broker-deregistrar-bosh-lite
       task: run-broker-deregistrar
@@ -431,7 +421,6 @@ jobs:
         image: *docker-image
         inputs:
           - name: bosh-lite-environment
-          - name: deployments-configuration
           - name: cf-mysql-ci
         params:
           DIRECTOR_IP_FILE: bosh-lite-environment/name
@@ -448,7 +437,6 @@ jobs:
       image: *docker-image
       inputs:
         - name: bosh-lite-environment
-        - name: deployments-configuration
         - name: cf-mysql-ci
       params:
         DIRECTOR_IP_FILE: bosh-lite-environment/name
@@ -498,7 +486,6 @@ jobs:
 - name: scaling-broker-registrar
   plan:
   - aggregate:
-    - get: deployments-configuration
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [deploy-to-scaling]
@@ -512,7 +499,6 @@ jobs:
       platform: *platform
       image: *docker-image
       inputs:
-        - name: deployments-configuration
         - name: cf-mysql-ci
         - name: bosh-lite-environment
       params:
@@ -527,7 +513,6 @@ jobs:
 - name: scaling-smoke-tests
   plan:
   - aggregate:
-    - get: deployments-configuration
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [scaling-broker-registrar]
@@ -541,7 +526,6 @@ jobs:
       platform: *platform
       image: *docker-image
       inputs:
-        - name: deployments-configuration
         - name: cf-mysql-ci
         - name: bosh-lite-environment
       params:
@@ -621,7 +605,6 @@ jobs:
     - get: cf-mysql-release
       passed: [claim-bosh-lite-failover]
       trigger: true
-    - get: deployments-configuration
     - get: cf-mysql-ci
   - try: *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
@@ -659,7 +642,6 @@ jobs:
 - name: failover-broker-registrar
   plan:
   - aggregate:
-    - get: deployments-configuration
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [deploy-to-failover]
@@ -672,7 +654,6 @@ jobs:
 - name: failover-smoke-tests
   plan:
   - aggregate:
-    - get: deployments-configuration
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [failover-broker-registrar]
@@ -750,7 +731,6 @@ jobs:
     - get: bosh-lite-environment
       passed: [claim-bosh-lite-upgrade]
       trigger: true
-    - get: deployments-configuration
     - get: cf-mysql-ci
   - try: *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
@@ -758,7 +738,6 @@ jobs:
 - name: deploy-previous-to-upgrade
   plan:
   - aggregate:
-    - get: deployments-configuration
     - get: cf-mysql-ci
     - get: cf-mysql-release
       resource: cf-mysql-release-master
@@ -778,7 +757,6 @@ jobs:
 - name: broker-registrar-previous-on-upgrade
   plan:
   - aggregate:
-    - get: deployments-configuration
     - get: cf-mysql-ci
     - get: cf-mysql-release
       # we don't use current cf-mysql in deploy stage
@@ -791,7 +769,6 @@ jobs:
 - name: smoke-tests-previous-on-upgrade
   plan:
   - aggregate:
-    - get: deployments-configuration
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [broker-registrar-previous-on-upgrade]
@@ -827,7 +804,6 @@ jobs:
 - name: deploy-current-to-upgrade
   plan:
   - aggregate:
-    - get: deployments-configuration
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [persistence-test-data-write-before-upgrade]
@@ -867,7 +843,6 @@ jobs:
 - name: smoke-tests-current-on-upgrade
   plan:
   - aggregate:
-    - get: deployments-configuration
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [deploy-current-to-upgrade]
@@ -947,7 +922,6 @@ jobs:
       resource: bosh-lite-no-cf-environment
       passed: [claim-bosh-lite-standalone]
       trigger: true
-    - get: deployments-configuration
     - get: cf-mysql-ci
   - *delete-deployment-bosh-lite
 
@@ -1054,14 +1028,12 @@ jobs:
     - get: cf-mysql-release
       passed: [deploy-to-integration]
       trigger: true
-    - get: deployments-configuration
     - get: cf-mysql-ci
   - task: run-broker-registrar
     config:
       platform: *platform
       image: *docker-image
       inputs:
-        - name: deployments-configuration
         - name: cf-mysql-ci
       params:
         ENV: {{integration_env_name}}
@@ -1076,7 +1048,6 @@ jobs:
       platform: *platform
       image: *docker-image
       inputs:
-        - name: deployments-configuration
         - name: cf-mysql-ci
       params:
         ENV: {{integration_env_name}}
@@ -1131,14 +1102,12 @@ jobs:
       trigger: true
       params:
         fetch: [release-candidate]
-    - get: deployments-configuration
     - get: cf-mysql-ci
   - task: merge-to-release-candidate
     config:
       platform: *platform
       image: *docker-image
       inputs:
-        - name: deployments-configuration
         - name: cf-mysql-ci
         - name: cf-mysql-release
       run:
