@@ -410,6 +410,7 @@ jobs:
   - aggregate:
     - get: bosh-lite-environment
       passed: [claim-bosh-lite-scaling]
+      trigger: true
     - get: cf-mysql-release
       passed: [claim-bosh-lite-scaling]
       trigger: true
