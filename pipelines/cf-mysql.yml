@@ -194,21 +194,22 @@ jobs:
       passed: [claim-intial-environment]
       trigger: true
     - get: cf-mysql-ci
-  - task: run-broker-deregistrar
-    config:
-      platform: *platform
-      image: *docker-image
-      inputs:
-      - name: cf-mysql-ci
-      params:
-        ENV: {{initial_env_name}}
-        DEPLOYMENT_NAME: {{initial_env_deployment_name}}
-        BOSH_USER: {{initial_env_bosh_username}}
-        BOSH_PASSWORD: {{initial_env_bosh_password}}
-        ERRAND: broker-deregistrar
-        SKIP_IF_NO_DEPLOYMENT: true
-      run:
-        path: cf-mysql-ci/scripts/bosh/run_errand
+  - try: 
+      task: run-broker-deregistrar
+      config:
+        platform: *platform
+        image: *docker-image
+        inputs:
+        - name: cf-mysql-ci
+        params:
+          ENV: {{initial_env_name}}
+          DEPLOYMENT_NAME: {{initial_env_deployment_name}}
+          BOSH_USER: {{initial_env_bosh_username}}
+          BOSH_PASSWORD: {{initial_env_bosh_password}}
+          ERRAND: broker-deregistrar
+          SKIP_IF_NO_DEPLOYMENT: true
+        run:
+          path: cf-mysql-ci/scripts/bosh/run_errand
   - task: delete-initial-deployment
     config:
       platform: *platform
