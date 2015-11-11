@@ -1000,11 +1000,11 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [deploy-to-standalone]
+      passed: [test-bootstrap]
       trigger: true
     - get: bosh-lite-environment
       resource: bosh-lite-no-cf-environment
-      passed: [deploy-to-standalone]
+      passed: [test-bootstrap]
       trigger: true
   - put: bosh-lite-environment
     resource: bosh-lite-no-cf-environment
