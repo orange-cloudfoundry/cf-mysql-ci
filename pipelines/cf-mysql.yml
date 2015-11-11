@@ -957,6 +957,45 @@ jobs:
           path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
+- name: test-bootstrap
+  plan:
+    - aggregate:
+      - get: cf-mysql-ci
+      - get: cf-mysql-release
+        passed: [deploy-to-standalone]
+        trigger: true
+      - get: bosh-lite-environment
+        resource: bosh-lite-no-cf-environment
+        passed: [deploy-to-standalone]
+        trigger: true
+    - task: break-mysql-cluster
+      config:
+        platform: *platform
+        image: *docker-image
+        inputs:
+        - name: cf-mysql-ci
+        - name: cf-mysql-release
+        - name: bosh-lite-environment
+        params:
+          BOSH_LITE_METADATA: bosh-lite-environment/metadata
+        run:
+          path: cf-mysql-ci/scripts/bosh-lite/break-mysql-cluster
+    - task: bootstrap
+      config:
+        platform: *platform
+        image: *docker-image
+        inputs:
+          - name: bosh-lite-environment
+          - name: cf-mysql-ci
+        params:
+          DIRECTOR_IP_FILE: bosh-lite-environment/name
+          BOSH_USER: {{bosh-lite-username}}
+          BOSH_PASSWORD_FILE: bosh-lite-environment/metadata
+          DEPLOYMENT_NAME: cf-warden-mysql
+          ERRAND: bootstrap
+        run:
+          path: cf-mysql-ci/scripts/bosh-lite/run_errand
+
 - name: release-standalone-environment
   plan:
   - aggregate:
