@@ -5,7 +5,7 @@ set -ex
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 
-RELEASE_DIR="${WORKSPACE_DIR}/${RELEASE_RELATIVE_DIR:?}"
+RELEASE_DIR="${WORKSPACE_DIR}/${RELEASE_RELATIVE_DIR:-cf-mysql-release}"
 
 pushd "${RELEASE_DIR}"
 
@@ -19,10 +19,12 @@ pushd "${RELEASE_DIR}"
     # Version 0 uploaded, so Bosh will not upload our changes.
     # Manually adding a timestamp to the version number fixes this.
     # We also include the latest OSS release tag in the version for clarity.
-    LATEST_TAG=$(git describe --tags --abbrev=0)
-    LATEST_TAG=${LATEST_TAG#v} # remove leading 'v'
-    TIMESTAMP=$(date +%s)
-    VERSION="${LATEST_TAG}+dev.${TIMESTAMP}"
+    GIT_DESCRIBE=$(git describe --long --tags)
+    GIT_DESCRIBE="${GIT_DESCRIBE#v}" # remove leading 'v'
+    MAJOR=$(echo $GIT_DESCRIBE | cut -f1 -d-)
+    MINOR=$(echo $GIT_DESCRIBE | cut -f2 -d-)
+    SHA=$(echo $GIT_DESCRIBE | cut -f3 -d-)
+    VERSION=$MAJOR.$MINOR+$SHA
 
     CREATE_RELEASE="bosh -n create release --name cf-mysql --version ${VERSION} --with-tarball --force"
 
