@@ -748,7 +748,21 @@ jobs:
       passed: [delete-upgrade-deployment]
       trigger: true
     - get: cf-mysql-final-release
-  - *make-manifest-bosh-lite
+  - task: make-manifest
+    config:
+      platform: *platform
+      image: *docker-image
+      inputs:
+      - name: cf-mysql-ci
+      - name: cf-mysql-release
+      - name: bosh-lite-environment
+      params:
+        OUTPUT_FILE: cf-mysql-release/deployment.yml
+        BOSH_LITE_METADATA: bosh-lite-environment/metadata
+        STANDALONE_MODE: false
+        USE_PREVIOUS_RELEASE: true
+      run:
+        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - put: bosh-lite-deployment
     params:
       target_file: bosh-lite-environment/name
