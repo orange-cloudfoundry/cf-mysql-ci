@@ -37,7 +37,7 @@ resources:
     target: {{acceptance_env_bosh_url}}
     username: {{acceptance_env_bosh_username}}
     password: {{acceptance_env_bosh_password}}
-    deployment: {{acceptance_env_deployment_name}}
+    deployment: {{acceptance_env_mysql_deployment_name}}
     ignore_ssl: true
 
 jobs:
@@ -71,7 +71,7 @@ jobs:
         - name: deployments-configuration
       params:
         ENV: {{acceptance_env_name}}
-        DEPLOYMENT_NAME: {{acceptance_env_deployment_name}}
+        DEPLOYMENT_NAME: {{acceptance_env_mysql_deployment_name}}
         BOSH_USER: {{acceptance_env_bosh_username}}
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         ERRAND: broker-deregistrar
@@ -87,7 +87,7 @@ jobs:
         - name: deployments-configuration
       params:
         ENV: {{acceptance_env_name}}
-        DEPLOYMENT_NAME: {{acceptance_env_deployment_name}}
+        DEPLOYMENT_NAME: {{acceptance_env_mysql_deployment_name}}
         BOSH_USER: {{acceptance_env_bosh_username}}
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
       run:
@@ -160,7 +160,7 @@ jobs:
         - name: deployments-configuration
       params:
         ENV: {{acceptance_env_name}}
-        DEPLOYMENT_NAME: {{acceptance_env_deployment_name}}
+        DEPLOYMENT_NAME: {{acceptance_env_mysql_deployment_name}}
         BOSH_USER: {{acceptance_env_bosh_username}}
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         ERRAND: broker-registrar
@@ -175,7 +175,7 @@ jobs:
         - name: deployments-configuration
       params:
         ENV: {{acceptance_env_name}}
-        DEPLOYMENT_NAME: {{acceptance_env_deployment_name}}
+        DEPLOYMENT_NAME: {{acceptance_env_mysql_deployment_name}}
         BOSH_USER: {{acceptance_env_bosh_username}}
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         ERRAND: acceptance-tests
