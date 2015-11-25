@@ -1,0 +1,49 @@
+#!/bin/bash
+set -eux
+
+function bosh-ip() {
+  bosh -n vms cf-warden-mysql | grep $1 | awk '{ print $8 }'
+}
+
+set_env(){
+  MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+  CI_DIR="$( cd "${MY_DIR}/../../" && pwd )"
+  WORKSPACE_DIR="$( cd "${CI_DIR}/.." && pwd )"
+
+  pushd "${WORKSPACE_DIR}"
+    DIRECTOR_IP_FILE="${DIRECTOR_IP_FILE:?}"
+    DIRECTOR_IP=$(cat "${DIRECTOR_IP_FILE}")
+    BOSH_LITE_METADATA="${BOSH_LITE_METADATA:?}"
+    BOSH_USER="${BOSH_USER:-admin}"
+    BOSH_PASSWORD="$(cat ${BOSH_LITE_METADATA} | jq -r '.director_password')"
+  popd
+
+  bosh -n target "${DIRECTOR_IP}"
+  bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
+}
+
+function stop_all_nodes() {
+  pushd "${WORKSPACE_DIR}"
+    # assumes we are running against a remote bosh-lite
+    BOSH_LITE_KEY_FILE="/tmp/id_rsa"
+    echo "${BOSH_LITE_KEY:?}" > "${BOSH_LITE_KEY_FILE}"
+    chmod 600 "${BOSH_LITE_KEY_FILE}"
+
+    for nodeIndex in $(seq 1 3); do
+      local mysql_node=$(bosh-ip mysql_z${nodeIndex}/0)
+      ssh \
+          -t \
+          -i "${BOSH_LITE_KEY_FILE}" \
+          -o StrictHostKeyChecking=no \
+          "ubuntu@${DIRECTOR_IP}" \
+          "curl -vk ${mysql_node}:9200/mysql_stop"
+    done
+  popd
+}
+
+main(){
+    set_env
+    stop_all_nodes
+}
+
+main()
