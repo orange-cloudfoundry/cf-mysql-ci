@@ -992,6 +992,7 @@ jobs:
         params:
           DIRECTOR_IP_FILE: bosh-lite-environment/name
           BOSH_LITE_METADATA: bosh-lite-environment/metadata
+          BOSH_LITE_KEY: {{bosh-lite-private-key}}
         run:
           path: cf-mysql-ci/scripts/bootstrap/break-mysql-cluster
     - task: bootstrap
