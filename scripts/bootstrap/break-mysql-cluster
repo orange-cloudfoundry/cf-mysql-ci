@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eux
 
-function bosh-ip() {
+bosh-ip() {
   bosh -n vms cf-warden-mysql | grep $1 | awk '{ print $8 }'
 }
 
@@ -22,7 +22,7 @@ set_env(){
   bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
 }
 
-function stop_all_nodes() {
+stop_all_nodes() {
   pushd "${WORKSPACE_DIR}"
     # assumes we are running against a remote bosh-lite
     BOSH_LITE_KEY_FILE="/tmp/id_rsa"
@@ -30,13 +30,13 @@ function stop_all_nodes() {
     chmod 600 "${BOSH_LITE_KEY_FILE}"
 
     for nodeIndex in $(seq 1 3); do
-      local mysql_node=$(bosh-ip mysql_z${nodeIndex}/0)
+      MYSQL_NODE=$(bosh-ip "mysql_z${nodeIndex}/0")
       ssh \
           -t \
           -i "${BOSH_LITE_KEY_FILE}" \
           -o StrictHostKeyChecking=no \
           "ubuntu@${DIRECTOR_IP}" \
-          "curl -vk ${mysql_node}:9200/mysql_stop"
+          "curl -vk username:password@${MYSQL_NODE}:9200/stop_mysql"
     done
   popd
 }
@@ -46,4 +46,4 @@ main(){
     stop_all_nodes
 }
 
-main()
+main
