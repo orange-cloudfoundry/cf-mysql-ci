@@ -804,7 +804,8 @@ jobs:
     - get: bosh-lite-environment
       passed: [smoke-tests-previous-on-upgrade]
       trigger: true
-  - task: persistence-test-data-write-before-upgrade
+  - &persistence-test-data-write
+    task: persistence-test-data-write
     config:
       platform: *platform
       image: docker:///pivotalcf/mysql-restore
@@ -843,7 +844,8 @@ jobs:
     - get: bosh-lite-environment
       passed: [deploy-current-to-upgrade]
       trigger: true
-  - task: persistence-test-data-read-after-upgrade
+  - &persistence-test-data-read
+    task: persistence-test-data-read
     config:
       platform: *platform
       image: docker:///pivotalcf/mysql-restore
@@ -971,16 +973,29 @@ jobs:
           path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
+- name: persistence-test-data-write-before-bootstrap
+  plan:
+  - aggregate:
+    - get: cf-mysql-ci
+    - get: cf-mysql-release
+      passed: [deploy-to-standalone]
+      trigger: true
+    - get: bosh-lite-environment
+      resource: bosh-lite-no-cf-environment
+      passed: [deploy-to-standalone]
+      trigger: true
+  - *persistence-test-data-write
+
 - name: test-bootstrap
   plan:
     - aggregate:
       - get: cf-mysql-ci
       - get: cf-mysql-release
-        passed: [deploy-to-standalone]
+        passed: [persistence-test-data-write-before-bootstrap]
         trigger: true
       - get: bosh-lite-environment
         resource: bosh-lite-no-cf-environment
-        passed: [deploy-to-standalone]
+        passed: [persistence-test-data-write-before-bootstrap]
         trigger: true
     - task: break-mysql-cluster
       config:
@@ -1011,15 +1026,28 @@ jobs:
         run:
           path: cf-mysql-ci/scripts/bosh-lite/run_errand
 
-- name: release-standalone-environment
+- name: persistence-test-data-read-after-bootstrap
   plan:
   - aggregate:
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [test-bootstrap]
       trigger: true
     - get: bosh-lite-environment
       resource: bosh-lite-no-cf-environment
       passed: [test-bootstrap]
+      trigger: true
+  - *persistence-test-data-read
+
+- name: release-standalone-environment
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      passed: [persistence-test-data-read-after-bootstrap]
+      trigger: true
+    - get: bosh-lite-environment
+      resource: bosh-lite-no-cf-environment
+      passed: [persistence-test-data-read-after-bootstrap]
       trigger: true
   - put: bosh-lite-environment
     resource: bosh-lite-no-cf-environment
