@@ -36,7 +36,7 @@ stop_all_nodes() {
           -i "${BOSH_LITE_KEY_FILE}" \
           -o StrictHostKeyChecking=no \
           "ubuntu@${DIRECTOR_IP}" \
-          "curl -vk username:password@${MYSQL_NODE}:9200/stop_mysql"
+          "curl -vk -X POST username:password@${MYSQL_NODE}:9200/stop_mysql"
     done
   popd
 }
