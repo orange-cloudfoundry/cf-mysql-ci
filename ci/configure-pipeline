@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -eu
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
+
+CREDENTIALS_FILE="${CREDENTIALS_FILE:-deployments-core-services/credentials.yml}"
+if [[ "${CREDENTIALS_FILE}" != /* ]]; then
+  CREDENTIALS_FILE="${WORKSPACE_DIR}/${CREDENTIALS_FILE}"
+fi
+
+PIPELINE_SUFFIX="${1:-}"
+if [[ -z "${PIPELINE_SUFFIX}" ]]; then
+  PIPELINE_NAME=cf-mysql
+else
+  PIPELINE_NAME=cf-mysql-${PIPELINE_SUFFIX}
+fi
+
+fly -t concourse set-pipeline \
+      -p "${PIPELINE_NAME}" \
+      -c ${MY_DIR}/pipelines/${PIPELINE_NAME}.yml \
+      -l ${CREDENTIALS_FILE}
