@@ -3,7 +3,7 @@ resources:
 - name: acceptance-env-bosh-stemcell
   type: bosh-io-stemcell
   source:
-    name: {{acceptance_env_stemcell_name}}
+    name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
 
 - name: cf-mysql-ci
   type: git
@@ -13,7 +13,7 @@ resources:
 - name: deployments-configuration
   type: git
   source:
-    uri: {{deployments_config_repo_uri}}
+    uri: git@github.com:pivotal-cf/deployments-core-services
     private_key: {{git-private-key}}
 
 - name: cf-mysql-release-rc
@@ -34,10 +34,10 @@ resources:
 - name: acceptance-deployment
   type: bosh-deployment
   source:
-    target: {{acceptance_env_bosh_url}}
+    target: https://bosh.primo.cf-app.com:25555
     username: {{acceptance_env_bosh_username}}
     password: {{acceptance_env_bosh_password}}
-    deployment: {{acceptance_env_mysql_deployment_name}}
+    deployment: cf-primo-mysql
     ignore_ssl: true
 
 jobs:
@@ -70,8 +70,8 @@ jobs:
         - name: cf-mysql-ci
         - name: deployments-configuration
       params:
-        ENV: {{acceptance_env_name}}
-        DEPLOYMENT_NAME: {{acceptance_env_mysql_deployment_name}}
+        ENV: primo
+        DEPLOYMENT_NAME: cf-primo-mysql
         BOSH_USER: {{acceptance_env_bosh_username}}
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         ERRAND: broker-deregistrar
@@ -86,8 +86,8 @@ jobs:
         - name: cf-mysql-ci
         - name: deployments-configuration
       params:
-        ENV: {{acceptance_env_name}}
-        DEPLOYMENT_NAME: {{acceptance_env_mysql_deployment_name}}
+        ENV: primo
+        DEPLOYMENT_NAME: cf-primo-mysql
         BOSH_USER: {{acceptance_env_bosh_username}}
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
       run:
@@ -128,7 +128,7 @@ jobs:
         - name: deployments-configuration
         - name: cf-mysql-release
         params:
-          ENV: {{acceptance_env_name}}
+          ENV: primo
           BOSH_USER: {{acceptance_env_bosh_username}}
           BOSH_PASSWORD: {{acceptance_env_bosh_password}}
           DEPLOYMENTS_DIR: deployments-configuration
@@ -159,8 +159,8 @@ jobs:
         - name: cf-mysql-ci
         - name: deployments-configuration
       params:
-        ENV: {{acceptance_env_name}}
-        DEPLOYMENT_NAME: {{acceptance_env_mysql_deployment_name}}
+        ENV: primo
+        DEPLOYMENT_NAME: cf-primo-mysql
         BOSH_USER: {{acceptance_env_bosh_username}}
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         ERRAND: broker-registrar
@@ -174,8 +174,8 @@ jobs:
         - name: cf-mysql-ci
         - name: deployments-configuration
       params:
-        ENV: {{acceptance_env_name}}
-        DEPLOYMENT_NAME: {{acceptance_env_mysql_deployment_name}}
+        ENV: primo
+        DEPLOYMENT_NAME: cf-primo-mysql
         BOSH_USER: {{acceptance_env_bosh_username}}
         BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         ERRAND: acceptance-tests
