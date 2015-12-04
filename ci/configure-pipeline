@@ -1,23 +1,51 @@
 #!/bin/bash
 
-set -eu
+set -eux
 
-MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
+set_env() {
+  MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+  WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
+  CREDENTIALS_FILE="${CREDENTIALS_FILE:-deployments-core-services/credentials.yml}"
+  if [[ "${CREDENTIALS_FILE}" != /* ]]; then
+    CREDENTIALS_FILE="${WORKSPACE_DIR}/${CREDENTIALS_FILE}"
+  fi
+}
 
-CREDENTIALS_FILE="${CREDENTIALS_FILE:-deployments-core-services/credentials.yml}"
-if [[ "${CREDENTIALS_FILE}" != /* ]]; then
-  CREDENTIALS_FILE="${WORKSPACE_DIR}/${CREDENTIALS_FILE}"
-fi
+set_pipeline_name() {
+  PIPELINE_SUFFIX="${1:-}"
+  if [[ -z "${PIPELINE_SUFFIX}" ]]; then
+    PIPELINE_NAME=cf-mysql
+  else
+    PIPELINE_NAME=cf-mysql-${PIPELINE_SUFFIX}
+  fi
+  PIPELINE_PATH=${MY_DIR}/pipelines/${PIPELINE_NAME}.yml
+}
 
-PIPELINE_SUFFIX="${1:-}"
-if [[ -z "${PIPELINE_SUFFIX}" ]]; then
-  PIPELINE_NAME=cf-mysql
-else
-  PIPELINE_NAME=cf-mysql-${PIPELINE_SUFFIX}
-fi
+get_jobs() {
+  gorgeous -F yaml -T json ${PIPELINE_PATH} \
+  | jq -c "[.jobs[].name]" \
+  | tr -d '"'
+}
 
-fly -t concourse set-pipeline \
-      -p "${PIPELINE_NAME}" \
-      -c ${MY_DIR}/pipelines/${PIPELINE_NAME}.yml \
-      -l ${CREDENTIALS_FILE}
+update_pipeline_groups() {
+  job_list=$(get_jobs)
+  groups="groups: [{name: ${PIPELINE_NAME}, jobs: ${job_list}}]"
+  sed "s/groups.*/${groups}/g" "${PIPELINE_PATH}" > "/tmp/groups.yml"
+  mv /tmp/groups.yml "${PIPELINE_PATH}"
+}
+
+fly_pipeline() {
+  fly -t concourse set-pipeline \
+        -p "${PIPELINE_NAME}" \
+        -c ${PIPELINE_PATH} \
+        -l ${CREDENTIALS_FILE}
+}
+
+main() {
+  set_env
+  set_pipeline_name
+  update_pipeline_groups
+  fly_pipeline
+}
+
+main
