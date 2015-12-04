@@ -12,12 +12,12 @@ resources:
 - name: initial-env-bosh-stemcell
   type: bosh-io-stemcell
   source:
-    name: {{initial_env_stemcell_name}}
+    name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
 
 - name: integration-env-bosh-stemcell
   type: bosh-io-stemcell
   source:
-    name: {{integration_env_stemcell_name}}
+    name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
 
 - name: bosh-lite-stemcell
   type: bosh-io-stemcell
@@ -27,7 +27,7 @@ resources:
 - name: deployments-configuration
   type: git
   source:
-    uri: {{deployments_config_repo_uri}}
+    uri: git@github.com:pivotal-cf/deployments-core-services
     private_key: {{git-private-key}}
 
 - name: cf-mysql-ci
@@ -57,51 +57,51 @@ resources:
 - name: initial-deployment
   type: bosh-deployment
   source:  
-    target: {{initial_env_bosh_url}}
+    target: https://bosh.dijon.cf-app.com:25555
     username: {{initial_env_bosh_username}}
     password: {{initial_env_bosh_password}}
-    deployment: {{initial_env_mysql_deployment_name}}
+    deployment: cf-dijon-mysql
     ignore_ssl: true
 
 - name: integration-deployment
   type: bosh-deployment
   source:
-    target: {{integration_env_bosh_url}}
+    target: https://bosh.a1.cf-app.com:25555
     username: {{integration_env_bosh_username}}
     password: {{integration_env_bosh_password}}
-    deployment: {{integration_env_mysql_deployment_name}}
+    deployment: cf-a1-mysql
     ignore_ssl: true
 
 - name: intial-environment
   type: pool
   source:
-    uri: {{env_pool_repo_uri}}
+    uri: &pool-uri git@github.com:pivotal-cf-experimental/core-services-oss-env-resource-pool
     branch: master
-    pool: {{initial_env_pool}}
+    pool: aws
     private_key: {{git-writer-private-key}}
 
 - name: integration-environment
   type: pool
   source:
-    uri: {{env_pool_repo_uri}}
+    uri: *pool-uri
     branch: master
-    pool: {{integration_env_pool}}
+    pool: aws-integration
     private_key: {{git-writer-private-key}}
 
 - name: bosh-lite-environment
   type: pool
   source:
-    uri: {{env_pool_repo_uri}}
+    uri: *pool-uri
     branch: master
-    pool: {{bosh_lite_env_pool}}
+    pool: bosh-lites-working
     private_key: {{git-writer-private-key}}
 
 - name: bosh-lite-no-cf-environment
   type: pool
   source:
-    uri: {{env_pool_repo_uri}}
+    uri: *pool-uri
     branch: master
-    pool: {{bosh_lite_no_cf_env_pool}}
+    pool: bosh-lites-no-cf
     private_key: {{git-writer-private-key}}
 
 - name: bosh-lite-deployment
@@ -202,8 +202,8 @@ jobs:
         inputs:
         - name: cf-mysql-ci
         params:
-          ENV: {{initial_env_name}}
-          DEPLOYMENT_NAME: {{initial_env_mysql_deployment_name}}
+          ENV: dijon
+          DEPLOYMENT_NAME: cf-dijon-mysql
           BOSH_USER: {{initial_env_bosh_username}}
           BOSH_PASSWORD: {{initial_env_bosh_password}}
           ERRAND: broker-deregistrar
@@ -217,8 +217,8 @@ jobs:
       inputs:
       - name: cf-mysql-ci
       params:
-        ENV: {{initial_env_name}}
-        DEPLOYMENT_NAME: {{initial_env_mysql_deployment_name}}
+        ENV: dijon
+        DEPLOYMENT_NAME: cf-dijon-mysql
         BOSH_USER: {{initial_env_bosh_username}}
         BOSH_PASSWORD: {{initial_env_bosh_password}}
       run:
@@ -257,7 +257,7 @@ jobs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
         params:
-          ENV: {{initial_env_name}}
+          ENV: dijon
           DEPLOYMENTS_DIR: deployments-configuration
         run:
           path: cf-mysql-ci/scripts/bosh/make_manifest
@@ -283,10 +283,10 @@ jobs:
       inputs:
         - name: cf-mysql-ci
       params:
-        ENV: {{initial_env_name}}
+        ENV: dijon
+        DEPLOYMENT_NAME: cf-dijon-mysql
         BOSH_USER: {{initial_env_bosh_username}}
         BOSH_PASSWORD: {{initial_env_bosh_password}}
-        DEPLOYMENT_NAME: {{initial_env_mysql_deployment_name}}
         ERRAND: broker-registrar
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
@@ -297,10 +297,10 @@ jobs:
       inputs:
         - name: cf-mysql-ci
       params:
-        ENV: {{initial_env_name}}
+        ENV: dijon
+        DEPLOYMENT_NAME: cf-dijon-mysql
         BOSH_USER: {{initial_env_bosh_username}}
         BOSH_PASSWORD: {{initial_env_bosh_password}}
-        DEPLOYMENT_NAME: {{initial_env_mysql_deployment_name}}
         ERRAND: acceptance-tests
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
@@ -324,7 +324,7 @@ jobs:
         - name: deployments-configuration
         - name: cf-mysql-ci
       params:
-        ENV: {{initial_env_name}}
+        ENV: dijon
         DEPLOYMENTS_DIR: deployments-configuration
         RUN_ALL_ACCEPTANCE_TESTS: true
       run:
@@ -341,10 +341,10 @@ jobs:
       inputs:
         - name: cf-mysql-ci
       params:
-        ENV: {{initial_env_name}}
+        ENV: dijon
+        DEPLOYMENT_NAME: cf-dijon-mysql
         BOSH_USER: {{initial_env_bosh_username}}
         BOSH_PASSWORD: {{initial_env_bosh_password}}
-        DEPLOYMENT_NAME: {{initial_env_mysql_deployment_name}}
         ERRAND: acceptance-tests
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
@@ -370,7 +370,7 @@ jobs:
         CF_API_PASSWORD: {{initial_env_cf_password}}
         PROXY_API_USER: {{initial_env_proxy_username}}
         PROXY_API_PASSWORD: {{initial_env_proxy_password}}
-        DOMAIN: {{initial_env_domain}}
+        DOMAIN: dijon.cf-app.com
       run:
         path: cf-mysql-ci/scripts/dashboard/test-dashboard
 
@@ -1094,7 +1094,7 @@ jobs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
         params:
-          ENV: {{integration_env_name}}
+          ENV: a1
           DEPLOYMENTS_DIR: deployments-configuration
         run:
           path: cf-mysql-ci/scripts/bosh/make_manifest
@@ -1120,8 +1120,8 @@ jobs:
       inputs:
         - name: cf-mysql-ci
       params:
-        ENV: {{integration_env_name}}
-        DEPLOYMENT_NAME: {{integration_env_mysql_deployment_name}}
+        ENV: a1
+        DEPLOYMENT_NAME: cf-a1-mysql
         BOSH_USER: {{integration_env_bosh_username}}
         BOSH_PASSWORD: {{integration_env_bosh_password}}
         ERRAND: broker-registrar
@@ -1134,8 +1134,8 @@ jobs:
       inputs:
         - name: cf-mysql-ci
       params:
-        ENV: {{integration_env_name}}
-        DEPLOYMENT_NAME: {{integration_env_mysql_deployment_name}}
+        ENV: a1
+        DEPLOYMENT_NAME: cf-a1-mysql
         BOSH_USER: {{integration_env_bosh_username}}
         BOSH_PASSWORD: {{integration_env_bosh_password}}
         ERRAND: acceptance-tests
