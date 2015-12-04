@@ -105,3 +105,5 @@ jobs:
         params:
           from: final\-release\/release\-artifacts\/.*\.tgz
           to: final\/
+
+groups: [{name: cf-mysql-final, jobs: [final-release]}]

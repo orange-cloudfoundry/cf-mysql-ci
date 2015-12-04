@@ -194,3 +194,5 @@ jobs:
   - put: aws-acceptance-environment
     params:
       release: aws-acceptance-environment
+
+groups: [{name: cf-mysql-acceptance, jobs: [claim-aws-environment,delete-acceptance-deployment,deploy-to-acceptance,run-smoke-tests-acceptance,release-acceptance-environment]}]

@@ -1,6 +1,8 @@
 #!/bin/bash
 
-set -eux
+set -eu
+
+PIPELINE_SUFFIX="${1:-}"
 
 set_env() {
   MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -12,7 +14,6 @@ set_env() {
 }
 
 set_pipeline_name() {
-  PIPELINE_SUFFIX="${1:-}"
   if [[ -z "${PIPELINE_SUFFIX}" ]]; then
     PIPELINE_NAME=cf-mysql
   else
