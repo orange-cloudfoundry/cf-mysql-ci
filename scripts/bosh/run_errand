@@ -17,7 +17,7 @@ rm /tmp/env_vars_from_lock
 SKIP_IF_NO_DEPLOYMENT="${SKIP_IF_NO_DEPLOYMENT:-false}"
 ERRAND="${ERRAND:?}"
 
-bosh -n target "bosh.${ENV}.cf-app.com"
+bosh -n target "${DIRECTOR_IP}"
 
 set +e
 check_if_deployment_exists ${DEPLOYMENT_NAME}
