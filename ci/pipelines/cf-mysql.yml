@@ -201,7 +201,6 @@ jobs:
         - name: cf-mysql-ci
         - name: aws-environment
         params:
-          DIRECTOR_IP_FILE: aws-environment/name
           ENV_LOCK_FILE: aws-environment/metadata
           ERRAND: broker-deregistrar
           SKIP_IF_NO_DEPLOYMENT: true
@@ -215,7 +214,7 @@ jobs:
       - name: cf-mysql-ci
       - name: aws-environment
       params:
-        ENV_LOCK_FILE: aws-environment/metadata        
+        ENV_LOCK_FILE: aws-environment/metadata
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
 
@@ -253,13 +252,13 @@ jobs:
         - name: cf-mysql-release
         - name: aws-environment
         params:
-          DIRECTOR_IP_FILE: aws-environment/name
           ENV_LOCK_FILE: aws-environment/metadata
           DEPLOYMENTS_DIR: deployments-configuration
         run:
           path: cf-mysql-ci/scripts/bosh/make_manifest
   - put: aws-deployment
     params:
+      target_file: aws-environment/name
       manifest: make-manifest/cf-mysql-release/deployment.yml
       releases: [create-release/cf-mysql-release/dev_releases/cf-mysql/*.tgz]
       stemcells: [aws-bosh-stemcell/*.tgz]
@@ -281,7 +280,6 @@ jobs:
         - name: cf-mysql-ci
         - name: aws-environment
       params:
-        DIRECTOR_IP_FILE: aws-environment/name
         ENV_LOCK_FILE: aws-environment/metadata
         ERRAND: broker-registrar
       run:
@@ -294,7 +292,6 @@ jobs:
         - name: cf-mysql-ci
         - name: aws-environment
       params:
-        DIRECTOR_IP_FILE: aws-environment/name
         ENV_LOCK_FILE: aws-environment/metadata
         ERRAND: acceptance-tests
       run:
@@ -320,7 +317,6 @@ jobs:
         - name: cf-mysql-ci
         - name: aws-environment
       params:
-        DIRECTOR_IP_FILE: aws-environment/name
         ENV_LOCK_FILE: aws-environment/metadata
         DEPLOYMENTS_DIR: deployments-configuration
         RUN_ALL_ACCEPTANCE_TESTS: true
@@ -339,7 +335,6 @@ jobs:
         - name: cf-mysql-ci
         - name: aws-environment
       params:
-        DIRECTOR_IP_FILE: aws-environment/name
         ENV_LOCK_FILE: aws-environment/metadata
         ERRAND: acceptance-tests
       run:
@@ -363,7 +358,6 @@ jobs:
         - name: cf-mysql-ci
         - name: aws-environment
       params:
-        DIRECTOR_IP_FILE: aws-environment/name
         ENV_LOCK_FILE: aws-environment/metadata
       run:
         path: cf-mysql-ci/scripts/dashboard/test-dashboard

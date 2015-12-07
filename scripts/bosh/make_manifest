@@ -8,7 +8,6 @@ WORKSPACE_DIR="$( cd ${CI_DIR}/.. && pwd )"
 RELEASE_DIR="$( cd ${WORKSPACE_DIR}/cf-mysql-release && pwd )"
 source ${CI_DIR}/scripts/utils.sh
 
-DIRECTOR_IP=$(cat $DIRECTOR_IP_FILE)
 ENV_VARS_FROM_LOCK=$(read_vars_from_env_lock_file $ENV_LOCK_FILE)
 echo $ENV_VARS_FROM_LOCK > /tmp/env_vars_from_lock
 source /tmp/env_vars_from_lock
