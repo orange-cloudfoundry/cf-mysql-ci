@@ -9,7 +9,7 @@ resources:
     password: {{cf-docker-password}}
     repository: cloudfoundry/cf-mysql-ci
 
-- name: initial-env-bosh-stemcell
+- name: aws-bosh-stemcell
   type: bosh-io-stemcell
   source:
     name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
@@ -54,25 +54,31 @@ resources:
     branch: release-candidate
     private_key: {{git-writer-private-key}}
 
-- name: initial-deployment
+- name: aws-deployment
   type: bosh-deployment
-  source:  
-    target: https://bosh.dijon.cf-app.com:25555
-    username: {{initial_env_bosh_username}}
-    password: {{initial_env_bosh_password}}
-    deployment: cf-dijon-mysql
+  source:
+    username: {{aws_bosh_username}}
+    password: {{aws_bosh_password}}
+    deployment: cf-mysql
+    ignore_ssl: true
+
+- name: bosh-lite-deployment
+  type: bosh-deployment
+  source:
+    username: {{bosh-lite-username}}
+    password: {{bosh-lite-password}}
+    deployment: cf-warden-mysql
     ignore_ssl: true
 
 - name: integration-deployment
   type: bosh-deployment
   source:
-    target: https://bosh.a1.cf-app.com:25555
     username: {{integration_env_bosh_username}}
     password: {{integration_env_bosh_password}}
     deployment: cf-a1-mysql
     ignore_ssl: true
 
-- name: intial-environment
+- name: aws-environment
   type: pool
   source:
     uri: &pool-uri git@github.com:pivotal-cf-experimental/core-services-oss-env-resource-pool
@@ -103,14 +109,6 @@ resources:
     branch: master
     pool: bosh-lites-no-cf
     private_key: {{git-writer-private-key}}
-
-- name: bosh-lite-deployment
-  type: bosh-deployment
-  source:
-    username: {{bosh-lite-username}}
-    password: {{bosh-lite-password}}
-    deployment: cf-warden-mysql
-    ignore_ssl: true
 
 - name: cf-mysql-final-release
   type: bosh-io-release
@@ -166,32 +164,32 @@ jobs:
       run:
         path: cf-mysql-release/scripts/test_sample_stubs
 
-- name: claim-intial-environment
+- name: claim-aws-environment
   plan:
   - aggregate:
     - get: cf-mysql-release
       passed: [test-sample-stubs, test-unit]
       trigger: true
-    - put: intial-environment
+    - put: aws-environment
       params:
         acquire: true
 
-- name: release-intial-environment-manual
+- name: release-aws-environment-manual
   plan:
   - aggregate:
-    - get: intial-environment
-      passed: [claim-intial-environment]
-  - put: intial-environment
+    - get: aws-environment
+      passed: [claim-aws-environment]
+  - put: aws-environment
     params:
-      release: intial-environment
+      release: aws-environment
 
-- name: delete-initial-deployment
+- name: delete-aws-deployment
   plan:
   - aggregate:
-    - get: intial-environment
-      passed: [claim-intial-environment]
+    - get: aws-environment
+      passed: [claim-aws-environment]
     - get: cf-mysql-release
-      passed: [claim-intial-environment]
+      passed: [claim-aws-environment]
       trigger: true
     - get: cf-mysql-ci
   - try: 
@@ -202,25 +200,19 @@ jobs:
         inputs:
         - name: cf-mysql-ci
         params:
-          ENV: dijon
-          DEPLOYMENT_NAME: cf-dijon-mysql
-          BOSH_USER: {{initial_env_bosh_username}}
-          BOSH_PASSWORD: {{initial_env_bosh_password}}
+          ENV_LOCK_FILE: aws-environment/metadata
           ERRAND: broker-deregistrar
           SKIP_IF_NO_DEPLOYMENT: true
         run:
           path: cf-mysql-ci/scripts/bosh/run_errand
-  - task: delete-initial-deployment
+  - task: delete-aws-deployment
     config:
       platform: *platform
       image: *docker-image
       inputs:
       - name: cf-mysql-ci
       params:
-        ENV: dijon
-        DEPLOYMENT_NAME: cf-dijon-mysql
-        BOSH_USER: {{initial_env_bosh_username}}
-        BOSH_PASSWORD: {{initial_env_bosh_password}}
+        ENV_LOCK_FILE: aws-environment/metadata        
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
 
@@ -230,11 +222,11 @@ jobs:
     - get: deployments-configuration
     - get: cf-mysql-ci
     - get: cf-mysql-release
-      passed: [delete-initial-deployment]
+      passed: [delete-aws-deployment]
       trigger: true
-    - get: initial-env-bosh-stemcell
-    - get: intial-environment
-      passed: [delete-initial-deployment]
+    - get: aws-bosh-stemcell
+    - get: aws-environment
+      passed: [delete-aws-deployment]
   - aggregate:
     - &create-release
       task: create-release
@@ -257,20 +249,20 @@ jobs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
         params:
-          ENV: dijon
+          ENV_LOCK_FILE: aws-environment/metadata
           DEPLOYMENTS_DIR: deployments-configuration
         run:
           path: cf-mysql-ci/scripts/bosh/make_manifest
-  - put: initial-deployment
+  - put: aws-deployment
     params:
       manifest: make-manifest/cf-mysql-release/deployment.yml
       releases: [create-release/cf-mysql-release/dev_releases/cf-mysql/*.tgz]
-      stemcells: [initial-env-bosh-stemcell/*.tgz]
+      stemcells: [aws-bosh-stemcell/*.tgz]
 
 - name: run-smoke-tests-initial
   plan:
   - aggregate:
-    - get: intial-environment
+    - get: aws-environment
       passed: [deploy-to-initial]
     - get: cf-mysql-release
       passed: [deploy-to-initial]
@@ -283,10 +275,7 @@ jobs:
       inputs:
         - name: cf-mysql-ci
       params:
-        ENV: dijon
-        DEPLOYMENT_NAME: cf-dijon-mysql
-        BOSH_USER: {{initial_env_bosh_username}}
-        BOSH_PASSWORD: {{initial_env_bosh_password}}
+        ENV_LOCK_FILE: aws-environment/metadata
         ERRAND: broker-registrar
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
@@ -297,10 +286,7 @@ jobs:
       inputs:
         - name: cf-mysql-ci
       params:
-        ENV: dijon
-        DEPLOYMENT_NAME: cf-dijon-mysql
-        BOSH_USER: {{initial_env_bosh_username}}
-        BOSH_PASSWORD: {{initial_env_bosh_password}}
+        ENV_LOCK_FILE: aws-environment/metadata
         ERRAND: acceptance-tests
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
@@ -308,7 +294,7 @@ jobs:
 - name: run-acceptance-tests-initial
   plan:
   - aggregate:
-    - get: intial-environment
+    - get: aws-environment
       passed: [run-smoke-tests-initial]
     - get: cf-mysql-release
       passed: [run-smoke-tests-initial]
@@ -324,12 +310,12 @@ jobs:
         - name: deployments-configuration
         - name: cf-mysql-ci
       params:
-        ENV: dijon
+        ENV_LOCK_FILE: aws-environment/metadata
         DEPLOYMENTS_DIR: deployments-configuration
         RUN_ALL_ACCEPTANCE_TESTS: true
       run:
         path: cf-mysql-ci/scripts/bosh/make_manifest
-  - put: initial-deployment
+  - put: aws-deployment
     params:
       manifest: recreate-manifest-to-run-acceptance-tests/cf-mysql-release/deployment.yml
       releases: []
@@ -341,10 +327,7 @@ jobs:
       inputs:
         - name: cf-mysql-ci
       params:
-        ENV: dijon
-        DEPLOYMENT_NAME: cf-dijon-mysql
-        BOSH_USER: {{initial_env_bosh_username}}
-        BOSH_PASSWORD: {{initial_env_bosh_password}}
+        ENV_LOCK_FILE: aws-environment/metadata
         ERRAND: acceptance-tests
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
@@ -352,7 +335,7 @@ jobs:
 - name: dashboard-test-initial
   plan:
   - aggregate:
-      - get: intial-environment
+      - get: aws-environment
         passed: [run-smoke-tests-initial]
       - get: cf-mysql-release
         passed: [run-smoke-tests-initial]
@@ -366,11 +349,7 @@ jobs:
         - name: cf-mysql-release
         - name: cf-mysql-ci
       params:
-        CF_API_USER: {{initial_env_cf_username}}
-        CF_API_PASSWORD: {{initial_env_cf_password}}
-        PROXY_API_USER: {{initial_env_proxy_username}}
-        PROXY_API_PASSWORD: {{initial_env_proxy_password}}
-        DOMAIN: dijon.cf-app.com
+        ENV_LOCK_FILE: aws-environment/metadata
       run:
         path: cf-mysql-ci/scripts/dashboard/test-dashboard
 
@@ -379,12 +358,12 @@ jobs:
   - get: cf-mysql-release
     passed: [run-acceptance-tests-initial,dashboard-test-initial]
     trigger: true
-  - get: intial-environment
+  - get: aws-environment
     passed: [run-acceptance-tests-initial,dashboard-test-initial]
     trigger: true
-  - put: intial-environment
+  - put: aws-environment
     params:
-      release: intial-environment
+      release: aws-environment
 
 ### SCALING
 - name: claim-bosh-lite-scaling
@@ -1200,5 +1179,5 @@ jobs:
     params:
       repository: merge-to-release-candidate/cf-mysql-release
 
-groups: [{name: cf-mysql, jobs: [cf-mysql-ci,test-unit,test-sample-stubs,claim-intial-environment,release-intial-environment-manual,delete-initial-deployment,deploy-to-initial,run-smoke-tests-initial,run-acceptance-tests-initial,dashboard-test-initial,release-aws-environmment,claim-bosh-lite-scaling,release-scaling-environment-manual,delete-scaling-deployment,deploy-to-scaling,scaling-broker-registrar,scaling-smoke-tests,scaling-tests,release-scaling-environment,claim-bosh-lite-failover,release-failover-environment-manual,delete-failover-deployment,deploy-to-failover,failover-broker-registrar,failover-smoke-tests,failover-tests,release-failover-environment,claim-bosh-lite-upgrade,release-upgrade-environment-manual,delete-upgrade-deployment,deploy-previous-to-upgrade,broker-registrar-previous-on-upgrade,smoke-tests-previous-on-upgrade,persistence-test-data-write-before-upgrade,deploy-current-to-upgrade,persistence-test-data-read-after-upgrade,smoke-tests-current-on-upgrade,dashboard-test-bosh-lite,release-upgrade-environment,claim-bosh-lite-standalone,release-standalone-environment-manual,delete-standalone-deployment,deploy-to-standalone,persistence-test-data-write-before-bootstrap,test-bootstrap,persistence-test-data-read-after-bootstrap,release-standalone-environment,claim-integration-environment,deploy-to-integration,run-smoke-tests-integration,release-integration-environment,upload-rc-artifacts,promote-to-rc]}]
+groups: [{name: cf-mysql, jobs: [cf-mysql-ci,test-unit,test-sample-stubs,claim-aws-environment,release-aws-environment-manual,delete-aws-deployment,deploy-to-initial,run-smoke-tests-initial,run-acceptance-tests-initial,dashboard-test-initial,release-aws-environmment,claim-bosh-lite-scaling,release-scaling-environment-manual,delete-scaling-deployment,deploy-to-scaling,scaling-broker-registrar,scaling-smoke-tests,scaling-tests,release-scaling-environment,claim-bosh-lite-failover,release-failover-environment-manual,delete-failover-deployment,deploy-to-failover,failover-broker-registrar,failover-smoke-tests,failover-tests,release-failover-environment,claim-bosh-lite-upgrade,release-upgrade-environment-manual,delete-upgrade-deployment,deploy-previous-to-upgrade,broker-registrar-previous-on-upgrade,smoke-tests-previous-on-upgrade,persistence-test-data-write-before-upgrade,deploy-current-to-upgrade,persistence-test-data-read-after-upgrade,smoke-tests-current-on-upgrade,dashboard-test-bosh-lite,release-upgrade-environment,claim-bosh-lite-standalone,release-standalone-environment-manual,delete-standalone-deployment,deploy-to-standalone,persistence-test-data-write-before-bootstrap,test-bootstrap,persistence-test-data-read-after-bootstrap,release-standalone-environment,claim-integration-environment,deploy-to-integration,run-smoke-tests-integration,release-integration-environment,upload-rc-artifacts,promote-to-rc]}]
 

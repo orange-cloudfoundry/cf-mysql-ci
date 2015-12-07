@@ -6,6 +6,12 @@ MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CI_DIR="$( cd "${MY_DIR}/../../" && pwd )"
 WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
 RELEASE_DIR="$(cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
+source ${CI_DIR}/scripts/utils.sh
+
+ENV_VARS_FROM_LOCK=$(read_vars_from_env_lock_file $ENV_LOCK_FILE)
+echo $ENV_VARS_FROM_LOCK > /tmp/env_vars_from_lock
+source /tmp/env_vars_from_lock
+rm /tmp/env_vars_from_lock
 
 export PATH=$PATH:/usr/lib/chromium-browser/
 export LD_LIBRARY_PATH=/usr/lib/chromium-browser/libs
