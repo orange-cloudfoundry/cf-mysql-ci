@@ -201,6 +201,7 @@ jobs:
         - name: cf-mysql-ci
         - name: aws-environment
         params:
+          DIRECTOR_IP_FILE: aws-environment/name
           ENV_LOCK_FILE: aws-environment/metadata
           ERRAND: broker-deregistrar
           SKIP_IF_NO_DEPLOYMENT: true
@@ -214,6 +215,7 @@ jobs:
       - name: cf-mysql-ci
       - name: aws-environment
       params:
+        DIRECTOR_IP_FILE: aws-environment/name
         ENV_LOCK_FILE: aws-environment/metadata
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
@@ -876,6 +878,7 @@ jobs:
         - name: bosh-lite-environment
         - name: cf-mysql-ci
         params:
+          ENV_LOCK_FILE: bosh-lite-environment/metadata
           IS_BOSH_LITE: true
           BOSH_LITE_METADATA: bosh-lite-environment/metadata
         run:
@@ -1081,8 +1084,9 @@ jobs:
         - name: deployments-configuration
         - name: cf-mysql-ci
         - name: cf-mysql-release
+        - name: integration-environment
         params:
-          ENV: a1
+          ENV_LOCK_FILE: integration-environment/metadata
           DEPLOYMENTS_DIR: deployments-configuration
         run:
           path: cf-mysql-ci/scripts/bosh/make_manifest
@@ -1107,11 +1111,9 @@ jobs:
       image: *docker-image
       inputs:
         - name: cf-mysql-ci
+        - name: integration-environment
       params:
-        ENV: a1
-        DEPLOYMENT_NAME: cf-a1-mysql
-        BOSH_USER: {{integration_env_bosh_username}}
-        BOSH_PASSWORD: {{integration_env_bosh_password}}
+        ENV_LOCK_FILE: integration-environment/metadata
         ERRAND: broker-registrar
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
@@ -1121,11 +1123,9 @@ jobs:
       image: *docker-image
       inputs:
         - name: cf-mysql-ci
+        - name: integration-environment
       params:
-        ENV: a1
-        DEPLOYMENT_NAME: cf-a1-mysql
-        BOSH_USER: {{integration_env_bosh_username}}
-        BOSH_PASSWORD: {{integration_env_bosh_password}}
+        ENV_LOCK_FILE: integration-environment/metadata
         ERRAND: acceptance-tests
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
