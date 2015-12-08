@@ -1092,6 +1092,7 @@ jobs:
           path: cf-mysql-ci/scripts/bosh/make_manifest
   - put: integration-deployment
     params:
+      target_file: integration-environment/name
       manifest: make-manifest/cf-mysql-release/deployment.yml
       releases: [create-release/cf-mysql-release/dev_releases/cf-mysql/*.tgz]
       stemcells: [integration-env-bosh-stemcell/*.tgz]

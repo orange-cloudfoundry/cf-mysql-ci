@@ -13,6 +13,6 @@ function read_vars_from_env_lock_file () {
     do
       key_uc=$(echo $i | tr '[:lower:]' '[:upper:]')
       val=$(echo "${lock}" | jq -r .${i})
-      echo "$key_uc=$val"
+      echo "export $key_uc=$val"
     done
 }
