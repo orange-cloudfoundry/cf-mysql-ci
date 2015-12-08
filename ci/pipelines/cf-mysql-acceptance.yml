@@ -34,10 +34,9 @@ resources:
 - name: acceptance-deployment
   type: bosh-deployment
   source:
-    target: https://bosh.primo.cf-app.com:25555
-    username: {{acceptance_env_bosh_username}}
-    password: {{acceptance_env_bosh_password}}
-    deployment: cf-primo-mysql
+    username: {{aws_bosh_username}}
+    password: {{aws_bosh_password}}
+    deployment: cf-mysql
     ignore_ssl: true
 
 jobs:
@@ -69,11 +68,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: deployments-configuration
+        - name: aws-acceptance-environment
       params:
-        ENV: primo
-        DEPLOYMENT_NAME: cf-primo-mysql
-        BOSH_USER: {{acceptance_env_bosh_username}}
-        BOSH_PASSWORD: {{acceptance_env_bosh_password}}
+        ENV_LOCK_FILE: aws-acceptance-environment/metadata
         ERRAND: broker-deregistrar
         SKIP_IF_NO_DEPLOYMENT: true
       run:
@@ -85,11 +82,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: deployments-configuration
+        - name: aws-acceptance-environment
       params:
-        ENV: primo
-        DEPLOYMENT_NAME: cf-primo-mysql
-        BOSH_USER: {{acceptance_env_bosh_username}}
-        BOSH_PASSWORD: {{acceptance_env_bosh_password}}
+        ENV_LOCK_FILE: aws-acceptance-environment/metadata
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
 
@@ -115,8 +110,6 @@ jobs:
         - name: cf-mysql-release
         params:
           RELEASE_RELATIVE_DIR: cf-mysql-release/
-          BOSH_USER: {{acceptance_env_bosh_username}}
-          BOSH_PASSWORD: {{acceptance_env_bosh_password}}
         run:
           path: cf-mysql-ci/scripts/create_release
     - task: make-manifest
@@ -127,10 +120,9 @@ jobs:
         - name: cf-mysql-ci
         - name: deployments-configuration
         - name: cf-mysql-release
+        - name: aws-acceptance-environment
         params:
-          ENV: primo
-          BOSH_USER: {{acceptance_env_bosh_username}}
-          BOSH_PASSWORD: {{acceptance_env_bosh_password}}
+          ENV_LOCK_FILE: aws-acceptance-environment/metadata
           DEPLOYMENTS_DIR: deployments-configuration
         run:
           path: cf-mysql-ci/scripts/bosh/make_manifest
@@ -158,11 +150,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: deployments-configuration
+        - name: aws-acceptance-environment
       params:
-        ENV: primo
-        DEPLOYMENT_NAME: cf-primo-mysql
-        BOSH_USER: {{acceptance_env_bosh_username}}
-        BOSH_PASSWORD: {{acceptance_env_bosh_password}}
+        ENV_LOCK_FILE: aws-acceptance-environment/metadata
         ERRAND: broker-registrar
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
@@ -173,11 +163,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: deployments-configuration
+        - name: aws-acceptance-environment
       params:
-        ENV: primo
-        DEPLOYMENT_NAME: cf-primo-mysql
-        BOSH_USER: {{acceptance_env_bosh_username}}
-        BOSH_PASSWORD: {{acceptance_env_bosh_password}}
+        ENV_LOCK_FILE: aws-acceptance-environment/metadata
         ERRAND: acceptance-tests
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
