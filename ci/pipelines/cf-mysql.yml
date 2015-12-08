@@ -326,6 +326,7 @@ jobs:
         path: cf-mysql-ci/scripts/bosh/make_manifest
   - put: aws-deployment
     params:
+      target_file: aws-environment/name
       manifest: recreate-manifest-to-run-acceptance-tests/cf-mysql-release/deployment.yml
       releases: []
       stemcells: []
