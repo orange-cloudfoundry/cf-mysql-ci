@@ -42,12 +42,12 @@ fi
 pushd ${RELEASE_DIR}
   ./generate_deployment_manifest \
     aws \
-    ${DEPLOYMENTS_DIR}/${ENV}/cf-aws-stub.yml \
-    ${DEPLOYMENTS_DIR}/${ENV}/cf-networks-stub.yml \
-    ${DEPLOYMENTS_DIR}/${ENV}/cf-shared-secrets.yml \
-    ${DEPLOYMENTS_DIR}/${ENV}/cf-mysql-plans-stub.yml \
-    ${DEPLOYMENTS_DIR}/${ENV}/cf-properties.yml \
-    ${DEPLOYMENTS_DIR}/${ENV}/cf-mysql-secrets.yml \
+    ${DEPLOYMENTS_DIR}/${ENV}/stubs/cf/cf-aws-stub.yml \
+    ${DEPLOYMENTS_DIR}/${ENV}/stubs/cf/cf-networks-stub.yml \
+    ${DEPLOYMENTS_DIR}/${ENV}/stubs/cf/cf-shared-secrets.yml \
+    ${DEPLOYMENTS_DIR}/${ENV}/stubs/mysql/cf-mysql-plans-stub.yml \
+    ${DEPLOYMENTS_DIR}/${ENV}/stubs/cf/cf-properties.yml \
+    ${DEPLOYMENTS_DIR}/${ENV}/stubs/mysql/cf-mysql-secrets.yml \
     "$@" > deployment.yml
 
   bosh deployment deployment.yml
