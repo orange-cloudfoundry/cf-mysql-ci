@@ -445,7 +445,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
       run:
-        path: cf-mysql-ci/scripts/bosh/delete-deployment
+        path: cf-mysql-ci/scripts/bosh/delete_deployment
 
 - name: deploy-to-scaling
   plan:
