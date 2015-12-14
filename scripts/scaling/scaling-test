@@ -12,60 +12,47 @@ function close-ssh-tunnels() {
 
 function setup_infrastructure_variables() {
   pushd "${WORKSPACE_DIR}"
+    source ${CI_DIR}/scripts/utils.sh
 
-    BOSH_USER="${BOSH_USER:-admin}"
-    BOSH_PASSWORD="${BOSH_PASSWORD:-admin}"
+    : "${ENV_TARGET_FILE:?}"
+    : "${ENV_METADATA:?}"
+    : "${BOSH_LITE_KEY:?}"
 
-    if [ ! -z "${DIRECTOR_IP_FILE}" ]; then
-      # assumes we are running against a remote bosh-lite
-      DIRECTOR_IP=$(cat "${DIRECTOR_IP_FILE}")
+    DIRECTOR_IP=$(cat "${ENV_TARGET_FILE}")
 
-      BOSH_LITE_METADATA="${BOSH_LITE_METADATA:?}"
-      BOSH_PASSWORD="$(cat ${BOSH_LITE_METADATA} | jq -r '.director_password')"
+    BOSH_USER="$(jq_val "bosh_user" "${ENV_METADATA}")"
+    BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
-      NODE_0_IP="127.0.0.1"
-      NODE_1_IP="127.0.0.1"
-      NODE_2_IP="127.0.0.1"
+    NODE_0_IP="127.0.0.1"
+    NODE_1_IP="127.0.0.1"
+    NODE_2_IP="127.0.0.1"
 
-      NODE_0_PORT="43306"
-      NODE_1_PORT="43307"
-      NODE_2_PORT="43308"
+    NODE_0_PORT="43306"
+    NODE_1_PORT="43307"
+    NODE_2_PORT="43308"
 
-      BOSH_LITE_KEY_FILE="/tmp/id_rsa"
-      echo "${BOSH_LITE_KEY:?}" > "${BOSH_LITE_KEY_FILE}"
-      chmod 600 "${BOSH_LITE_KEY_FILE}"
+    BOSH_LITE_KEY_FILE="/tmp/id_rsa"
+    echo "${BOSH_LITE_KEY}" > "${BOSH_LITE_KEY_FILE}"
+    chmod 600 "${BOSH_LITE_KEY_FILE}"
 
-      trap close-ssh-tunnels EXIT
-      ssh -L ${NODE_0_PORT}:10.244.7.2:3306 \
-        -NnTf \
-        -i "${BOSH_LITE_KEY_FILE}" \
-        -o StrictHostKeyChecking=no \
-        "ubuntu@${DIRECTOR_IP}"
+    trap close-ssh-tunnels EXIT
+    ssh -L ${NODE_0_PORT}:10.244.7.2:3306 \
+      -NnTf \
+      -i "${BOSH_LITE_KEY_FILE}" \
+      -o StrictHostKeyChecking=no \
+      "ubuntu@${DIRECTOR_IP}"
 
-      ssh -L ${NODE_1_PORT}:10.244.8.2:3306 \
-        -NnTf \
-        -i "${BOSH_LITE_KEY_FILE}" \
-        -o StrictHostKeyChecking=no \
-         "ubuntu@${DIRECTOR_IP}"
+    ssh -L ${NODE_1_PORT}:10.244.8.2:3306 \
+      -NnTf \
+      -i "${BOSH_LITE_KEY_FILE}" \
+      -o StrictHostKeyChecking=no \
+       "ubuntu@${DIRECTOR_IP}"
 
-      ssh  -L ${NODE_2_PORT}:10.244.9.2:3306 \
-        -NnTf \
-        -i "${BOSH_LITE_KEY_FILE}" \
-        -o StrictHostKeyChecking=no \
-        "ubuntu@${DIRECTOR_IP}"
-
-    else
-      # assumes we are running against a local bosh-lite
-      DIRECTOR_IP="${DIRECTOR_IP:-192.168.50.4}"
-
-      NODE_0_IP="10.244.7.2"
-      NODE_1_IP="10.244.8.2"
-      NODE_2_IP="10.244.9.2"
-
-      NODE_0_PORT="3306"
-      NODE_1_PORT="3306"
-      NODE_2_PORT="3306"
-    fi
+    ssh  -L ${NODE_2_PORT}:10.244.9.2:3306 \
+      -NnTf \
+      -i "${BOSH_LITE_KEY_FILE}" \
+      -o StrictHostKeyChecking=no \
+      "ubuntu@${DIRECTOR_IP}"
   popd
 }
 
