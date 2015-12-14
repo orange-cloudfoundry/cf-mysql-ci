@@ -16,7 +16,7 @@ function setup_infrastructure_variables() {
 
     : "${ENV_TARGET_FILE:?}"
     : "${ENV_METADATA:?}"
-    : "${BOSH_LITE_KEY:?}"
+    : "${BOSH_LITE_SSH_KEY:?}"
 
     DIRECTOR_IP=$(cat "${ENV_TARGET_FILE}")
 
@@ -31,26 +31,26 @@ function setup_infrastructure_variables() {
     NODE_1_PORT="43307"
     NODE_2_PORT="43308"
 
-    BOSH_LITE_KEY_FILE="/tmp/id_rsa"
-    echo "${BOSH_LITE_KEY}" > "${BOSH_LITE_KEY_FILE}"
-    chmod 600 "${BOSH_LITE_KEY_FILE}"
+    BOSH_LITE_SSH_KEY_FILE="/tmp/id_rsa"
+    echo "${BOSH_LITE_SSH_KEY}" > "${BOSH_LITE_SSH_KEY_FILE}"
+    chmod 600 "${BOSH_LITE_SSH_KEY_FILE}"
 
     trap close-ssh-tunnels EXIT
     ssh -L ${NODE_0_PORT}:10.244.7.2:3306 \
       -NnTf \
-      -i "${BOSH_LITE_KEY_FILE}" \
+      -i "${BOSH_LITE_SSH_KEY_FILE}" \
       -o StrictHostKeyChecking=no \
       "ubuntu@${DIRECTOR_IP}"
 
     ssh -L ${NODE_1_PORT}:10.244.8.2:3306 \
       -NnTf \
-      -i "${BOSH_LITE_KEY_FILE}" \
+      -i "${BOSH_LITE_SSH_KEY_FILE}" \
       -o StrictHostKeyChecking=no \
        "ubuntu@${DIRECTOR_IP}"
 
     ssh  -L ${NODE_2_PORT}:10.244.9.2:3306 \
       -NnTf \
-      -i "${BOSH_LITE_KEY_FILE}" \
+      -i "${BOSH_LITE_SSH_KEY_FILE}" \
       -o StrictHostKeyChecking=no \
       "ubuntu@${DIRECTOR_IP}"
   popd
