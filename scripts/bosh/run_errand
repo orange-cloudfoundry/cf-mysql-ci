@@ -5,17 +5,21 @@ set -eux
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CI_DIR="$( cd ${MY_DIR}/../../ && pwd )"
 WORKSPACE_DIR="$( cd ${CI_DIR}/../ && pwd )"
+
 source ${CI_DIR}/scripts/utils.sh
 
-ENV_VARS_FROM_LOCK=$(read_vars_from_env_lock_file $ENV_LOCK_FILE)
-echo $ENV_VARS_FROM_LOCK > /tmp/env_vars_from_lock
-source /tmp/env_vars_from_lock
-rm /tmp/env_vars_from_lock
+: "${ENV_TARGET_FILE:?}"
+: "${ENV_METADATA:?}"
+: "${ERRAND:?}"
+: "${SKIP_IF_NO_DEPLOYMENT:=false}"
 
-SKIP_IF_NO_DEPLOYMENT="${SKIP_IF_NO_DEPLOYMENT:-false}"
-ERRAND="${ERRAND:?}"
+BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
+DEPLOYMENT_NAME="$(jq_val "deployment_name" "${ENV_METADATA}")"
+BOSH_USER="$(jq_val "bosh_user" "${ENV_METADATA}")"
+BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
-bosh -n target bosh.${ENV}.cf-app.com
+bosh -n target "${BOSH_TARGET}"
+bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
 
 set +e
 check_if_deployment_exists ${DEPLOYMENT_NAME}

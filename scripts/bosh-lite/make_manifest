@@ -7,12 +7,16 @@ CI_DIR="$( cd ${MY_DIR}/../.. && pwd )"
 WORKSPACE_DIR="$( cd ${CI_DIR}/.. && pwd )"
 RELEASE_DIR="$( cd ${WORKSPACE_DIR}/cf-mysql-release && pwd )"
 
-OUTPUT_FILE=${OUTPUT_FILE:?}
-NODE_COUNT=${NODE_COUNT:-3}
-DOMAIN=$(cat "${BOSH_LITE_METADATA:?}" | jq -r '.domain' )
-CF_ADMIN_PASSWORD=$(cat "${BOSH_LITE_METADATA:?}" | jq -r '.cf_password' )
-USE_PREVIOUS_RELEASE=${USE_PREVIOUS_RELEASE:-false}
-STANDALONE_MODE=${STANDALONE_MODE:-false}
+source ${CI_DIR}/scripts/utils.sh
+
+: "${OUTPUT_FILE:?}"
+: "${ENV_METADATA:?}"
+: "${NODE_COUNT:=3}"
+: "${USE_PREVIOUS_RELEASE:=false}"
+: "${STANDALONE_MODE:=false}"
+
+DOMAIN="$(jq_val "domain" "${ENV_METADATA}")"
+CF_ADMIN_PASSWORD="$(jq_val "cf_password" "${ENV_METADATA}")"
 
 get_version() {
   if [ "${USE_PREVIOUS_RELEASE}" = true ]; then

@@ -10,16 +10,32 @@ ACTION_COLOR='\033[1;33m'
 INFO_COLOR='\033[1;36m'
 NO_COLOR='\033[0m'
 
-CONFIG_LOCATION=${CONFIG_LOCATION:-${CI_DIR}/integration-config.json}
+source ${CI_DIR}/scripts/utils.sh
+
+# required
+: "${ENV_METADATA:?}"
+
+# optional
+: "${CONFIG_LOCATION:=${CI_DIR}/integration-config.json}"
+: "${USE_SMALL_PLANS:=false}"
+: "${USE_HTTPS:=true}"
+: "${PROXY_COUNT:=2}"
+
+# optional, only needed for failover test
+: "${BROKER_0_REMOTE_IP:=}"
+: "${BROKER_1_REMOTE_IP:=}"
+: "${MYSQL_NODE_0_REMOTE_IP:=}"
+: "${BROKER_0_LOCAL_PORT:=}"
+: "${BROKER_1_LOCAL_PORT:=}"
+: "${MYSQL_NODE_0_LOCAL_PORT:=}"
+
 echo -e "Creating config file at ${INFO_COLOR}${CONFIG_LOCATION}${NO_COLOR}..."
 
-CF_API_USER="${CF_API_USER:?}"
-CF_API_PASSWORD="${CF_API_PASSWORD:?}"
-PROXY_API_USER="${PROXY_API_USER:?}"
-PROXY_API_PASSWORD="${PROXY_API_PASSWORD:?}"
-DOMAIN="${DOMAIN:?}"
-USE_SMALL_PLANS=${USE_SMALL_PLANS:-false}
-USE_HTTPS=${USE_HTTPS:-true}
+CF_API_USER="$(jq_val "cf_api_user" "${ENV_METADATA}")"
+CF_API_PASSWORD="$(jq_val "cf_api_password" "${ENV_METADATA}")"
+PROXY_API_USER="$(jq_val "proxy_api_user" "${ENV_METADATA}")"
+PROXY_API_PASSWORD="$(jq_val "proxy_api_password" "${ENV_METADATA}")"
+DOMAIN="$(jq_val "domain" "${ENV_METADATA}")"
 
 if [ "${USE_HTTPS}" = true ]; then
   PROTOCOL="https"
@@ -35,7 +51,6 @@ else
   LARGE_PLAN_SIZE=1000
 fi
 
-PROXY_COUNT=${PROXY_COUNT:-2}
 if [ "${PROXY_COUNT}" == 0 ]; then
   DASHBOARD_URLS="[]"
 elif [ "${PROXY_COUNT}" == 1 ]; then
@@ -43,14 +58,6 @@ elif [ "${PROXY_COUNT}" == 1 ]; then
 else
   DASHBOARD_URLS="[\"https://proxy-0-p-mysql.${DOMAIN}\", \"https://proxy-1-p-mysql.${DOMAIN}\"]"
 fi
-
-# The following properties are only used by the failover test
-BROKER_0_REMOTE_IP=${BROKER_0_REMOTE_IP:-}
-BROKER_1_REMOTE_IP=${BROKER_1_REMOTE_IP:-}
-MYSQL_NODE_0_REMOTE_IP=${MYSQL_NODE_0_REMOTE_IP:-}
-BROKER_0_LOCAL_PORT=${BROKER_0_LOCAL_PORT:-}
-BROKER_1_LOCAL_PORT=${BROKER_1_LOCAL_PORT:-}
-MYSQL_NODE_0_LOCAL_PORT=${MYSQL_NODE_0_LOCAL_PORT:-}
 
 cat > ${CONFIG_LOCATION} <<EOF
 {

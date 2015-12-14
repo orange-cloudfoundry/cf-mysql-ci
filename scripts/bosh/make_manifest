@@ -1,29 +1,31 @@
 #!/bin/bash
 
-set -eux
+set -eux -o pipefail
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-CI_DIR="$( cd ${MY_DIR}/../.. && pwd )"
-WORKSPACE_DIR="$( cd ${CI_DIR}/.. && pwd )"
-RELEASE_DIR="$( cd ${WORKSPACE_DIR}/cf-mysql-release && pwd )"
-source ${CI_DIR}/scripts/utils.sh
+CI_DIR="$( cd "${MY_DIR}/../.." && pwd )"
+WORKSPACE_DIR="$( cd "${CI_DIR}/.." && pwd )"
+RELEASE_DIR="$( cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
 
-ENV_VARS_FROM_LOCK=$(read_vars_from_env_lock_file $ENV_LOCK_FILE)
-echo $ENV_VARS_FROM_LOCK > /tmp/env_vars_from_lock
-source /tmp/env_vars_from_lock
-rm /tmp/env_vars_from_lock
+source "${CI_DIR}/scripts/utils.sh"
 
-RUN_ALL_ACCEPTANCE_TESTS="${RUN_ALL_ACCEPTANCE_TESTS:-false}"
+: "${ENV_TARGET_FILE:?}"
+: "${ENV_METADATA:?}"
+: "${DEPLOYMENTS_DIR:?}"
+: "${RUN_ALL_ACCEPTANCE_TESTS:=false}"
 
 # ensure DEPLOYMENTS_DIR is an absolute path
-DEPLOYMENTS_DIR="${DEPLOYMENTS_DIR:?}"
 if [[ "${DEPLOYMENTS_DIR}" != /* ]]; then
   DEPLOYMENTS_DIR="${WORKSPACE_DIR}/${DEPLOYMENTS_DIR}"
 fi
 
-echo "ENV: ${ENV:?}"
+BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
+ENV="$(jq_val "env" "${ENV_METADATA}")"
+BOSH_USER="$(jq_val "bosh_user" "${ENV_METADATA}")"
+BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
-bosh -n target bosh.${ENV}.cf-app.com
+bosh -n target "${BOSH_TARGET}"
+bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
 
 echo "args: $*"
 
