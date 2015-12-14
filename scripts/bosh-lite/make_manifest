@@ -16,7 +16,7 @@ source ${CI_DIR}/scripts/utils.sh
 : "${STANDALONE_MODE:=false}"
 
 DOMAIN="$(jq_val "domain" "${ENV_METADATA}")"
-CF_ADMIN_PASSWORD="$(jq_val "cf_password" "${ENV_METADATA}")"
+CF_ADMIN_PASSWORD="$(jq_val "cf_api_password" "${ENV_METADATA}")"
 
 get_version() {
   if [ "${USE_PREVIOUS_RELEASE}" = true ]; then
