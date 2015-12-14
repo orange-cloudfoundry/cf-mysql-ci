@@ -10,15 +10,18 @@ set_env(){
   CI_DIR="$( cd "${MY_DIR}/../../" && pwd )"
   WORKSPACE_DIR="$( cd "${CI_DIR}/.." && pwd )"
 
-  pushd "${WORKSPACE_DIR}"
-    DIRECTOR_IP_FILE="${DIRECTOR_IP_FILE:?}"
-    DIRECTOR_IP=$(cat "${DIRECTOR_IP_FILE}")
-    BOSH_LITE_METADATA="${BOSH_LITE_METADATA:?}"
-    BOSH_USER="${BOSH_USER:-admin}"
-    BOSH_PASSWORD="$(cat ${BOSH_LITE_METADATA} | jq -r '.director_password')"
-  popd
+  source "${CI_DIR}/scripts/utils.sh"
 
-  bosh -n target "${DIRECTOR_IP}"
+  : "${BOSH_LITE_SSH_KEY:?}"
+  : "${ENV_TARGET_FILE:?}"
+  : "${ENV_METADATA:?}"
+
+  BOSH_TARGET=$(cat "${ENV_TARGET_FILE}")
+
+  BOSH_USER="$(jq_val "bosh_user" "${ENV_METADATA}")"
+  BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
+
+  bosh -n target "${BOSH_TARGET}"
   bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
 }
 
@@ -26,7 +29,7 @@ stop_all_nodes() {
   pushd "${WORKSPACE_DIR}"
     # assumes we are running against a remote bosh-lite
     BOSH_LITE_KEY_FILE="/tmp/id_rsa"
-    echo "${BOSH_LITE_KEY:?}" > "${BOSH_LITE_KEY_FILE}"
+    echo "${BOSH_LITE_SSH_KEY}" > "${BOSH_LITE_KEY_FILE}"
     chmod 600 "${BOSH_LITE_KEY_FILE}"
 
     for nodeIndex in $(seq 1 3); do
@@ -35,7 +38,7 @@ stop_all_nodes() {
           -t \
           -i "${BOSH_LITE_KEY_FILE}" \
           -o StrictHostKeyChecking=no \
-          "ubuntu@${DIRECTOR_IP}" \
+          "ubuntu@${BOSH_TARGET}" \
           "curl -vk -X POST username:password@${MYSQL_NODE}:9200/stop_mysql"
     done
   popd
