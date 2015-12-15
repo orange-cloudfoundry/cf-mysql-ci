@@ -11,10 +11,10 @@ source ${CI_DIR}/scripts/utils.sh
 : "${ENV_TARGET_FILE:?}"
 : "${ENV_METADATA:?}"
 : "${ERRAND:?}"
+: "${DEPLOYMENT_NAME:?}"
 : "${SKIP_IF_NO_DEPLOYMENT:=false}"
 
 BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
-DEPLOYMENT_NAME="$(jq_val "deployment_name" "${ENV_METADATA}")"
 BOSH_USER="$(jq_val "bosh_user" "${ENV_METADATA}")"
 BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
