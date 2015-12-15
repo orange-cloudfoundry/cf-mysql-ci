@@ -70,7 +70,8 @@ jobs:
         - name: deployments-configuration
         - name: aws-acceptance-environment
       params:
-        ENV_LOCK_FILE: aws-acceptance-environment/metadata
+        ENV_TARGET_FILE: aws-acceptance-environment/name
+        ENV_METADATA: aws-acceptance-environment/metadata  
         ERRAND: broker-deregistrar
         SKIP_IF_NO_DEPLOYMENT: true
         DEPLOYMENT_NAME: cf-mysql
@@ -85,7 +86,8 @@ jobs:
         - name: deployments-configuration
         - name: aws-acceptance-environment
       params:
-        ENV_LOCK_FILE: aws-acceptance-environment/metadata
+        ENV_TARGET_FILE: aws-acceptance-environment/name
+        ENV_METADATA: aws-acceptance-environment/metadata  
         DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
@@ -124,7 +126,8 @@ jobs:
         - name: cf-mysql-release
         - name: aws-acceptance-environment
         params:
-          ENV_LOCK_FILE: aws-acceptance-environment/metadata
+          ENV_TARGET_FILE: aws-acceptance-environment/name
+          ENV_METADATA: aws-acceptance-environment/metadata  
           DEPLOYMENTS_DIR: deployments-configuration
         run:
           path: cf-mysql-ci/scripts/bosh/make_manifest
@@ -155,7 +158,8 @@ jobs:
         - name: deployments-configuration
         - name: aws-acceptance-environment
       params:
-        ENV_LOCK_FILE: aws-acceptance-environment/metadata
+        ENV_TARGET_FILE: aws-acceptance-environment/name
+        ENV_METADATA: aws-acceptance-environment/metadata  
         ERRAND: broker-registrar
         DEPLOYMENT_NAME: cf-mysql
       run:
@@ -169,7 +173,8 @@ jobs:
         - name: deployments-configuration
         - name: aws-acceptance-environment
       params:
-        ENV_LOCK_FILE: aws-acceptance-environment/metadata
+        ENV_TARGET_FILE: aws-acceptance-environment/name
+        ENV_METADATA: aws-acceptance-environment/metadata  
         ERRAND: acceptance-tests
         DEPLOYMENT_NAME: cf-mysql
       run:
