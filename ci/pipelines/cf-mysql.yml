@@ -1092,6 +1092,7 @@ jobs:
         - name: cf-mysql-release
         - name: integration-environment
         params:
+          ENV_TARGET_FILE: integration-environment/name
           ENV_METADATA: integration-environment/metadata
           DEPLOYMENTS_DIR: deployments-configuration
         run:
@@ -1120,6 +1121,7 @@ jobs:
         - name: cf-mysql-ci
         - name: integration-environment
       params:
+        ENV_TARGET_FILE: integration-environment/name
         ENV_METADATA: integration-environment/metadata
         ERRAND: broker-registrar
       run:
@@ -1132,6 +1134,7 @@ jobs:
         - name: cf-mysql-ci
         - name: integration-environment
       params:
+        ENV_TARGET_FILE: integration-environment/name
         ENV_METADATA: integration-environment/metadata
         ERRAND: acceptance-tests
       run:
