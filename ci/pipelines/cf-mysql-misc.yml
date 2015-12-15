@@ -1,0 +1,55 @@
+---
+resources:
+- name: integration-environment
+  type: pool
+  source:
+    uri: git@github.com:pivotal-cf-experimental/core-services-oss-env-resource-pool
+    branch: master
+    pool: aws-integration
+    private_key: {{git-writer-private-key}}
+
+- name: cf-mysql-ci
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry-incubator/cf-mysql-ci.git
+
+- name: timer
+  type: time
+  source: 
+    interval: 30m
+
+jobs:
+- name: claim-integration-environment
+  plan:
+  - get: timer
+    trigger: true
+  - put: integration-environment
+    params:
+      acquire: true
+  
+- name: run-smoke-tests-integration
+  plan:
+  - aggregate:
+    - get: cf-mysql-ci
+    - get: integration-environment
+      passed: [claim-integration-environment]
+      trigger: true  
+  - task: run-smoke-tests
+    config:
+      platform: linux
+      image: docker:///cloudfoundry/cf-mysql-ci
+      inputs:
+        - name: cf-mysql-ci
+        - name: integration-environment
+      params:
+        ENV_TARGET_FILE: integration-environment/name
+        ENV_METADATA: integration-environment/metadata
+        ERRAND: acceptance-tests
+        DEPLOYMENT_NAME: cf-a1-mysql  
+      run:
+        path: cf-mysql-ci/scripts/bosh/run_errand
+  - put: integration-environment
+    params:
+      release: integration-environment
+
+groups: [{name: cf-mysql-misc, jobs: [claim-integration-environment,run-smoke-tests-integration]}]
