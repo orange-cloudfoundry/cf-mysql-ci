@@ -55,6 +55,7 @@ jobs:
         - get: cf-mysql-master
           params:
             fetch:
+            - develop
             - release-candidate
         - get: cf-mysql-ci
         - get: release-notes
@@ -103,7 +104,7 @@ jobs:
           - final-release/release-artifacts/*.tgz
       - put: s3-resource-final-release
         params:
-          from: final\-release\/release\-artifacts\/.*\.tgz
+          from: merge-master-into-develop\/final-release\/release-artifacts\/.*\.tgz
           to: final\/
 
 groups: [{name: cf-mysql-final, jobs: [final-release]}]
