@@ -1,10 +1,6 @@
 #!/bin/bash
 set -eux
 
-bosh-ip() {
-  bosh -n vms cf-warden-mysql | grep $1 | awk '{ print $8 }'
-}
-
 set_env(){
   MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
   CI_DIR="$( cd "${MY_DIR}/../../" && pwd )"
@@ -32,8 +28,8 @@ stop_all_nodes() {
     echo "${BOSH_LITE_SSH_KEY}" > "${BOSH_LITE_KEY_FILE}"
     chmod 600 "${BOSH_LITE_KEY_FILE}"
 
-    for nodeIndex in $(seq 1 3); do
-      MYSQL_NODE=$(bosh-ip "mysql_z${nodeIndex}/0")
+    for nodeOctet in $(seq 7 9); do
+      MYSQL_NODE=$"10.244.${nodeOctet}.2"
       ssh \
           -t \
           -i "${BOSH_LITE_KEY_FILE}" \
