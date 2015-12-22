@@ -5,7 +5,7 @@ set -eux
 function close-ssh-tunnels() {
   echo "Closing SSH tunnels ..."
   OLD_TUNNELS=`ps aux | grep "ssh" | \
-    grep "\-L $NODE_0_PORT \| \-L $NODE_1_PORT \| \-L $NODE_2_PORT" | \
+    grep \-L 43306 \| \-L 43307 \| \-L 43308 | \
     awk '{print $2}'`
   [[ -z "${OLD_TUNNELS}" ]] || kill ${OLD_TUNNELS}
 }
@@ -23,67 +23,49 @@ function setup_infrastructure_variables() {
     BOSH_USER="$(jq_val "bosh_user" "${ENV_METADATA}")"
     BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
-    NODE_0_IP="127.0.0.1"
-    NODE_1_IP="127.0.0.1"
-    NODE_2_IP="127.0.0.1"
+    NODE_IP="127.0.0.1"
 
-    NODE_0_PORT="43306"
-    NODE_1_PORT="43307"
-    NODE_2_PORT="43308"
+    NODE_PORT=43306
 
     BOSH_LITE_SSH_KEY_FILE="/tmp/id_rsa"
     echo "${BOSH_LITE_SSH_KEY}" > "${BOSH_LITE_SSH_KEY_FILE}"
     chmod 600 "${BOSH_LITE_SSH_KEY_FILE}"
 
     trap close-ssh-tunnels EXIT
-    ssh -L ${NODE_0_PORT}:10.244.7.2:3306 \
-      -NnTf \
-      -i "${BOSH_LITE_SSH_KEY_FILE}" \
-      -o StrictHostKeyChecking=no \
-      "ubuntu@${DIRECTOR_IP}"
+    for nodeOctet in $(seq 7 9); do
+      MYSQL_NODE=$"10.244.${nodeOctet}.2"
+      if [[ $nodeOctet == 9 ]]; then
+        MYSQL_NODE=$"10.244.${nodeOctet}.6"
+      fi
 
-    ssh -L ${NODE_1_PORT}:10.244.8.2:3306 \
-      -NnTf \
-      -i "${BOSH_LITE_SSH_KEY_FILE}" \
-      -o StrictHostKeyChecking=no \
-       "ubuntu@${DIRECTOR_IP}"
+      ssh -L ${NODE_PORT}:${MYSQL_NODE}:3306 \
+        -NnTf \
+        -i "${BOSH_LITE_SSH_KEY_FILE}" \
+        -o StrictHostKeyChecking=no \
+        "ubuntu@${DIRECTOR_IP}"
 
-    ssh  -L ${NODE_2_PORT}:10.244.9.2:3306 \
-      -NnTf \
-      -i "${BOSH_LITE_SSH_KEY_FILE}" \
-      -o StrictHostKeyChecking=no \
-      "ubuntu@${DIRECTOR_IP}"
+      NODE_PORT=$[NODE_PORT+1]
+    done
+
   popd
 }
 
 function verify_replicated_row_count_is() {
+  NODE_PORT=43306
   pushd "${MY_DIR}"
-
-    NODE_0_COUNT=$(bundle exec ruby mariadb_crud.rb select --host ${NODE_0_IP} --port $NODE_0_PORT)
-    if [[ "${NODE_0_COUNT}" != $1 ]]; then
-      echo "Node 0 did write data correctly:"
-      echo "Expected count: $1"
-      echo "Actual count: $NODE_0_COUNT"
-      exit 1
-    fi
-
-    NODE_1_COUNT=$(bundle exec ruby mariadb_crud.rb select --host ${NODE_1_IP} --port $NODE_1_PORT)
-    if [[ "${NODE_1_COUNT}" != $1 ]]; then
-      echo "Node 1 did not replicate correctly:"
-      echo "Expected count: $1"
-      echo "Actual count: $NODE_1_COUNT"
-      exit 1
-    fi
-
-    NODE_2_COUNT=$(bundle exec ruby mariadb_crud.rb select --host $NODE_2_IP --port $NODE_2_PORT)
-    if [[ "${NODE_2_COUNT}" != $1 ]]; then
-      echo "Node 2 did not replicate correctly:"
-      echo "Expected count: $1"
-      echo "Actual count: $NODE_2_COUNT"
-      exit 1
-    fi
+    for nodeIndex in $(seq 0 2); do
+      NODE_COUNT=$(bundle exec ruby mariadb_crud.rb select --host ${NODE_IP} --port $NODE_PORT)
+      if [[ "${NODE_COUNT}" != $1 ]]; then
+        echo "Node ${nodeIndex} did write data correctly:"
+        echo "Expected count: $1"
+        echo "Actual count: $NODE_COUNT"
+        exit 1
+      fi
+      NODE_PORT=$[NODE_PORT+1]
+    done
 
   popd
+  NODE_PORT=43306
 }
 
 function scale_to() {
@@ -99,15 +81,15 @@ function scale_to() {
 function write_some_data() {
   pushd "${MY_DIR}"
     echo "Writing some data to Node 0"
-    bundle exec ruby mariadb_crud.rb insert $1 --host "${NODE_0_IP}" --port "${NODE_0_PORT}"
+    bundle exec ruby mariadb_crud.rb insert $1 --host "${NODE_IP}" --port "${NODE_PORT}"
   popd
 }
 
 function verify_first_node_row_count_is() {
   pushd "${MY_DIR}"
-    NODE_0_COUNT=$(bundle exec ruby mariadb_crud.rb select --host "${NODE_0_IP}" --port "${NODE_0_PORT}")
-    if [ ! "${NODE_0_COUNT}" -eq $1 ] ; then
-      echo "Expected record count is not equal to ${NODE_0_COUNT}"
+    NODE_COUNT=$(bundle exec ruby mariadb_crud.rb select --host "${NODE_IP}" --port "${NODE_PORT}")
+    if [ ! "${NODE_COUNT}" -eq $1 ] ; then
+      echo "Expected record count is not equal to ${NODE_COUNT}"
       exit 1
     fi
   popd
@@ -116,7 +98,7 @@ function verify_first_node_row_count_is() {
 function clear_data() {
   pushd "${MY_DIR}"
     echo "Removing test data from Node 0"
-    bundle exec ruby mariadb_crud.rb delete --host "${NODE_0_IP}" --port "${NODE_0_PORT}"
+    bundle exec ruby mariadb_crud.rb delete --host "${NODE_IP}" --port "${NODE_PORT}"
   popd
 }
 
