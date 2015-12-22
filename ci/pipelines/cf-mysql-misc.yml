@@ -20,6 +20,7 @@ resources:
 
 jobs:
 - name: claim-integration-environment
+  serial: true
   plan:
   - get: timer
     trigger: true
