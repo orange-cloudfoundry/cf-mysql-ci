@@ -168,7 +168,7 @@ jobs:
       inputs:
       - name: cf-mysql-release
       run:
-        path: cf-mysql-release/scripts/test_sample_stubs
+        path: cf-mysql-release/scripts/test-sample-stubs
 
 - name: claim-aws-environment
   plan:
