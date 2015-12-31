@@ -477,10 +477,9 @@ jobs:
         - name: bosh-lite-environment
         params:
           OUTPUT_FILE: cf-mysql-release/deployment.yml
-          NODE_COUNT: 1
+          MINIMAL_MODE: true
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
-          STANDALONE_MODE: false
         run:
           path: cf-mysql-ci/scripts/bosh-lite/make_manifest
 
@@ -641,7 +640,6 @@ jobs:
           OUTPUT_FILE: cf-mysql-release/deployment.yml
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
-          STANDALONE_MODE: false
         run:
           path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
@@ -762,8 +760,8 @@ jobs:
       - name: bosh-lite-environment
       params:
         OUTPUT_FILE: cf-mysql-release/deployment.yml
+        ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
-        STANDALONE_MODE: false
         USE_PREVIOUS_RELEASE: true
       run:
         path: cf-mysql-ci/scripts/bosh-lite/make_manifest
@@ -835,7 +833,21 @@ jobs:
       trigger: true
   - aggregate:
     - *create-release
-    - *make-manifest-bosh-lite
+    - task: make-manifest
+      config:
+        platform: *platform
+        image: *docker-image
+        inputs:
+        - name: cf-mysql-ci
+        - name: cf-mysql-release
+        - name: bosh-lite-environment
+        params:
+          OUTPUT_FILE: cf-mysql-release/deployment.yml
+          ENV_TARGET_FILE: bosh-lite-environment/name
+          ENV_METADATA: bosh-lite-environment/metadata
+          NO_ARBITRATOR: true
+        run:
+          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
 - name: persistence-test-data-read-after-upgrade
@@ -973,6 +985,7 @@ jobs:
         - name: bosh-lite-environment
         params:
           OUTPUT_FILE: cf-mysql-release/deployment.yml
+          ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
           STANDALONE_MODE: true
         run:

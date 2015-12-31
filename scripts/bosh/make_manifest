@@ -29,28 +29,35 @@ bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
 
 echo "args: $*"
 
-CUSTOM_STUB=/tmp/cf-mysql-acceptance-tests-stub.yml
-rm -f ${CUSTOM_STUB} && touch ${CUSTOM_STUB}
+tmpdir=$(mktemp -d /tmp/mysql_manifest.XXXXX)
+trap '{ rm -rf ${tmpdir}; }' EXIT
+
+PROPERTY_OVERRIDES="${DEPLOYMENTS_DIR}/${ENV}/stubs/mysql/property_overrides.yml" 
 if [[ "${RUN_ALL_ACCEPTANCE_TESTS}" = "true" ]]; then
+  CUSTOM_STUB="${tmpdir}/cf-mysql-acceptance-tests-stub.yml"
   cat > ${CUSTOM_STUB} <<EOF
 ---
-jobs:
-- name: acceptance-tests
-  properties:
+property_overrides:
+  acceptance_tests:
     smoke_tests_only: false
 EOF
+
+  spiff merge "${PROPERTY_OVERRIDES}" \
+    "${CUSTOM_STUB}" \
+    > "${tmpdir}/custom_property_overrides.yml"
+
+  PROPERTY_OVERRIDES="${tmpdir}/custom_property_overrides.yml"
 fi
 
+bosh download manifest cf ${tmpdir}/cf-manifest.yml
+
 pushd ${RELEASE_DIR}
-  ./generate_deployment_manifest \
-    aws \
-    ${DEPLOYMENTS_DIR}/${ENV}/stubs/cf/cf-aws-stub.yml \
-    ${DEPLOYMENTS_DIR}/${ENV}/stubs/cf/cf-networks-stub.yml \
-    ${DEPLOYMENTS_DIR}/${ENV}/stubs/cf/cf-shared-secrets.yml \
-    ${DEPLOYMENTS_DIR}/${ENV}/stubs/mysql/cf-mysql-plans-stub.yml \
-    ${DEPLOYMENTS_DIR}/${ENV}/stubs/cf/cf-properties.yml \
-    ${DEPLOYMENTS_DIR}/${ENV}/stubs/mysql/cf-mysql-secrets.yml \
-    "$@" > deployment.yml
+  ./scripts/generate-deployment-manifest \
+    -c "${tmpdir}/cf-manifest.yml" \
+    -i "${DEPLOYMENTS_DIR}/${ENV}/stubs/mysql/aws_iaas_settings.yml" \
+    -p "${PROPERTY_OVERRIDES}" \
+    -n "${DEPLOYMENTS_DIR}/${ENV}/stubs/mysql/instance_count_overrides.yml" \
+    > deployment.yml
 
   bosh deployment deployment.yml
   cat deployment.yml

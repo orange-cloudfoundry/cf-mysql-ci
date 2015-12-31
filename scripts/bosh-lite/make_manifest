@@ -9,62 +9,72 @@ RELEASE_DIR="$( cd ${WORKSPACE_DIR}/cf-mysql-release && pwd )"
 
 source ${CI_DIR}/scripts/utils.sh
 
+tmpdir=$(mktemp -d /tmp/mysql_manifest.XXXXX)
+trap '{ rm -rf ${tmpdir}; }' EXIT
+
 : "${OUTPUT_FILE:?}"
+: "${ENV_TARGET_FILE:?}"
 : "${ENV_METADATA:?}"
-: "${NODE_COUNT:=3}"
+: "${MINIMAL_MODE:=false}"
 : "${USE_PREVIOUS_RELEASE:=false}"
 : "${STANDALONE_MODE:=false}"
+: "${NO_ARBITRATOR:=false}"
 
-DOMAIN="$(jq_val "domain" "${ENV_METADATA}")"
-CF_ADMIN_PASSWORD="$(jq_val "cf_api_password" "${ENV_METADATA}")"
+pushd "${WORKSPACE_DIR}"
+  DIRECTOR_IP=$(cat "${ENV_TARGET_FILE}")
 
-get_version() {
-  if [ "${USE_PREVIOUS_RELEASE}" = true ]; then
+  BOSH_USERNAME="$(jq_val "bosh_user" "${ENV_METADATA}")"
+  BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
+popd
+
+get_previous_version() {
   echo "$(find ${RELEASE_DIR}/releases/cf-mysql-* -type f -printf "%f\n" | \
     cut -d '-' -f3              | \
     cut -d '.' -f1              | \
     sort -n                     | \
     tail -1)"
-  else
-    echo "latest"
-  fi
 }
 
-# select stub that corresponds to $NODE_COUNT
-MYSQL_STUB="${RELEASE_DIR}/bosh-lite/cf-mysql-stub-spiff-${NODE_COUNT}-node.yml"
-if [[ ! -f "${MYSQL_STUB}" ]] ; then
-  echo "Can't find ${MYSQL_STUB}"
-  exit 1
+if [ "${STANDALONE_MODE}" = false ] ; then
+  bosh -n target "${DIRECTOR_IP}"
+  bosh -n login "${BOSH_USERNAME}" "${BOSH_PASSWORD}"
+
+  bosh -n download manifest cf-warden "${tmpdir}/cf-warden.yml"
+
+  CF_MANIFEST="${tmpdir}/cf-warden.yml"
+else
+  CF_MANIFEST="${RELEASE_DIR}/manifest-generation/examples/standalone/standalone-cf-manifest.yml"
 fi
 
-# concourse bosh resource will automatically replace the UUID
-MYSQL_STUB_MODIFIED=/tmp/mysql-stub.yml
-sed 's/PLACEHOLDER-DIRECTOR-UUID/~/' ${MYSQL_STUB} > ${MYSQL_STUB_MODIFIED}
+PROPERTY_OVERRIDES="${RELEASE_DIR}/manifest-generation/bosh-lite-stubs/property-overrides.yml"
+IAAS_SETTINGS="${RELEASE_DIR}/manifest-generation/bosh-lite-stubs/iaas-settings.yml"
+INSTANCE_COUNT_OVERRIDE="${RELEASE_DIR}/manifest-generation/examples/instance-count-overrides.yml"
+RELEASE_VERSIONS="${RELEASE_DIR}/manifest-generation/examples/release-versions.yml"
 
-MYSQL_VERSION="$(get_version)"
-CUSTOM_CI_STUB=/tmp/custom-mysql-ci-stub.yml
-cat <<CI_STUB > ${CUSTOM_CI_STUB}
-releases:
+if [ "${STANDALONE_MODE}" = "true" ]; then
+  PROPERTY_OVERRIDES="${RELEASE_DIR}/manifest-generation/bosh-lite-stubs/property-overrides-standalone.yml"
+  INSTANCE_COUNT_OVERRIDE="${RELEASE_DIR}/manifest-generation/examples/standalone/instance-count-overrides.yml"
+elif [ "${MINIMAL_MODE}" = "true" ]; then
+  INSTANCE_COUNT_OVERRIDE="${RELEASE_DIR}/manifest-generation/examples/minimal/instance-count-overrides.yml"
+elif [ "${NO_ARBITRATOR}" = "true" ]; then
+  INSTANCE_COUNT_OVERRIDE="${RELEASE_DIR}/manifest-generation/examples/no-arbitrator/instance-count-overrides.yml"
+fi
+
+if [ "${USE_PREVIOUS_RELEASE}" = "true" ]; then
+  MYSQL_VERSION="$(get_previous_version)"
+  RELEASE_VERSIONS="${tmpdir}/cf-mysql-versions-stub.yml"
+  cat > "${RELEASE_VERSIONS}" <<EOF
+---
+release_versions:
 - name: cf-mysql
   version: ${MYSQL_VERSION}
-properties:
-  domain: ${DOMAIN}
-  system_domain: ${DOMAIN}
-  app_domains:
-  - ${DOMAIN}
-  cf:
-    admin_password: ${CF_ADMIN_PASSWORD}
-CI_STUB
-
-STANDALONE_STUB=""
-if [ "${STANDALONE_MODE}" = true ] ; then
-  STANDALONE_STUB="${RELEASE_DIR}/bosh-lite/cf-mysql-standalone-stub.yml"
+EOF
 fi
 
-${RELEASE_DIR}/generate_deployment_manifest \
-  warden \
-  ${RELEASE_DIR}/templates/sample_stubs/sample_plans_stub.yml \
-  ${MYSQL_STUB_MODIFIED} \
-  ${CUSTOM_CI_STUB} \
-  ${STANDALONE_STUB} \
-  "$@" > ${WORKSPACE_DIR}/${OUTPUT_FILE}
+"${RELEASE_DIR}/scripts/generate-deployment-manifest" \
+  -c "${CF_MANIFEST}" \
+  -p "${PROPERTY_OVERRIDES}" \
+  -i "${IAAS_SETTINGS}" \
+  -n "${INSTANCE_COUNT_OVERRIDE}" \
+  -v "${RELEASE_VERSIONS}" \
+  > "${WORKSPACE_DIR}/${OUTPUT_FILE}"
