@@ -35,15 +35,17 @@ get_previous_version() {
     tail -1)"
 }
 
+CF_MANIFEST="${tmpdir}/cf-warden.yml"
 if [ "${STANDALONE_MODE}" = false ] ; then
   bosh -n target "${DIRECTOR_IP}"
   bosh -n login "${BOSH_USERNAME}" "${BOSH_PASSWORD}"
 
-  bosh -n download manifest cf-warden "${tmpdir}/cf-warden.yml"
-
-  CF_MANIFEST="${tmpdir}/cf-warden.yml"
+  bosh -n download manifest cf-warden "${CF_MANIFEST}"
 else
-  CF_MANIFEST="${RELEASE_DIR}/manifest-generation/examples/standalone/standalone-cf-manifest.yml"
+  sed -e "s/REPLACE_WITH_DIRECTOR_UUID/~/g" \
+    -e "s/REPLACE_WITH_CF_DEPLOYMENT_NAME/cf-warden/g" \
+    "${RELEASE_DIR}/manifest-generation/examples/standalone/standalone-cf-manifest.yml" \
+    > "${CF_MANIFEST}"
 fi
 
 PROPERTY_OVERRIDES="${RELEASE_DIR}/manifest-generation/bosh-lite-stubs/property-overrides.yml"
