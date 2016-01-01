@@ -13,6 +13,7 @@ source "${CI_DIR}/scripts/utils.sh"
 : "${ENV_METADATA:?}"
 : "${DEPLOYMENTS_DIR:?}"
 : "${RUN_ALL_ACCEPTANCE_TESTS:=false}"
+: "${USE_EXISTING_CF_MANIFEST:=false}"
 
 # ensure DEPLOYMENTS_DIR is an absolute path
 if [[ "${DEPLOYMENTS_DIR}" != /* ]]; then
@@ -49,11 +50,16 @@ EOF
   PROPERTY_OVERRIDES="${tmpdir}/custom_property_overrides.yml"
 fi
 
-bosh download manifest cf ${tmpdir}/cf-manifest.yml
+if [ "${USE_EXISTING_CF_MANIFEST}" = false ]; then
+  bosh download manifest cf "${tmpdir}/cf-manifest.yml"
+  CF_MANIFEST=${tmpdir}/cf-manifest.yml
+else
+  CF_MANIFEST="${DEPLOYMENTS_DIR}/${ENV}/stubs/cf/cf-manifest.yml"
+fi
 
 pushd ${RELEASE_DIR}
   ./scripts/generate-deployment-manifest \
-    -c "${tmpdir}/cf-manifest.yml" \
+    -c "${CF_MANIFEST}" \
     -i "${DEPLOYMENTS_DIR}/${ENV}/stubs/mysql/aws_iaas_settings.yml" \
     -p "${PROPERTY_OVERRIDES}" \
     -n "${DEPLOYMENTS_DIR}/${ENV}/stubs/mysql/instance_count_overrides.yml" \

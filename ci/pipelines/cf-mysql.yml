@@ -1117,6 +1117,7 @@ jobs:
           ENV_TARGET_FILE: integration-environment/name
           ENV_METADATA: integration-environment/metadata
           DEPLOYMENTS_DIR: deployments-configuration
+          USE_EXISTING_CF_MANIFEST: true
         run:
           path: cf-mysql-ci/scripts/bosh/make_manifest
   - put: integration-deployment
