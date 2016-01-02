@@ -91,7 +91,7 @@ function scale_up() {
 function write_some_data() {
   pushd "${MY_DIR}"
     echo "Writing some data to Node 0"
-    bundle exec ruby mariadb_crud.rb insert $1 --host "${NODE_IP}" --port "${NODE_PORT}"
+    bundle exec ruby mariadb_crud.rb insert $1 --host "${TUNNEL_HOST}" --port "${NODE_PORT}"
   popd
 }
 
