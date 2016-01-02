@@ -53,8 +53,7 @@ function verify_replicated_row_count_is() {
   pushd "${MY_DIR}"
     for node_index in $(seq 0 1); do
       PORT=${TUNNEL_PORTS[$node_index]}
-      MYSQL_IP=${MYSQL_IPS[$node_index]}
-      NODE_COUNT=$(bundle exec ruby mariadb_crud.rb select --host ${MYSQL_IP} --port ${PORT})
+      NODE_COUNT=$(bundle exec ruby mariadb_crud.rb select --host ${TUNNEL_HOST} --port ${PORT})
       if [[ "${NODE_COUNT}" != $1 ]]; then
         echo "Node ${node_index} did write data correctly:"
         echo "Expected count: $1"
@@ -99,8 +98,7 @@ function write_some_data() {
 function verify_first_node_row_count_is() {
   pushd "${MY_DIR}"
     PORT=${TUNNEL_PORTS[0]}
-    MYSQL_IP=${MYSQL_IPS[0]}
-    NODE_COUNT=$(bundle exec ruby mariadb_crud.rb select --host "${MYSQL_IP}" --port "${PORT}")
+    NODE_COUNT=$(bundle exec ruby mariadb_crud.rb select --host "${TUNNEL_HOST}" --port "${PORT}")
     if [ ! "${NODE_COUNT}" -eq $1 ] ; then
       echo "Expected record count is not equal to ${NODE_COUNT}"
       exit 1
@@ -111,9 +109,8 @@ function verify_first_node_row_count_is() {
 function clear_data() {
   pushd "${MY_DIR}"
     PORT=${TUNNEL_PORTS[0]}
-    MYSQL_IP=${MYSQL_IPS[0]}
     echo "Removing test data from Node 0"
-    bundle exec ruby mariadb_crud.rb delete --host "${MYSQL_IP}" --port "${PORT}"
+    bundle exec ruby mariadb_crud.rb delete --host "${TUNNEL_HOST}" --port "${PORT}"
   popd
 }
 
