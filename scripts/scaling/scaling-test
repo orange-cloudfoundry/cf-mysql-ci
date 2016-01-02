@@ -2,6 +2,9 @@
 
 set -eux
 
+tmpdir=$(mktemp -d /tmp/mysql_scaling.XXXXX)
+trap '{ rm -rf ${tmpdir}; }' EXIT
+
 function close-ssh-tunnels() {
   echo "Closing SSH tunnels ..."
   OLD_TUNNELS=`ps aux | grep "ssh" | \
@@ -71,20 +74,25 @@ function verify_replicated_row_count_is() {
 
 function scale_down() {
   echo "Scaling down to minimal deployment"
+
+  MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
   MINIMAL_MODE=true \
-    OUTPUT_FILE="deployment.yml" \
+    OUTPUT_FILE="${MANIFEST_FILE}" \
     ${CI_DIR}/scripts/bosh-lite/make_manifest
 
-  bosh deployment "${WORKSPACE_DIR}/${OUTPUT_FILE}"
+  bosh deployment "${MANIFEST_FILE}"
   bosh -n deploy
 }
 
 function scale_up() {
   echo "Scaling to up to full deployment"
+  MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
+
   MINIMAL_MODE=false \
-  OUTPUT_FILE="deployment.yml" \
+  OUTPUT_FILE="${MANIFEST_FILE}" \
     ${CI_DIR}/scripts/bosh-lite/make_manifest
-  bosh deployment "${WORKSPACE_DIR}/${OUTPUT_FILE}"
+
+  bosh deployment "${MANIFEST_FILE}"
   bosh -n deploy
 }
 
