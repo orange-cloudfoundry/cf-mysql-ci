@@ -20,6 +20,10 @@ trap '{ rm -rf ${tmpdir}; }' EXIT
 : "${STANDALONE_MODE:=false}"
 : "${NO_ARBITRATOR:=false}"
 
+if [[ "${OUTPUT_FILE}" != /* ]]; then
+  OUTPUT_FILE="${WORKSPACE_DIR}/${OUTPUT_FILE}"
+fi
+
 pushd "${WORKSPACE_DIR}"
   DIRECTOR_IP=$(cat "${ENV_TARGET_FILE}")
 
@@ -79,4 +83,4 @@ fi
   -i "${IAAS_SETTINGS}" \
   -n "${INSTANCE_COUNT_OVERRIDE}" \
   -v "${RELEASE_VERSIONS}" \
-  > "${WORKSPACE_DIR}/${OUTPUT_FILE}"
+  > "${OUTPUT_FILE}"
