@@ -8,7 +8,7 @@ trap '{ rm -rf ${tmpdir}; }' EXIT
 function close-ssh-tunnels() {
   echo "Closing SSH tunnels ..."
   OLD_TUNNELS=`ps aux | grep "ssh" | \
-    grep \-L 43306 \| \-L 43307 \| \-L 43308 | \
+    grep "\-L 43306 \| \-L 43307 \| \-L 43308" | \
     awk '{print $2}'`
   [[ -z "${OLD_TUNNELS}" ]] || kill ${OLD_TUNNELS}
 }
@@ -26,50 +26,43 @@ function setup_infrastructure_variables() {
     BOSH_USER="$(jq_val "bosh_user" "${ENV_METADATA}")"
     BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
-    NODE_IP="127.0.0.1"
-
-    NODE_PORT=43306
+    TUNNEL_HOST="127.0.0.1"
+    # exclude arbitrator (10.244.8.2)
+    TUNNEL_PORTS=("43306" "43307")
+    MYSQL_IPS=("10.244.7.2" "10.244.8.2")
 
     BOSH_LITE_SSH_KEY_FILE="/tmp/id_rsa"
     echo "${BOSH_LITE_SSH_KEY}" > "${BOSH_LITE_SSH_KEY_FILE}"
     chmod 600 "${BOSH_LITE_SSH_KEY_FILE}"
 
     trap close-ssh-tunnels EXIT
-    for nodeOctet in $(seq 7 9); do
-      MYSQL_NODE=$"10.244.${nodeOctet}.2"
-      if [[ $nodeOctet == 9 ]]; then
-        MYSQL_NODE=$"10.244.${nodeOctet}.6"
-      fi
-
-      ssh -L ${NODE_PORT}:${MYSQL_NODE}:3306 \
+    for i in $(seq 0 1); do
+      PORT=${TUNNEL_PORTS[$i]}
+      MYSQL_IP=${MYSQL_IPS[$i]}
+      ssh -L ${PORT}:${MYSQL_IP}:3306 \
         -NnTf \
         -i "${BOSH_LITE_SSH_KEY_FILE}" \
         -o StrictHostKeyChecking=no \
         "ubuntu@${DIRECTOR_IP}"
-
-      NODE_PORT=$[NODE_PORT+1]
     done
-
-    NODE_PORT=43306
   popd
 }
 
 function verify_replicated_row_count_is() {
   NODE_PORT=43306
   pushd "${MY_DIR}"
-    for nodeIndex in $(seq 0 2); do
-      NODE_COUNT=$(bundle exec ruby mariadb_crud.rb select --host ${NODE_IP} --port $NODE_PORT)
+    for node_index in $(seq 0 1); do
+      PORT=${TUNNEL_PORTS[$node_index]}
+      MYSQL_IP=${MYSQL_IPS[$node_index]}
+      NODE_COUNT=$(bundle exec ruby mariadb_crud.rb select --host ${MYSQL_IP} --port ${PORT})
       if [[ "${NODE_COUNT}" != $1 ]]; then
-        echo "Node ${nodeIndex} did write data correctly:"
+        echo "Node ${node_index} did write data correctly:"
         echo "Expected count: $1"
         echo "Actual count: $NODE_COUNT"
         exit 1
       fi
-      NODE_PORT=$[NODE_PORT+1]
     done
-
   popd
-  NODE_PORT=43306
 }
 
 function scale_down() {
@@ -105,7 +98,9 @@ function write_some_data() {
 
 function verify_first_node_row_count_is() {
   pushd "${MY_DIR}"
-    NODE_COUNT=$(bundle exec ruby mariadb_crud.rb select --host "${NODE_IP}" --port "${NODE_PORT}")
+    PORT=${TUNNEL_PORTS[0]}
+    MYSQL_IP=${MYSQL_IPS[0]}
+    NODE_COUNT=$(bundle exec ruby mariadb_crud.rb select --host "${MYSQL_IP}" --port "${PORT}")
     if [ ! "${NODE_COUNT}" -eq $1 ] ; then
       echo "Expected record count is not equal to ${NODE_COUNT}"
       exit 1
@@ -115,8 +110,10 @@ function verify_first_node_row_count_is() {
 
 function clear_data() {
   pushd "${MY_DIR}"
+    PORT=${TUNNEL_PORTS[0]}
+    MYSQL_IP=${MYSQL_IPS[0]}
     echo "Removing test data from Node 0"
-    bundle exec ruby mariadb_crud.rb delete --host "${NODE_IP}" --port "${NODE_PORT}"
+    bundle exec ruby mariadb_crud.rb delete --host "${MYSQL_IP}" --port "${PORT}"
   popd
 }
 
