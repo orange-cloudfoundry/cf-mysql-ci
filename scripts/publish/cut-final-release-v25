@@ -1,0 +1,84 @@
+#!/bin/bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
+RELEASE_DIR="$(cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
+
+OUTPUT_RELEASE_ARTIFACTS="${WORKSPACE_DIR}/${OUTPUT_RELEASE_ARTIFACTS:?}"
+RELEASE_ACCESS_KEY="${RELEASE_ACCESS_KEY:?}"
+RELEASE_SECRET_KEY="${RELEASE_SECRET_KEY:?}"
+OUTPUT_RELEASE_TAG="${WORKSPACE_DIR}/${OUTPUT_RELEASE_TAG:?}"
+OUTPUT_RELEASE_NOTES="${WORKSPACE_DIR}/${OUTPUT_RELEASE_NOTES:?}"
+OUTPUT_RELEASE_COMMIT="${WORKSPACE_DIR}/${OUTPUT_RELEASE_COMMIT:?}"
+RELEASE_NOTES_DIRECTORY="${RELEASE_NOTES_DIRECTORY:?}"
+RELEASE_NOTES_REGEX="${WORKSPACE_DIR}/${RELEASE_NOTES_DIRECTORY}/RELEASE_NOTES_v*"
+
+function get_expected_release_version() {
+  RELEASE_NOTES_FILENAME="$(basename ${RELEASE_NOTES_REGEX})"
+  echo "${RELEASE_NOTES_FILENAME#RELEASE_NOTES_v}" #remove leading file prefix
+}
+
+function get_actual_release_version() {
+  # get the previous release version and add 1
+  pushd ${RELEASE_DIR} > /dev/null
+    PREVIOUS_VERSION=$(ls releases/cf-mysql-*.yml | \
+      cut -d '-' -f3 | \
+      cut -d '.' -f1 | \
+      sort -n | \
+      tail -1)
+    echo "$((${PREVIOUS_VERSION} + .1))"
+  popd > /dev/null
+}
+
+function write_upload_keys() {
+  # write AWS keys used to upload blobs to public blob store
+  pushd ${RELEASE_DIR}
+    cat << EOF > config/private.yml
+---
+blobstore:
+  s3:
+    access_key_id: $RELEASE_ACCESS_KEY
+    secret_access_key: $RELEASE_SECRET_KEY
+EOF
+  popd
+}
+
+pushd ${RELEASE_DIR}
+
+  git config --global user.email "core-services-bot@pivotal.io"
+  git config --global user.name "Final Release Builder"
+
+  git checkout releases/v25
+  git submodule foreach --recursive git submodule sync && git submodule update --init --recursive
+
+  EXPECTED_VERSION="$(get_expected_release_version)"
+  ACTUAL_VERSION="$(get_actual_release_version)"
+  VERSION_TAG="v${ACTUAL_VERSION}"
+
+  if [[ "${EXPECTED_VERSION}" != "${ACTUAL_VERSION}" ]]; then
+    echo "Expected version ${EXPECTED_VERSION} did not equal actual version ${ACTUAL_VERSION}"
+    exit 1
+  fi
+
+  write_upload_keys
+
+  bosh -n create release --with-tarball --final
+
+  mkdir -p ${OUTPUT_RELEASE_ARTIFACTS}
+  cp releases/cf-mysql/cf-mysql-${ACTUAL_VERSION}.tgz ${OUTPUT_RELEASE_ARTIFACTS}
+
+  git add .
+  git commit -m "Final release version ${VERSION_TAG}"
+
+  echo ${VERSION_TAG} > $OUTPUT_RELEASE_TAG
+
+  # Simply copy release notes to static filename for now,
+  # leaves us the option to do modification later
+  cp ${RELEASE_NOTES_REGEX} ${OUTPUT_RELEASE_NOTES}
+
+  git rev-parse HEAD > ${OUTPUT_RELEASE_COMMIT}
+popd
+
+echo "Successfully created cf-mysql final release ${VERSION_TAG}"
