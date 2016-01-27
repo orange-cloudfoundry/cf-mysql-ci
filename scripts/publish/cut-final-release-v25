@@ -28,7 +28,7 @@ function get_actual_release_version() {
       cut -d '.' -f1 | \
       sort -n | \
       tail -1)
-    echo "$((${PREVIOUS_VERSION} + .1))"
+    echo "$(echo ${PREVIOUS_VERSION} + .1 | bc)"
   popd > /dev/null
 }
 
