@@ -55,7 +55,9 @@ pushd ${RELEASE_DIR}
   git submodule foreach --recursive git submodule sync && git submodule update --init --recursive
 
   EXPECTED_VERSION="$(get_expected_release_version)"
-  ACTUAL_VERSION="$(${ACTUAL_VERSION}:get_actual_release_version)"
+  if [[ -z "${ACTUAL_VERSION}" ]]; then
+    ACTUAL_VERSION="$(${ACTUAL_VERSION}:-get_actual_release_version)"
+  fi
   VERSION_TAG="v${ACTUAL_VERSION}"
 
   if [[ "${EXPECTED_VERSION}" != "${ACTUAL_VERSION}" ]]; then
