@@ -67,7 +67,7 @@ pushd ${RELEASE_DIR}
 
   write_upload_keys
 
-  bosh -n create release --with-tarball --final
+  bosh -n create release --with-tarball --final --version "${ACTUAL_VERSION}"
 
   mkdir -p ${OUTPUT_RELEASE_ARTIFACTS}
   cp releases/cf-mysql/cf-mysql-${ACTUAL_VERSION}.tgz ${OUTPUT_RELEASE_ARTIFACTS}
