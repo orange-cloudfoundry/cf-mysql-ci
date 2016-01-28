@@ -56,7 +56,7 @@ pushd ${RELEASE_DIR}
 
   EXPECTED_VERSION="$(get_expected_release_version)"
   if [[ -z "${ACTUAL_VERSION}" ]]; then
-    ACTUAL_VERSION="$(${ACTUAL_VERSION}:-get_actual_release_version)"
+    ACTUAL_VERSION="$(get_actual_release_version)"
   fi
   VERSION_TAG="v${ACTUAL_VERSION}"
 
