@@ -4,7 +4,15 @@ resources:
   type: git
   source:
     uri: git@github.com:cloudfoundry/cf-mysql-release.git
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
     branch: releases/v24
+=======
+    branch: releases/v25
+>>>>>>> Stashed changes
+=======
+    branch: releases/v25
+>>>>>>> Stashed changes
     private_key: {{git-writer-private-key}}
 
 - name: cf-mysql-ci
@@ -53,7 +61,15 @@ jobs:
             path: cf-mysql-release
           - name: release-notes
           run:
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             path: cf-mysql-ci/scripts/publish/cut-final-release-v24
+=======
+            path: cf-mysql-ci/scripts/publish/cut-final-release-v25
+>>>>>>> Stashed changes
+=======
+            path: cf-mysql-ci/scripts/publish/cut-final-release-v25
+>>>>>>> Stashed changes
           params:
             RELEASE_NOTES_DIRECTORY: release-notes
             OUTPUT_RELEASE_ARTIFACTS: release-artifacts
@@ -62,7 +78,15 @@ jobs:
             OUTPUT_RELEASE_COMMIT: git-commit
             RELEASE_ACCESS_KEY: {{cf-mysql-publish-blobs-aws-access-key-id}}
             RELEASE_SECRET_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
             ACTUAL_VERSION: "24.1"
+=======
+            ACTUAL_VERSION: "25.1"
+>>>>>>> Stashed changes
+=======
+            ACTUAL_VERSION: "25.1"
+>>>>>>> Stashed changes
       - put: cf-mysql-release-candidate
         params:
           repository: final-release/cf-mysql-release
