@@ -1,0 +1,134 @@
+---
+resources:
+- name: aws-stemcell
+  type: bosh-io-stemcell
+  source:
+    name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
+
+- name: deployments-core-services
+  type: git
+  source:
+    branch: v24
+    uri: git@github.com:pivotal-cf/deployments-core-services
+    private_key: {{git-private-key}}
+
+- name: cf-mysql-release-rc
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/cf-mysql-release
+    branch: releases/v24
+    private_key: {{git-writer-private-key}}
+
+- name: aws-acceptance-environment
+  type: pool
+  source:
+    uri: git@github.com:pivotal-cf-experimental/core-services-oss-env-resource-pool
+    branch: master
+    pool: aws-acceptance
+    private_key: {{git-writer-private-key}}
+
+- name: primo-deployment
+  type: bosh-deployment
+  source:
+    target: https://bosh.primo.cf-app.com:25555
+    username: {{primo_bosh_username}}
+    password: {{primo_bosh_password}}
+    deployment: cf-primo-mysql
+    ignore_ssl: true
+
+jobs:
+- name: claim-aws-environment
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      resource: cf-mysql-release-rc
+      trigger: true
+    - put: aws-acceptance-environment
+      params:
+        acquire: true
+
+- name: delete-primo-deployment
+  plan:
+  - aggregate:
+    - get: aws-acceptance-environment
+      passed: [claim-aws-environment]
+    - get: cf-mysql-release
+      resource: cf-mysql-release-rc
+      passed: [claim-aws-environment]
+      trigger: true
+    - get: deployments-core-services
+  - task: run-broker-deregistrar
+    file: deployments-core-services/ci/tasks/bosh/run-errand-broker-deregistrar.yml
+    config:
+      params:
+        ENV: primo
+        DEPLOYMENT_NAME: cf-primo-mysql
+  - task: delete-primo-deployment
+    file: deployments-core-services/ci/tasks/bosh/delete-deployment.yml
+    config:
+      params:
+        ENV: primo
+        DEPLOYMENT_NAME: cf-primo-mysql
+
+- name: deploy-to-primo
+  plan:
+  - aggregate:
+    - get: deployments-core-services
+    - get: cf-mysql-release
+      resource: cf-mysql-release-rc
+      passed: [delete-primo-deployment]
+      trigger: true
+    - get: aws-stemcell
+    - get: aws-acceptance-environment
+      passed: [delete-primo-deployment]
+  - aggregate:
+    - task: create-release
+      file: deployments-core-services/ci/tasks/create-release-cf-mysql-release.yml
+    - task: make-manifest
+      file: deployments-core-services/ci/tasks/make-manifest-cf-mysql.yml
+      config:
+        params:
+          ENV: primo
+  - put: primo-deployment
+    params:
+      manifest: make-manifest/cf-mysql-release/deployment.yml
+      releases: [create-release/cf-mysql-release/dev_releases/cf-mysql/*.tgz]
+      stemcells: [aws-stemcell/*.tgz]
+
+- name: run-smoke-tests-primo
+  plan:
+  - aggregate:
+    - get: aws-acceptance-environment
+      passed: [deploy-to-primo]
+    - get: cf-mysql-release
+      resource: cf-mysql-release-rc
+      passed: [deploy-to-primo]
+      trigger: true
+    - get: deployments-core-services
+  - task: run-broker-registrar
+    file: deployments-core-services/ci/tasks/bosh/run-errand.yml
+    config:
+      params:
+        ENV: primo
+        DEPLOYMENT_NAME: cf-primo-mysql
+        ERRAND: broker-registrar
+  - task: run-smoke-tests
+    file: deployments-core-services/ci/tasks/bosh/run-errand.yml
+    config:
+      params:
+        ENV: primo
+        DEPLOYMENT_NAME: cf-primo-mysql
+        ERRAND: acceptance-tests
+
+- name: release-primo-environment
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      resource: cf-mysql-release-rc
+      passed: [run-smoke-tests-primo]
+      trigger: true
+    - get: aws-acceptance-environment
+      passed: [run-smoke-tests-primo]
+  - put: aws-acceptance-environment
+    params:
+      release: aws-acceptance-environment

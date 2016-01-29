@@ -1,0 +1,82 @@
+---
+resources:
+- name: cf-mysql-release-candidate
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/cf-mysql-release.git
+    branch: releases/v25
+    private_key: {{git-writer-private-key}}
+
+- name: cf-mysql-ci
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry-incubator/cf-mysql-ci.git
+    branch: v25
+
+- name: s3-resource-final-release
+  type: s3
+  source:
+    bucket: cf-mysql-releases
+    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
+    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
+
+- name: release-notes
+  type: s3
+  source:
+    bucket: cf-mysql-release-notes
+    regexp: RELEASE_NOTES_v(\d+).(\d+)
+    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
+    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
+
+- name: publish-github-release
+  type: github-release
+  source:
+    user: cloudfoundry
+    repository: cf-mysql-release
+    access_token: {{git-writer-github-access-token}}
+
+jobs:
+  - name: final-release
+    plan:
+      - aggregate:
+        - get: cf-mysql-ci
+        - get: cf-mysql-release-candidate
+        - get: release-notes
+          trigger: true
+      - task: final-release
+        config:
+          platform: linux
+          image: docker:///cloudfoundry/cf-mysql-ci
+          inputs:
+          - name: cf-mysql-ci
+          - name: cf-mysql-release-candidate
+            path: cf-mysql-release
+          - name: release-notes
+          run:
+            path: cf-mysql-ci/scripts/publish/cut-final-release-v25
+          params:
+            RELEASE_NOTES_DIRECTORY: release-notes
+            OUTPUT_RELEASE_ARTIFACTS: release-artifacts
+            OUTPUT_RELEASE_TAG: cf-mysql-tag
+            OUTPUT_RELEASE_NOTES: generated-release-notes
+            OUTPUT_RELEASE_COMMIT: git-commit
+            RELEASE_ACCESS_KEY: {{cf-mysql-publish-blobs-aws-access-key-id}}
+            RELEASE_SECRET_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
+            ACTUAL_VERSION: "25.1"
+      - put: cf-mysql-release-candidate
+        params:
+          repository: final-release/cf-mysql-release
+      - put: publish-github-release
+        params:
+          name: final-release/cf-mysql-tag
+          tag: final-release/cf-mysql-tag
+          body: final-release/generated-release-notes
+          commitish: final-release/git-commit
+          globs:
+          - final-release/release-artifacts/*.tgz
+      - put: s3-resource-final-release
+        params:
+          from: final-release\/release-artifacts\/.*\.tgz
+          to: final\/
+
+groups: [{name: cf-mysql-final-v25-1, jobs: [final-release]}]
