@@ -19,23 +19,28 @@ function setup_infrastructure_variables() {
     : "${BOSH_LITE_SSH_KEY:?}"
 
     DIRECTOR_IP=$(cat "${ENV_TARGET_FILE}")
-
     BOSH_USER="$(jq_val "bosh_user" "${ENV_METADATA}")"
     BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
-
-    TUNNEL_HOST="127.0.0.1"
-    # exclude arbitrator (10.244.9.6)
-    TUNNEL_PORTS=("43306" "43307")
-    MYSQL_IPS=("10.244.7.2" "10.244.8.2")
-
     BOSH_LITE_SSH_KEY_FILE="/tmp/id_rsa"
     echo "${BOSH_LITE_SSH_KEY}" > "${BOSH_LITE_SSH_KEY_FILE}"
     chmod 600 "${BOSH_LITE_SSH_KEY_FILE}"
 
+    TUNNEL_HOST="127.0.0.1"
+    TUNNEL_PORTS=()
+    BASE_TUNNEL_IP=43306
+    MYSQL_IPS=()
+    num_ips=$#
+    MYSQL_IPS=("$@")
+    for i in `seq 1 $num_ips`; do
+      TUNNEL_PORTS[$i-1]=$(( BASE_TUNNEL_IP++ ))
+    done
+
     trap close-ssh-tunnels EXIT
-    for i in $(seq 0 1); do
-      PORT=${TUNNEL_PORTS[$i]}
-      MYSQL_IP=${MYSQL_IPS[$i]}
+    for i in `seq 1 $num_ips`; do
+      PORT=${TUNNEL_PORTS[$i-1]}
+      MYSQL_IP=${MYSQL_IPS[$i-1]}
+
+      echo "$PORT and $MYSQL_IP"
       ssh -L ${PORT}:${MYSQL_IP}:3306 \
         -NnTf \
         -i "${BOSH_LITE_SSH_KEY_FILE}" \
@@ -47,20 +52,19 @@ function setup_infrastructure_variables() {
 
 function verify_replicated_row_count_is() {
   pushd "${MY_DIR}"
-    for node_index in $(seq 0 1); do
-      PORT=${TUNNEL_PORTS[$node_index]}
-      NODE_COUNT=$(bundle exec ruby mariadb_crud.rb select --host ${TUNNEL_HOST} --port ${PORT})
-      if [[ "${NODE_COUNT}" != $1 ]]; then
+    for port in "${TUNNEL_PORTS[@]}"; do
+      ROW_COUNT=$(bundle exec ruby mariadb_crud.rb select --host ${TUNNEL_HOST} --port ${port})
+      if [[ "${ROW_COUNT}" != $1 ]]; then
         echo "Node ${node_index} did write data correctly:"
         echo "Expected count: $1"
-        echo "Actual count: $NODE_COUNT"
+        echo "Actual count: $ROW_COUNT"
         exit 1
       fi
     done
   popd
 }
 
-function scale_down() {
+function scale_down_to_minimal() {
   echo "Scaling down to minimal deployment"
 
   MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
@@ -72,11 +76,23 @@ function scale_down() {
   bosh -n deploy
 }
 
-function scale_up() {
-  echo "Scaling to up to full deployment"
+function scale_up_to_arb() {
+  echo "Scaling up to full deployment (2 nodes plus arbitrator)"
   MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
 
   MINIMAL_MODE=false \
+  OUTPUT_FILE="${MANIFEST_FILE}" \
+    ${CI_DIR}/scripts/bosh-lite/make_manifest
+
+  bosh deployment "${MANIFEST_FILE}"
+  bosh -n deploy
+}
+
+function deploy_full_cluster() {
+  echo "Scaling to up to full deployment (3 nodes)"
+  MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
+
+  NO_ARBITRATOR=true \
   OUTPUT_FILE="${MANIFEST_FILE}" \
     ${CI_DIR}/scripts/bosh-lite/make_manifest
 
@@ -95,9 +111,9 @@ function write_some_data() {
 function verify_first_node_row_count_is() {
   pushd "${MY_DIR}"
     PORT=${TUNNEL_PORTS[0]}
-    NODE_COUNT=$(bundle exec ruby mariadb_crud.rb select --host "${TUNNEL_HOST}" --port "${PORT}")
-    if [ ! "${NODE_COUNT}" -eq $1 ] ; then
-      echo "Expected record count is not equal to ${NODE_COUNT}"
+    ROW_COUNT=$(bundle exec ruby mariadb_crud.rb select --host "${TUNNEL_HOST}" --port "${PORT}")
+    if [ ! "${ROW_COUNT}" -eq $1 ] ; then
+      echo "Expected record count is not equal to ${ROW_COUNT}"
       exit 1
     fi
   popd

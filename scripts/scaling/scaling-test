@@ -11,7 +11,7 @@ WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
 
 source "${MY_DIR}/scaling-helpers"
 
-setup_infrastructure_variables
+setup_infrastructure_variables 10.244.7.2 10.244.8.2
 
 pushd "${MY_DIR}"
   bundle install
@@ -20,14 +20,14 @@ popd
 bosh -n target "${DIRECTOR_IP}"
 bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
 
-scale_down
+scale_down_to_minimal
 clear_data
 write_some_data 1000
 
-scale_up
+scale_up_to_arb
 verify_replicated_row_count_is 1000
 
-scale_down
+scale_down_to_minimal
 write_some_data 1000
 verify_first_node_row_count_is 2000
 
