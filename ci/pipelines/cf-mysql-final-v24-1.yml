@@ -4,7 +4,7 @@ resources:
   type: git
   source:
     uri: git@github.com:cloudfoundry/cf-mysql-release.git
-    branch: releases/v25
+    branch: releases/v24
     private_key: {{git-writer-private-key}}
 
 - name: cf-mysql-ci
@@ -53,7 +53,7 @@ jobs:
             path: cf-mysql-release
           - name: release-notes
           run:
-            path: cf-mysql-ci/scripts/publish/cut-final-release-v25
+            path: cf-mysql-ci/scripts/publish/cut-final-release-v24
           params:
             RELEASE_NOTES_DIRECTORY: release-notes
             OUTPUT_RELEASE_ARTIFACTS: release-artifacts
@@ -62,7 +62,7 @@ jobs:
             OUTPUT_RELEASE_COMMIT: git-commit
             RELEASE_ACCESS_KEY: {{cf-mysql-publish-blobs-aws-access-key-id}}
             RELEASE_SECRET_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
-            ACTUAL_VERSION: "25.1"
+            ACTUAL_VERSION: "24.1"
       - put: cf-mysql-release-candidate
         params:
           repository: final-release/cf-mysql-release
