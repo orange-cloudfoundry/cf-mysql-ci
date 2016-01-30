@@ -581,6 +581,131 @@ jobs:
     params:
       release: bosh-lite-environment
 
+# ARB-TO-FULL-SCALING
+- name: claim-bosh-lite-arb-to-full-scaling
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      passed: [run-acceptance-tests-initial,dashboard-test-initial]
+      trigger: true
+    - put: bosh-lite-environment
+      params:
+        acquire: true
+
+- name: release-arb-to-full-scaling-environment-manual
+  plan:
+  - aggregate:
+    - get: bosh-lite-environment
+      passed: [claim-bosh-lite-arb-to-full-scaling]
+  - put: bosh-lite-environment
+    params:
+      release: bosh-lite-environment
+
+- name: delete-arb-to-full-scaling-deployment
+  plan:
+  - aggregate:
+    - get: bosh-lite-environment
+      passed: [claim-bosh-lite-arb-to-full-scaling]
+      trigger: true
+    - get: cf-mysql-release
+      passed: [claim-bosh-lite-arb-to-full-scaling]
+      trigger: true
+    - get: cf-mysql-ci
+  - try: *broker-deregistrar-bosh-lite
+  - *delete-deployment-bosh-lite
+
+- name: deploy-to-arb-to-full-scaling
+  plan:
+  - aggregate:
+    - get: cf-mysql-ci
+    - get: cf-mysql-release
+      passed: [delete-arb-to-full-scaling-deployment]
+      trigger: true
+    - get: bosh-lite-stemcell
+    - get: bosh-lite-environment
+      passed: [delete-arb-to-full-scaling-deployment]
+      trigger: true
+  - aggregate:
+    - *create-release
+    - &make-manifest-bosh-lite
+      task: make-manifest
+      config:
+        platform: *platform
+        image: *docker-image
+        inputs:
+        - name: cf-mysql-ci
+        - name: cf-mysql-release
+        - name: bosh-lite-environment
+        params:
+          OUTPUT_FILE: cf-mysql-release/deployment.yml
+          ENV_TARGET_FILE: bosh-lite-environment/name
+          ENV_METADATA: bosh-lite-environment/metadata
+        run:
+          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
+  - *deploy-to-bosh-lite
+
+- name: arb-to-full-scaling-broker-registrar
+  plan:
+  - aggregate:
+    - get: cf-mysql-ci
+    - get: cf-mysql-release
+      passed: [deploy-to-arb-to-full-scaling]
+      trigger: true
+    - get: bosh-lite-environment
+      passed: [deploy-to-arb-to-full-scaling]
+      trigger: true
+  - *broker-registrar-bosh-lite
+
+- name: arb-to-full-scaling-smoke-tests
+  plan:
+  - aggregate:
+    - get: cf-mysql-ci
+    - get: cf-mysql-release
+      passed: [arb-to-full-scaling-broker-registrar]
+      trigger: true
+    - get: bosh-lite-environment
+      passed: [arb-to-full-scaling-broker-registrar]
+      trigger: true
+  - *smoke-tests-bosh-lite
+
+- name: arb-to-full-scaling-tests
+  plan:
+  - aggregate:
+    - get: cf-mysql-ci
+    - get: cf-mysql-release
+      passed: [arb-to-full-scaling-smoke-tests]
+      trigger: true
+    - get: bosh-lite-environment
+      passed: [arb-to-full-scaling-smoke-tests]
+      trigger: true
+  - task: run-arb-to-full-scaling-tests
+    config:
+      platform: *platform
+      image: *docker-image
+      inputs:
+        - name: cf-mysql-ci
+        - name: bosh-lite-environment
+        - name: cf-mysql-release
+      params:
+        ENV_TARGET_FILE: bosh-lite-environment/name
+        ENV_METADATA: bosh-lite-environment/metadata
+        BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
+      run:
+        path: cf-mysql-ci/scripts/scaling/scaling-arb-to-full-test
+
+- name: release-arb-to-full-scaling-environment
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      passed: [arb-to-full-scaling-tests]
+      trigger: true
+    - get: bosh-lite-environment
+      passed: [arb-to-full-scaling-tests]
+      trigger: true
+  - put: bosh-lite-environment
+    params:
+      release: bosh-lite-environment
+
 ### FAILOVER
 - name: claim-bosh-lite-failover
   plan:
@@ -1224,5 +1349,5 @@ jobs:
     params:
       repository: merge-to-release-candidate/cf-mysql-release
 
-groups: [{name: cf-mysql, jobs: [build-dockerfile,test-unit,test-sample-stubs,claim-aws-environment,release-aws-environment-manual,delete-aws-deployment,deploy-to-initial,run-smoke-tests-initial,run-acceptance-tests-initial,dashboard-test-initial,release-aws-environmment,claim-bosh-lite-scaling,release-scaling-environment-manual,delete-scaling-deployment,deploy-to-scaling,scaling-broker-registrar,scaling-smoke-tests,scaling-tests,release-scaling-environment,claim-bosh-lite-failover,release-failover-environment-manual,delete-failover-deployment,deploy-to-failover,failover-broker-registrar,failover-smoke-tests,failover-tests,release-failover-environment,claim-bosh-lite-upgrade,release-upgrade-environment-manual,delete-upgrade-deployment,deploy-previous-to-upgrade,broker-registrar-previous-on-upgrade,smoke-tests-previous-on-upgrade,persistence-test-data-write-before-upgrade,deploy-current-to-upgrade,persistence-test-data-read-after-upgrade,smoke-tests-current-on-upgrade,dashboard-test-bosh-lite,release-upgrade-environment,claim-bosh-lite-standalone,release-standalone-environment-manual,delete-standalone-deployment,deploy-to-standalone,persistence-test-data-write-before-bootstrap,test-bootstrap,persistence-test-data-read-after-bootstrap,release-standalone-environment,claim-integration-environment,deploy-to-integration,run-smoke-tests-integration,release-integration-environment,upload-rc-artifacts,promote-to-rc]}]
+groups: [{name: cf-mysql, jobs: [build-dockerfile,test-unit,test-sample-stubs,claim-aws-environment,release-aws-environment-manual,delete-aws-deployment,deploy-to-initial,run-smoke-tests-initial,run-acceptance-tests-initial,dashboard-test-initial,release-aws-environmment,claim-bosh-lite-scaling,release-scaling-environment-manual,delete-scaling-deployment,deploy-to-scaling,scaling-broker-registrar,scaling-smoke-tests,scaling-tests,release-scaling-environment,claim-bosh-lite-arb-to-full-scaling,release-arb-to-full-scaling-environment-manual,delete-arb-to-full-scaling-deployment,deploy-to-arb-to-full-scaling,arb-to-full-scaling-broker-registrar,arb-to-full-scaling-smoke-tests,arb-to-full-scaling-tests,release-arb-to-full-scaling-environment,claim-bosh-lite-failover,release-failover-environment-manual,delete-failover-deployment,deploy-to-failover,failover-broker-registrar,failover-smoke-tests,failover-tests,release-failover-environment,claim-bosh-lite-upgrade,release-upgrade-environment-manual,delete-upgrade-deployment,deploy-previous-to-upgrade,broker-registrar-previous-on-upgrade,smoke-tests-previous-on-upgrade,persistence-test-data-write-before-upgrade,deploy-current-to-upgrade,persistence-test-data-read-after-upgrade,smoke-tests-current-on-upgrade,dashboard-test-bosh-lite,release-upgrade-environment,claim-bosh-lite-standalone,release-standalone-environment-manual,delete-standalone-deployment,deploy-to-standalone,persistence-test-data-write-before-bootstrap,test-bootstrap,persistence-test-data-read-after-bootstrap,release-standalone-environment,claim-integration-environment,deploy-to-integration,run-smoke-tests-integration,release-integration-environment,upload-rc-artifacts,promote-to-rc]}]
 
