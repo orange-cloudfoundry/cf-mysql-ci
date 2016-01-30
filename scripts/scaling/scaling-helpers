@@ -88,6 +88,18 @@ function scale_up_to_arb() {
   bosh -n deploy
 }
 
+function deploy_full_cluster_with_arb() {
+  echo "Scaling to up to full deployment + arb (3 nodes plus arbitrator)"
+  MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
+
+  FULL_PLUS_ARBITRATOR=true \
+  OUTPUT_FILE="${MANIFEST_FILE}" \
+    ${CI_DIR}/scripts/bosh-lite/make_manifest
+
+  bosh deployment "${MANIFEST_FILE}"
+  bosh -n deploy
+}
+
 function deploy_full_cluster() {
   echo "Scaling to up to full deployment (3 nodes)"
   MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
