@@ -20,7 +20,7 @@ popd
 bosh -n target "${DIRECTOR_IP}"
 bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
 
-#scale_up_to_arb (Assume already scaled up to arb in a prev pipeline stage)
+scale_up_to_arb
 clear_data
 write_some_data 1000
 
