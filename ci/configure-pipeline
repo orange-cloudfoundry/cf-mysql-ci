@@ -29,10 +29,13 @@ get_jobs() {
 }
 
 update_pipeline_groups() {
-  job_list=$(get_jobs)
-  groups="groups: [{name: ${PIPELINE_NAME}, jobs: ${job_list}}]"
-  sed "s/groups.*/${groups}/g" "${PIPELINE_PATH}" > "/tmp/groups.yml"
-  mv /tmp/groups.yml "${PIPELINE_PATH}"
+  # bail if master since we've added more groups
+  if [[ "${PIPELINE_NAME}" != cf-mysql ]]; then
+    job_list=$(get_jobs)
+    groups="groups: [{name: ${PIPELINE_NAME}, jobs: ${job_list}}]"
+    sed "s/groups.*/${groups}/g" "${PIPELINE_PATH}" > "/tmp/groups.yml"
+    mv /tmp/groups.yml "${PIPELINE_PATH}"
+  fi
 }
 
 fly_pipeline() {

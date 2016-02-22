@@ -1349,5 +1349,123 @@ jobs:
     params:
       repository: merge-to-release-candidate/cf-mysql-release
 
-groups: [{name: cf-mysql, jobs: [build-dockerfile,test-unit,test-sample-stubs,claim-aws-environment,release-aws-environment-manual,delete-aws-deployment,deploy-to-initial,run-smoke-tests-initial,run-acceptance-tests-initial,dashboard-test-initial,release-aws-environmment,claim-bosh-lite-scaling,release-scaling-environment-manual,delete-scaling-deployment,deploy-to-scaling,scaling-broker-registrar,scaling-smoke-tests,scaling-tests,release-scaling-environment,claim-bosh-lite-arb-to-full-scaling,release-arb-to-full-scaling-environment-manual,delete-arb-to-full-scaling-deployment,deploy-to-arb-to-full-scaling,arb-to-full-scaling-broker-registrar,arb-to-full-scaling-smoke-tests,arb-to-full-scaling-tests,release-arb-to-full-scaling-environment,claim-bosh-lite-failover,release-failover-environment-manual,delete-failover-deployment,deploy-to-failover,failover-broker-registrar,failover-smoke-tests,failover-tests,release-failover-environment,claim-bosh-lite-upgrade,release-upgrade-environment-manual,delete-upgrade-deployment,deploy-previous-to-upgrade,broker-registrar-previous-on-upgrade,smoke-tests-previous-on-upgrade,persistence-test-data-write-before-upgrade,deploy-current-to-upgrade,persistence-test-data-read-after-upgrade,smoke-tests-current-on-upgrade,dashboard-test-bosh-lite,release-upgrade-environment,claim-bosh-lite-standalone,release-standalone-environment-manual,delete-standalone-deployment,deploy-to-standalone,persistence-test-data-write-before-bootstrap,test-bootstrap,persistence-test-data-read-after-bootstrap,release-standalone-environment,claim-integration-environment,deploy-to-integration,run-smoke-tests-integration,release-integration-environment,upload-rc-artifacts,promote-to-rc]}]
+#groups: [{name: cf-mysql, jobs: [build-dockerfile,test-unit,test-sample-stubs,claim-aws-environment,release-aws-environment-manual,delete-aws-deployment,deploy-to-initial,run-smoke-tests-initial,run-acceptance-tests-initial,dashboard-test-initial,release-aws-environmment,claim-bosh-lite-scaling,release-scaling-environment-manual,delete-scaling-deployment,deploy-to-scaling,scaling-broker-registrar,scaling-smoke-tests,scaling-tests,release-scaling-environment,claim-bosh-lite-arb-to-full-scaling,release-arb-to-full-scaling-environment-manual,delete-arb-to-full-scaling-deployment,deploy-to-arb-to-full-scaling,arb-to-full-scaling-broker-registrar,arb-to-full-scaling-smoke-tests,arb-to-full-scaling-tests,release-arb-to-full-scaling-environment,claim-bosh-lite-failover,release-failover-environment-manual,delete-failover-deployment,deploy-to-failover,failover-broker-registrar,failover-smoke-tests,failover-tests,release-failover-environment,claim-bosh-lite-upgrade,release-upgrade-environment-manual,delete-upgrade-deployment,deploy-previous-to-upgrade,broker-registrar-previous-on-upgrade,smoke-tests-previous-on-upgrade,persistence-test-data-write-before-upgrade,deploy-current-to-upgrade,persistence-test-data-read-after-upgrade,smoke-tests-current-on-upgrade,dashboard-test-bosh-lite,release-upgrade-environment,claim-bosh-lite-standalone,release-standalone-environment-manual,delete-standalone-deployment,deploy-to-standalone,persistence-test-data-write-before-bootstrap,test-bootstrap,persistence-test-data-read-after-bootstrap,release-standalone-environment,claim-integration-environment,deploy-to-integration,run-smoke-tests-integration,release-integration-environment,upload-rc-artifacts,promote-to-rc]}]
 
+groups:
+- name: cf-mysql
+  jobs:
+  - build-dockerfile
+  - test-unit
+  - test-sample-stubs
+  - claim-aws-environment
+  - release-aws-environment-manual
+  - delete-aws-deployment
+  - deploy-to-initial
+  - run-smoke-tests-initial
+  - run-acceptance-tests-initial
+  - dashboard-test-initial
+  - release-aws-environmment
+  - claim-bosh-lite-scaling
+  - release-scaling-environment-manual
+  - delete-scaling-deployment
+  - deploy-to-scaling
+  - scaling-broker-registrar
+  - scaling-smoke-tests
+  - scaling-tests
+  - release-scaling-environment
+  - claim-bosh-lite-failover
+  - release-failover-environment-manual
+  - delete-failover-deployment
+  - deploy-to-failover
+  - failover-broker-registrar
+  - failover-smoke-tests
+  - failover-tests
+  - release-failover-environment
+  - claim-bosh-lite-upgrade
+  - release-upgrade-environment-manual
+  - delete-upgrade-deployment
+  - deploy-previous-to-upgrade
+  - broker-registrar-previous-on-upgrade
+  - smoke-tests-previous-on-upgrade
+  - persistence-test-data-write-before-upgrade
+  - deploy-current-to-upgrade
+  - persistence-test-data-read-after-upgrade
+  - smoke-tests-current-on-upgrade
+  - dashboard-test-bosh-lite
+  - release-upgrade-environment
+  - claim-bosh-lite-standalone
+  - release-standalone-environment-manual
+  - delete-standalone-deployment
+  - deploy-to-standalone
+  - persistence-test-data-write-before-bootstrap
+  - test-bootstrap
+  - persistence-test-data-read-after-bootstrap
+  - release-standalone-environment
+  - claim-integration-environment
+  - deploy-to-integration
+  - run-smoke-tests-integration
+  - release-integration-environment
+  - upload-rc-artifacts
+  - promote-to-rc
+  - claim-bosh-lite-arb-to-full-scaling
+  - release-arb-to-full-scaling-environment-manual
+  - delete-arb-to-full-scaling-deployment
+  - deploy-to-arb-to-full-scaling
+  - arb-to-full-scaling-broker-registrar
+  - arb-to-full-scaling-smoke-tests
+  - arb-to-full-scaling-tests
+  - release-arb-to-full-scaling-environment
+- name: failover
+  jobs:
+  - claim-bosh-lite-failover
+  - release-failover-environment-manual
+  - delete-failover-deployment
+  - deploy-to-failover
+  - failover-broker-registrar
+  - failover-smoke-tests
+  - failover-tests
+  - release-failover-environment
+- name: standalone
+  jobs:
+  - claim-bosh-lite-standalone
+  - release-standalone-environment-manual
+  - delete-standalone-deployment
+  - deploy-to-standalone
+  - release-standalone-environment
+  - persistence-test-data-write-before-bootstrap
+  - test-bootstrap
+  - persistence-test-data-read-after-bootstrap
+- name: upgrade
+  jobs:
+  - claim-bosh-lite-upgrade
+  - release-upgrade-environment-manual
+  - delete-upgrade-deployment
+  - deploy-previous-to-upgrade
+  - broker-registrar-previous-on-upgrade
+  - smoke-tests-previous-on-upgrade
+  - persistence-test-data-write-before-upgrade
+  - deploy-current-to-upgrade
+  - persistence-test-data-read-after-upgrade
+  - smoke-tests-current-on-upgrade
+  - dashboard-test-bosh-lite
+  - release-upgrade-environment
+- name: scaling
+  jobs:
+  - claim-bosh-lite-scaling
+  - release-scaling-environment-manual
+  - delete-scaling-deployment
+  - deploy-to-scaling
+  - scaling-broker-registrar
+  - scaling-smoke-tests
+  - scaling-tests
+  - release-scaling-environment
+- name: arb-to-full
+  jobs:
+  - claim-bosh-lite-arb-to-full-scaling
+  - release-arb-to-full-scaling-environment-manual
+  - delete-arb-to-full-scaling-deployment
+  - deploy-to-arb-to-full-scaling
+  - arb-to-full-scaling-broker-registrar
+  - arb-to-full-scaling-smoke-tests
+  - arb-to-full-scaling-tests
+  - release-arb-to-full-scaling-environment
