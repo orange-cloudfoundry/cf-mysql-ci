@@ -51,7 +51,7 @@ pushd ${RELEASE_DIR}
   git config --global user.name "Final Release Builder"
 
   git checkout master
-  git merge release-candidate # will always fast-forward
+  git merge --no-edit release-candidate # will always fast-forward
   git submodule foreach --recursive git submodule sync && git submodule update --init --recursive
 
   EXPECTED_VERSION="$(get_expected_release_version)"
