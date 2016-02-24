@@ -105,6 +105,6 @@ jobs:
       - put: s3-resource-final-release
         params:
           from: merge-master-into-develop\/final-release\/release-artifacts\/.*\.tgz
-          to: final\/
+          to: final/
 
 groups: [{name: cf-mysql-final, jobs: [final-release]}]
