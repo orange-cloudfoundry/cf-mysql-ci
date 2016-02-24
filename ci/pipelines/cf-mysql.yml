@@ -889,8 +889,7 @@ jobs:
         ENV_METADATA: bosh-lite-environment/metadata
         USE_PREVIOUS_RELEASE: true
       run:
-        # TODO: #110903058 use normal make_manifest after v26 is released
-        path: cf-mysql-ci/scripts/bosh-lite/make_manifest_v25
+        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - put: bosh-lite-deployment
     params:
       target_file: bosh-lite-environment/name
