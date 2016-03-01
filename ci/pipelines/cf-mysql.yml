@@ -1208,6 +1208,7 @@ jobs:
       - release-failover-environment
       - release-scaling-environment
       - release-standalone-environment
+      - release-arb-to-full-scaling-environment  
       trigger: true
   - put: integration-environment
     params:
