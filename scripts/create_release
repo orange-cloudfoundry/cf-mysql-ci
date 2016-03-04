@@ -45,7 +45,7 @@ pushd "${RELEASE_DIR}"
       else
         set -x
         exit ${CF_MYSQL_EXIT_CODE}
-    fi
+      fi
     else
       cp dev_releases/cf-mysql/cf-mysql-*.tgz ${WORKSPACE_DIR}/release-tarball/
     fi
