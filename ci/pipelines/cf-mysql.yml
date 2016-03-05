@@ -248,6 +248,8 @@ jobs:
         inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
+        outputs:
+        - name: release-tarball
         params:
           RELEASE_RELATIVE_DIR: cf-mysql-release/
         run:
@@ -261,6 +263,8 @@ jobs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
         - name: aws-environment
+        outputs:
+        - name: deployment-manifest 
         params:
           ENV_TARGET_FILE: aws-environment/name
           ENV_METADATA: aws-environment/metadata
@@ -270,8 +274,8 @@ jobs:
   - put: aws-deployment
     params:
       target_file: aws-environment/name
-      manifest: make-manifest/cf-mysql-release/deployment.yml
-      releases: [create-release/cf-mysql-release/dev_releases/cf-mysql/*.tgz]
+      manifest: deployment-manifest/deployment.yml
+      releases: [release-tarball/*.tgz]
       stemcells: [aws-bosh-stemcell/*.tgz]
 
 - name: run-smoke-tests-initial
