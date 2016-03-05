@@ -7,3 +7,5 @@ cd cf-mysql-release
 git checkout release-candidate
 
 git rebase develop
+
+git push origin release-candidate
