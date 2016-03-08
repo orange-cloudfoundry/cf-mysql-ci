@@ -58,6 +58,7 @@ jobs:
             - develop
             - release-candidate
         - get: cf-mysql-ci
+        - get: cf-mysql-develop
         - get: release-notes
           trigger: true
       - task: final-release
@@ -73,38 +74,34 @@ jobs:
             path: cf-mysql-ci/scripts/publish/cut-final-release
           params:
             RELEASE_NOTES_DIRECTORY: release-notes
-            OUTPUT_RELEASE_ARTIFACTS: release-artifacts
-            OUTPUT_RELEASE_TAG: cf-mysql-tag
-            OUTPUT_RELEASE_NOTES: generated-release-notes
-            OUTPUT_RELEASE_COMMIT: git-commit
+            OUTPUT_RELEASE_ARTIFACTS: output-release-dir/release-artifacts
+            OUTPUT_RELEASE_TAG: output-release-dir/cf-mysql-tag
+            OUTPUT_RELEASE_NOTES: output-release-dir/generated-release-notes
+            OUTPUT_RELEASE_COMMIT: output-release-dir/git-commit
             RELEASE_ACCESS_KEY: {{cf-mysql-publish-blobs-aws-access-key-id}}
             RELEASE_SECRET_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
+          outputs:
+            - name: output-release-dir
       - task: merge-master-into-develop
         config:
           platform: linux
           image: docker:///cloudfoundry/cf-mysql-ci
           inputs:
           - name: cf-mysql-ci
-          - name: final-release
+          - name: cf-mysql-develop
           run:
             path: cf-mysql-ci/scripts/publish/merge-master-into-develop
-      - put: cf-mysql-master
-        params:
-          repository: final-release/cf-mysql-release
-      - put: cf-mysql-develop
-        params:
-          repository: merge-master-into-develop/final-release/cf-mysql-release
       - put: publish-github-release
         params:
-          name: final-release/cf-mysql-tag
-          tag: final-release/cf-mysql-tag
-          body: final-release/generated-release-notes
-          commitish: final-release/git-commit
+          name: output-release-dir/cf-mysql-tag
+          tag: output-release-dir/cf-mysql-tag
+          body: output-release-dir/generated-release-notes
+          commitish: output-release-dir/git-commit
           globs:
-          - final-release/release-artifacts/*.tgz
+          - output-release-dir/release-artifacts/*.tgz
       - put: s3-resource-final-release
         params:
-          from: merge-master-into-develop\/final-release\/release-artifacts\/.*\.tgz
+          from: output-release-dir\/release-artifacts\/.*\.tgz
           to: final/
 
 groups: [{name: cf-mysql-final, jobs: [final-release]}]
