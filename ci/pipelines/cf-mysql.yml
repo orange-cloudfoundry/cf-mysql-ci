@@ -55,13 +55,6 @@ resources:
     uri: https://github.com/cloudfoundry/cf-mysql-release.git
     branch: master
 
-- name: cf-mysql-release-rc
-  type: git
-  source:
-    uri: git@github.com:cloudfoundry/cf-mysql-release
-    branch: release-candidate
-    private_key: {{git-writer-private-key}}
-
 - name: aws-deployment
   type: bosh-deployment
   source:
@@ -335,6 +328,8 @@ jobs:
         - name: deployments-configuration
         - name: cf-mysql-ci
         - name: aws-environment
+      outputs:
+        - name: deployment-manifest
       params:
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
@@ -345,7 +340,7 @@ jobs:
   - put: aws-deployment
     params:
       target_file: aws-environment/name
-      manifest: recreate-manifest-to-run-acceptance-tests/cf-mysql-release/deployment.yml
+      manifest: deployment-manifest/deployment.yml
       releases: []
       stemcells: []
   - task: run-acceptance-tests
@@ -479,8 +474,10 @@ jobs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
         - name: bosh-lite-environment
+        outputs:
+          - name: deployment-manifest
         params:
-          OUTPUT_FILE: cf-mysql-release/deployment.yml
+          OUTPUT_FILE: deployment-manifest/deployment.yml
           MINIMAL_MODE: true
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
@@ -491,8 +488,8 @@ jobs:
     put: bosh-lite-deployment
     params:
       target_file: bosh-lite-environment/name
-      manifest: make-manifest/cf-mysql-release/deployment.yml
-      releases: [create-release/cf-mysql-release/dev_releases/cf-mysql/*.tgz]
+      manifest: deployment-manifest/deployment.yml
+      releases: [release-tarball/*.tgz]
       stemcells: [bosh-lite-stemcell/*.tgz]
 
 - name: scaling-broker-registrar
@@ -640,8 +637,10 @@ jobs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
         - name: bosh-lite-environment
+        outputs:
+          - name: deployment-manifest
         params:
-          OUTPUT_FILE: cf-mysql-release/deployment.yml
+          OUTPUT_FILE: deployment-manifest/deployment.yml
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
         run:
@@ -765,8 +764,10 @@ jobs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
         - name: bosh-lite-environment
+        outputs:
+          - name: deployment-manifest
         params:
-          OUTPUT_FILE: cf-mysql-release/deployment.yml
+          OUTPUT_FILE: deployment-manifest/deployment.yml
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
         run:
@@ -872,23 +873,24 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-ci
-    - get: cf-mysql-release
-      resource: cf-mysql-release-master
     - get: bosh-lite-stemcell
     - get: bosh-lite-environment
       passed: [delete-upgrade-deployment]
       trigger: true
     - get: cf-mysql-final-release
+    - get: cf-mysql-release  #TODO: Fix this to pull from master branch once v27 is cut with fraenkel's candiedyaml deleted
   - task: make-manifest
     config:
       platform: *platform
       image: *docker-image
       inputs:
-      - name: cf-mysql-ci
       - name: cf-mysql-release
+      - name: cf-mysql-ci
       - name: bosh-lite-environment
+      outputs:
+      - name: deployment-manifest
       params:
-        OUTPUT_FILE: cf-mysql-release/deployment.yml
+        OUTPUT_FILE: deployment-manifest/deployment.yml
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         USE_PREVIOUS_RELEASE: true
@@ -897,7 +899,7 @@ jobs:
   - put: bosh-lite-deployment
     params:
       target_file: bosh-lite-environment/name
-      manifest: make-manifest/cf-mysql-release/deployment.yml
+      manifest: deployment-manifest/deployment.yml
       releases: [cf-mysql-final-release/release.tgz]
       stemcells: [bosh-lite-stemcell/*.tgz]
 
@@ -970,8 +972,10 @@ jobs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
         - name: bosh-lite-environment
+        outputs:
+          - name: deployment-manifest
         params:
-          OUTPUT_FILE: cf-mysql-release/deployment.yml
+          OUTPUT_FILE: deployment-manifest/deployment.yml
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
         run:
@@ -1111,8 +1115,10 @@ jobs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
         - name: bosh-lite-environment
+        outputs:
+          - name: deployment-manifest
         params:
-          OUTPUT_FILE: cf-mysql-release/deployment.yml
+          OUTPUT_FILE: deployment-manifest/deployment.yml
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
           STANDALONE_MODE: true
@@ -1242,6 +1248,8 @@ jobs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
         - name: integration-environment
+        outputs:
+          - name: deployment-manifest
         params:
           ENV_TARGET_FILE: integration-environment/name
           ENV_METADATA: integration-environment/metadata
@@ -1252,8 +1260,8 @@ jobs:
   - put: integration-deployment
     params:
       target_file: integration-environment/name
-      manifest: make-manifest/cf-mysql-release/deployment.yml
-      releases: [create-release/cf-mysql-release/dev_releases/cf-mysql/*.tgz]
+      manifest: deployment-manifest/deployment.yml
+      releases: [release-tarball/*.tgz]
       stemcells: [integration-env-bosh-stemcell/*.tgz]
 
 - name: run-smoke-tests-integration
@@ -1321,13 +1329,15 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
+      outputs:
+        - name: release-tarball
       params:
         RELEASE_RELATIVE_DIR: cf-mysql-release
       run:
         path: cf-mysql-ci/scripts/create_release
   - put: cf-mysql-rc-artifacts
     params:
-      from: create\-rc\-release\-artifacts\/cf\-mysql\-release\/dev_releases\/cf\-mysql\/cf\-mysql.*\.tgz
+      from: release\-tarball\/*\.tgz
       to: release-candidate/
 
 - name: promote-to-rc
@@ -1339,7 +1349,7 @@ jobs:
       params:
         fetch: [release-candidate]
     - get: cf-mysql-ci
-  - task: merge-to-release-candidate
+  - task: merge-and-push-to-release-candidate
     config:
       platform: *platform
       image: *docker-image
@@ -1348,11 +1358,6 @@ jobs:
         - name: cf-mysql-release
       run:
         path: cf-mysql-ci/scripts/publish/merge-to-release-candidate
-  - put: cf-mysql-release-rc
-    params:
-      repository: merge-to-release-candidate/cf-mysql-release
-
-#groups: [{name: cf-mysql, jobs: [build-dockerfile,test-unit,test-sample-stubs,claim-aws-environment,release-aws-environment-manual,delete-aws-deployment,deploy-to-initial,run-smoke-tests-initial,run-acceptance-tests-initial,dashboard-test-initial,release-aws-environmment,claim-bosh-lite-scaling,release-scaling-environment-manual,delete-scaling-deployment,deploy-to-scaling,scaling-broker-registrar,scaling-smoke-tests,scaling-tests,release-scaling-environment,claim-bosh-lite-arb-to-full-scaling,release-arb-to-full-scaling-environment-manual,delete-arb-to-full-scaling-deployment,deploy-to-arb-to-full-scaling,arb-to-full-scaling-broker-registrar,arb-to-full-scaling-smoke-tests,arb-to-full-scaling-tests,release-arb-to-full-scaling-environment,claim-bosh-lite-failover,release-failover-environment-manual,delete-failover-deployment,deploy-to-failover,failover-broker-registrar,failover-smoke-tests,failover-tests,release-failover-environment,claim-bosh-lite-upgrade,release-upgrade-environment-manual,delete-upgrade-deployment,deploy-previous-to-upgrade,broker-registrar-previous-on-upgrade,smoke-tests-previous-on-upgrade,persistence-test-data-write-before-upgrade,deploy-current-to-upgrade,persistence-test-data-read-after-upgrade,smoke-tests-current-on-upgrade,dashboard-test-bosh-lite,release-upgrade-environment,claim-bosh-lite-standalone,release-standalone-environment-manual,delete-standalone-deployment,deploy-to-standalone,persistence-test-data-write-before-bootstrap,test-bootstrap,persistence-test-data-read-after-bootstrap,release-standalone-environment,claim-integration-environment,deploy-to-integration,run-smoke-tests-integration,release-integration-environment,upload-rc-artifacts,promote-to-rc]}]
 
 groups:
 - name: cf-mysql
