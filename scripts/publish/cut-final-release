@@ -80,6 +80,8 @@ pushd ${RELEASE_DIR}
   cp ${RELEASE_NOTES_REGEX} ${OUTPUT_RELEASE_NOTES}
 
   git rev-parse HEAD > ${OUTPUT_RELEASE_COMMIT}
+
+  git push origin master
 popd
 
 echo "Successfully created cf-mysql final release ${VERSION_TAG}"

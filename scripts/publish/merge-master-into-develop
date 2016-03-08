@@ -4,7 +4,7 @@ set -eux
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
-RELEASE_DIR="$(cd "${WORKSPACE_DIR}/final-release/cf-mysql-release" && pwd )"
+RELEASE_DIR="$(cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
 
 pushd ${RELEASE_DIR}
   git checkout develop
@@ -13,4 +13,6 @@ pushd ${RELEASE_DIR}
   git config --global user.name "Final Release Builder"
 
   git merge --no-edit master
+
+  git push origin develop
 popd
