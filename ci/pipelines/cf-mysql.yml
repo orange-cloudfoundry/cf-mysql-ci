@@ -46,8 +46,9 @@ resources:
 - name: cf-mysql-release
   type: git
   source:
-    uri: https://github.com/cloudfoundry/cf-mysql-release.git
+    uri: git@github.com:cloudfoundry/cf-mysql-release.git
     branch: develop
+    private_key: {{git-writer-private-key}}
 
 - name: cf-mysql-release-master
   type: git
@@ -1358,6 +1359,8 @@ jobs:
         - name: cf-mysql-release
       run:
         path: cf-mysql-ci/scripts/publish/merge-to-release-candidate
+      params:
+        GIT_PRIVATE_KEY: {{git-writer-private-key}}
 
 groups:
 - name: cf-mysql
