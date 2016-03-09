@@ -1337,7 +1337,7 @@ jobs:
         path: cf-mysql-ci/scripts/create_release
   - put: cf-mysql-rc-artifacts
     params:
-      from: release\-tarball\/*\.tgz
+      from: release\-tarball\/cf\-mysql.*\.tgz
       to: release-candidate/
 
 - name: promote-to-rc
