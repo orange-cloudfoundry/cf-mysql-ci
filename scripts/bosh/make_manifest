@@ -6,6 +6,7 @@ MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CI_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 WORKSPACE_DIR="$( cd "${CI_DIR}/.." && pwd )"
 RELEASE_DIR="$( cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
+MANIFEST_DIR="${WORKSPACE_DIR}/${MANIFEST_DIR:-deployment-manifest}"
 
 source "${CI_DIR}/scripts/utils.sh"
 
@@ -64,7 +65,7 @@ pushd ${RELEASE_DIR}
     -p "${PROPERTY_OVERRIDES}" \
     -n "${DEPLOYMENTS_DIR}/${ENV}/stubs/mysql/instance_count_overrides.yml" \
     > deployment.yml
-  cp deployment.yml ${WORKSPACE_DIR}/deployment-manifest/deployment.yml 
+  cp deployment.yml ${MANIFEST_DIR}/deployment.yml
   # Leaving a copy in the workspace dir so that a task can expose it as an output
   bosh deployment deployment.yml
   cat deployment.yml

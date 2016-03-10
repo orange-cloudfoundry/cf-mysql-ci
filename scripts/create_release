@@ -6,6 +6,7 @@ MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 
 RELEASE_DIR="${WORKSPACE_DIR}/${RELEASE_RELATIVE_DIR:-cf-mysql-release}"
+OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-release-tarball}"
 
 pushd "${RELEASE_DIR}"
 
@@ -41,12 +42,12 @@ pushd "${RELEASE_DIR}"
       if [[ "${CF_MYSQL_OUTPUT}" == *"Blobstore error"* ]]; then
         set -x
         ${CREATE_RELEASE}
-        cp dev_releases/cf-mysql/cf-mysql-*.tgz ${WORKSPACE_DIR}/release-tarball/
+        cp dev_releases/cf-mysql/cf-mysql-*.tgz ${OUTPUT_DIR}/
       else
         set -x
         exit ${CF_MYSQL_EXIT_CODE}
       fi
     else
-      cp dev_releases/cf-mysql/cf-mysql-*.tgz ${WORKSPACE_DIR}/release-tarball/
+      cp dev_releases/cf-mysql/cf-mysql-*.tgz ${OUTPUT_DIR}/
     fi
 popd
