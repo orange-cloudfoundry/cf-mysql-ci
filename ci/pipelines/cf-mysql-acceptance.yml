@@ -134,7 +134,7 @@ jobs:
           ENV_TARGET_FILE: aws-acceptance-environment/name
           ENV_METADATA: aws-acceptance-environment/metadata  
           DEPLOYMENTS_DIR: deployments-configuration
-          MANIFEST_DIR: manifest-dir
+          MANIFEST_DIR: deployment-manifest
         run:
           path: cf-mysql-ci/scripts/bosh/make_manifest
   - put: acceptance-deployment
