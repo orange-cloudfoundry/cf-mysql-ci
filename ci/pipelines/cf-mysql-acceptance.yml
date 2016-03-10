@@ -112,6 +112,9 @@ jobs:
         inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
+        outputs:
+        - name: release-tarball
+          path: cf-mysql-release/dev_releases/cf-mysql/
         params:
           RELEASE_RELATIVE_DIR: cf-mysql-release/
         run:
@@ -125,6 +128,9 @@ jobs:
         - name: deployments-configuration
         - name: cf-mysql-release
         - name: aws-acceptance-environment
+        outputs:
+        - name: manifest-dir
+          path: cf-mysql-release/
         params:
           ENV_TARGET_FILE: aws-acceptance-environment/name
           ENV_METADATA: aws-acceptance-environment/metadata  
@@ -134,8 +140,8 @@ jobs:
   - put: acceptance-deployment
     params:
       target_file: aws-acceptance-environment/name
-      manifest: make-manifest/cf-mysql-release/deployment.yml
-      releases: [create-release/cf-mysql-release/dev_releases/cf-mysql/*.tgz]
+      manifest: manifest-dir/deployment.yml
+      releases: [release-tarball/*.tgz]
       stemcells: [acceptance-env-bosh-stemcell/*.tgz]
 
 - name: run-smoke-tests-acceptance
