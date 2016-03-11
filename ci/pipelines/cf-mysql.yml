@@ -916,27 +916,15 @@ jobs:
       trigger: true
   - *broker-registrar-bosh-lite
 
-- name: smoke-tests-previous-on-upgrade
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [broker-registrar-previous-on-upgrade]
-      trigger: true
-    - get: bosh-lite-environment
-      passed: [broker-registrar-previous-on-upgrade]
-      trigger: true
-  - *smoke-tests-bosh-lite
-
 - name: persistence-test-data-write-before-upgrade
   plan:
   - aggregate:
     - get: cf-mysql-ci
     - get: cf-mysql-release
-      passed: [smoke-tests-previous-on-upgrade]
+      passed: [broker-registrar-previous-on-upgrade]
       trigger: true
     - get: bosh-lite-environment
-      passed: [smoke-tests-previous-on-upgrade]
+      passed: [broker-registrar-previous-on-upgrade]
       trigger: true
   - &persistence-test-data-write
     task: persistence-test-data-write
@@ -1397,7 +1385,6 @@ groups:
   - delete-upgrade-deployment
   - deploy-previous-to-upgrade
   - broker-registrar-previous-on-upgrade
-  - smoke-tests-previous-on-upgrade
   - persistence-test-data-write-before-upgrade
   - deploy-current-to-upgrade
   - persistence-test-data-read-after-upgrade
@@ -1453,7 +1440,6 @@ groups:
   - delete-upgrade-deployment
   - deploy-previous-to-upgrade
   - broker-registrar-previous-on-upgrade
-  - smoke-tests-previous-on-upgrade
   - persistence-test-data-write-before-upgrade
   - deploy-current-to-upgrade
   - persistence-test-data-read-after-upgrade
