@@ -25,6 +25,13 @@ resources:
   type: git
   source:
     uri: https://github.com/cloudfoundry-incubator/cf-mysql-ci.git
+    private_key: {{git-writer-private-key}}
+
+- name: deployments-core-services
+  type: git
+  source:
+    uri: git@github.com:pivotal-cf/deployments-core-services
+    private_key: {{git-writer-private-key}}
 
 - name: s3-resource-final-release
   type: s3
@@ -58,6 +65,7 @@ jobs:
             - develop
             - release-candidate
         - get: cf-mysql-ci
+        - get: deployments-core-services
         - get: cf-mysql-develop
         - get: release-notes
           trigger: true
@@ -99,6 +107,18 @@ jobs:
           commitish: output-release-dir/git-commit
           globs:
           - output-release-dir/release-artifacts/*.tgz
+      - put: cf-mysql-ci
+        params:
+          repository: cf-mysql-ci
+          tag: output-release-dir/cf-mysql-tag
+          only_tag: true
+          tag_prefix: cf-mysql-
+      - put: deployments-core-services
+        params:
+          repository: deployments-core-services
+          tag: output-release-dir/cf-mysql-tag
+          only_tag: true
+          tag_prefix: cf-mysql-
       - put: s3-resource-final-release
         params:
           from: output-release-dir\/release-artifacts\/.*\.tgz
