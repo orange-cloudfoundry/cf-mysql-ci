@@ -4,22 +4,14 @@ resources:
   type: git
   source:
     uri: git@github.com:cloudfoundry/cf-mysql-release.git
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
     branch: releases/v24
-=======
-    branch: releases/v25
->>>>>>> Stashed changes
-=======
-    branch: releases/v25
->>>>>>> Stashed changes
     private_key: {{git-writer-private-key}}
 
 - name: cf-mysql-ci
   type: git
   source:
     uri: https://github.com/cloudfoundry-incubator/cf-mysql-ci.git
-    branch: v25
+    branch: v24
 
 - name: s3-resource-final-release
   type: s3
@@ -60,47 +52,33 @@ jobs:
           - name: cf-mysql-release-candidate
             path: cf-mysql-release
           - name: release-notes
+          outputs:
+          - name: output-release-dir
           run:
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
             path: cf-mysql-ci/scripts/publish/cut-final-release-v24
-=======
-            path: cf-mysql-ci/scripts/publish/cut-final-release-v25
->>>>>>> Stashed changes
-=======
-            path: cf-mysql-ci/scripts/publish/cut-final-release-v25
->>>>>>> Stashed changes
           params:
             RELEASE_NOTES_DIRECTORY: release-notes
-            OUTPUT_RELEASE_ARTIFACTS: release-artifacts
-            OUTPUT_RELEASE_TAG: cf-mysql-tag
-            OUTPUT_RELEASE_NOTES: generated-release-notes
-            OUTPUT_RELEASE_COMMIT: git-commit
+            OUTPUT_RELEASE_ARTIFACTS: output-release-dir/release-artifacts
+            OUTPUT_RELEASE_TAG: output-release-dir/cf-mysql-tag
+            OUTPUT_RELEASE_NOTES: output-release-dir/generated-release-notes
+            OUTPUT_RELEASE_COMMIT: output-release-dir/git-commit
             RELEASE_ACCESS_KEY: {{cf-mysql-publish-blobs-aws-access-key-id}}
             RELEASE_SECRET_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-            ACTUAL_VERSION: "24.1"
-=======
-            ACTUAL_VERSION: "25.1"
->>>>>>> Stashed changes
-=======
-            ACTUAL_VERSION: "25.1"
->>>>>>> Stashed changes
+            ACTUAL_VERSION: "24.1" # needs to be updated manually
       - put: cf-mysql-release-candidate
         params:
-          repository: final-release/cf-mysql-release
+          repository: output-release-dir/cf-mysql-release
       - put: publish-github-release
         params:
-          name: final-release/cf-mysql-tag
-          tag: final-release/cf-mysql-tag
-          body: final-release/generated-release-notes
-          commitish: final-release/git-commit
+          name: output-release-dir/final-release/cf-mysql-tag
+          tag: output-release-dir/cf-mysql-tag
+          body: output-release-dir/generated-release-notes
+          commitish: output-release-dir/git-commit
           globs:
-          - final-release/release-artifacts/*.tgz
+            - output-release-dir/release-artifacts/*.tgz
       - put: s3-resource-final-release
         params:
-          from: final-release\/release-artifacts\/.*\.tgz
+          from: output-release-dir\/release-artifacts\/.*\.tgz
           to: final\/
 
-groups: [{name: cf-mysql-final-v25-1, jobs: [final-release]}]
+groups: [{name: cf-mysql-final-v24-1, jobs: [final-release]}]
