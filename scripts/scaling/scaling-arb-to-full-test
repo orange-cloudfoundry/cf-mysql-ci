@@ -20,11 +20,9 @@ popd
 bosh -n target "${DIRECTOR_IP}"
 bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
 
-scale_up_to_arb
 clear_data
 write_some_data 1000
 
-deploy_full_cluster_with_arb
 deploy_full_cluster #this step removes the arbitrator
 verify_replicated_row_count_is 1000
 
