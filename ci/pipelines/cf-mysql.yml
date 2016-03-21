@@ -134,7 +134,6 @@ jobs:
   - put: cf-mysql-ci-image
     params:
       build: cf-mysql-dockerfile/scripts/
-      cache: true
 
 - name: test-unit
   plan:
