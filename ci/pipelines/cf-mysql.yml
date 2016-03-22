@@ -4,9 +4,9 @@ resources:
 - name: cf-mysql-ci-image
   type: docker-image
   source:
-    username: {{cf-docker-username}}
-    email: {{cf-docker-email}}
-    password: {{cf-docker-password}}
+    username: {{pivotal-docker-username}}
+    email: {{pivotal-docker-email}}
+    password: {{pivotal-docker-password}}
     repository: cloudfoundry/cf-mysql-ci
 
 - name: cf-mysql-dockerfile
