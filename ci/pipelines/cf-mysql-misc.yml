@@ -15,8 +15,8 @@ resources:
 
 - name: timer
   type: time
-  source: 
-    interval: 30m
+  source:
+    interval: 2h
 
 jobs:
 - name: claim-integration-environment
@@ -27,14 +27,14 @@ jobs:
   - put: integration-environment
     params:
       acquire: true
-  
+
 - name: run-smoke-tests-integration
   plan:
   - aggregate:
     - get: cf-mysql-ci
     - get: integration-environment
       passed: [claim-integration-environment]
-      trigger: true  
+      trigger: true
   - task: run-smoke-tests
     config:
       platform: linux
@@ -46,7 +46,7 @@ jobs:
         ENV_TARGET_FILE: integration-environment/name
         ENV_METADATA: integration-environment/metadata
         ERRAND: acceptance-tests
-        DEPLOYMENT_NAME: cf-a1-mysql  
+        DEPLOYMENT_NAME: cf-a1-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
   - put: integration-environment
