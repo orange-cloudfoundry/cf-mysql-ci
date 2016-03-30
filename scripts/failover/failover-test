@@ -22,7 +22,7 @@ function close-ssh-tunnels() {
 }
 
 function bosh-ip() {
-  bosh -n vms cf-warden-mysql | grep $1 | awk '{ print $8 }'
+  bosh -n vms cf-warden-mysql | grep $1 | awk '{ print $11 }'
 }
 
 BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
