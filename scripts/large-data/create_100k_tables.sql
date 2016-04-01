@@ -6,7 +6,6 @@ BEGIN
 
   SET @ind = 0;
   label1: LOOP
-    SET @ind = @ind + 1;
     SET @dropq = CONCAT('DROP TABLE IF EXISTS table', @ind);
     SELECT @dropq;
     SET @createq = CONCAT('CREATE TABLE table', @ind, ' (id int)');
@@ -19,6 +18,7 @@ BEGIN
     SELECT "STMT2";
     DEALLOCATE PREPARE stmt1;
     DEALLOCATE PREPARE stmt2;
+    SET @ind = @ind + 1;
     IF @ind < 100000 THEN 
        ITERATE label1; 
     END IF; 
