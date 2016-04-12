@@ -1,0 +1,92 @@
+#!/bin/bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CI_DIR="$( cd ${MY_DIR}/../.. && pwd )"
+WORKSPACE_DIR="$( cd ${CI_DIR}/.. && pwd )"
+RELEASE_DIR="$( cd ${WORKSPACE_DIR}/cf-mysql-release && pwd )"
+
+source ${CI_DIR}/scripts/utils.sh
+
+tmpdir=$(mktemp -d /tmp/mysql_manifest.XXXXX)
+trap '{ rm -rf ${tmpdir}; }' EXIT
+
+: "${OUTPUT_FILE:?}"
+: "${ENV_TARGET_FILE:?}"
+: "${ENV_METADATA:?}"
+: "${MINIMAL_MODE:=false}"
+: "${USE_PREVIOUS_RELEASE:=false}"
+: "${STANDALONE_MODE:=false}"
+: "${NO_ARBITRATOR:=false}"
+: "${FULL_PLUS_ARBITRATOR:=false}"
+
+if [[ "${OUTPUT_FILE}" != /* ]]; then
+  OUTPUT_FILE="${WORKSPACE_DIR}/${OUTPUT_FILE}"
+fi
+
+pushd "${WORKSPACE_DIR}"
+  DIRECTOR_IP=$(cat "${ENV_TARGET_FILE}")
+
+  BOSH_USERNAME="$(jq_val "bosh_user" "${ENV_METADATA}")"
+  BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
+popd
+
+get_previous_version() {
+  echo "$(find ${RELEASE_DIR}/releases/cf-mysql-* -type f -printf "%f\n" | \
+    cut -d '-' -f3              | \
+    cut -d '.' -f1              | \
+    sort -n                     | \
+    tail -1)"
+}
+
+CF_MANIFEST="${tmpdir}/cf-warden.yml"
+if [ "${STANDALONE_MODE}" = false ] ; then
+  bosh -n target "${DIRECTOR_IP}"
+  bosh -n login "${BOSH_USERNAME}" "${BOSH_PASSWORD}"
+
+  bosh -n download manifest cf-warden "${CF_MANIFEST}"
+else
+  sed -e "s/REPLACE_WITH_DIRECTOR_UUID/~/g" \
+    -e "s/REPLACE_WITH_CF_DEPLOYMENT_NAME/cf-warden/g" \
+    "${RELEASE_DIR}/manifest-generation/examples/standalone/standalone-cf-manifest.yml" \
+    > "${CF_MANIFEST}"
+fi
+
+PROPERTY_OVERRIDES="${RELEASE_DIR}/manifest-generation/bosh-lite-stubs/property-overrides.yml"
+IAAS_SETTINGS="${RELEASE_DIR}/manifest-generation/bosh-lite-stubs/iaas-settings.yml"
+INSTANCE_COUNT_OVERRIDE="${RELEASE_DIR}/manifest-generation/examples/instance-count-overrides.yml"
+RELEASE_VERSIONS="${RELEASE_DIR}/manifest-generation/examples/release-versions.yml"
+
+if [ "${STANDALONE_MODE}" = "true" ]; then
+  PROPERTY_OVERRIDES="${RELEASE_DIR}/manifest-generation/bosh-lite-stubs/property-overrides-standalone.yml"
+  INSTANCE_COUNT_OVERRIDE="${RELEASE_DIR}/manifest-generation/examples/standalone/instance-count-overrides.yml"
+elif [ "${MINIMAL_MODE}" = "true" ]; then
+  INSTANCE_COUNT_OVERRIDE="${RELEASE_DIR}/manifest-generation/examples/minimal/instance-count-overrides.yml"
+elif [ "${NO_ARBITRATOR}" = "true" ]; then
+  INSTANCE_COUNT_OVERRIDE="${RELEASE_DIR}/manifest-generation/examples/no-arbitrator/instance-count-overrides.yml"
+elif [ "${FULL_PLUS_ARBITRATOR}" = "true" ]; then
+  INSTANCE_COUNT_OVERRIDE="${RELEASE_DIR}/manifest-generation/examples/upgrade-to-arbitrator/deploy-arbitrator/instance-count-overrides.yml"
+fi
+
+if [ "${USE_PREVIOUS_RELEASE}" = "true" ]; then
+  MYSQL_VERSION="$(get_previous_version)"
+  RELEASE_VERSIONS="${tmpdir}/cf-mysql-versions-stub.yml"
+  cat > "${RELEASE_VERSIONS}" <<EOF
+---
+release_versions:
+- name: cf-mysql
+  version: ${MYSQL_VERSION}
+EOF
+fi
+
+"${RELEASE_DIR}/scripts/generate-deployment-manifest" \
+  -c "${CF_MANIFEST}" \
+  -p "${PROPERTY_OVERRIDES}" \
+  -i "${IAAS_SETTINGS}" \
+  -n "${INSTANCE_COUNT_OVERRIDE}" \
+  -v "${RELEASE_VERSIONS}" \
+  > "${OUTPUT_FILE}"
+
+${CI_DIR}/scripts/bosh-lite/insert_db_start_timeout.rb ${OUTPUT_FILE}
+
