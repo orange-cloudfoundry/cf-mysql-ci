@@ -50,6 +50,13 @@ resources:
     branch: develop
     private_key: {{git-writer-private-key}}
 
+- name: cf-mysql-previous-release
+  type: git
+  source:
+    uri: git@github.com:pcf-core-services-writer/cf-mysql-release-v26.git
+    branch: v26-patched
+    private_key: {{git-writer-private-key}}
+
 - name: cf-mysql-release-master
   type: git
   source:
@@ -112,7 +119,7 @@ resources:
     pool: bosh-lites-no-cf
     private_key: {{git-writer-private-key}}
 
-- name: cf-mysql-final-release
+- name: cf-mysql-latest-release-tarball
   type: bosh-io-release
   source:
     repository: cloudfoundry/cf-mysql-release
@@ -877,8 +884,9 @@ jobs:
     - get: bosh-lite-environment
       passed: [delete-upgrade-deployment]
       trigger: true
-    - get: cf-mysql-final-release
-    - get: cf-mysql-release  #TODO: Fix this to pull from master branch once v27 is cut with fraenkel's candiedyaml deleted
+    - get: cf-mysql-latest-release-tarball
+    - get: cf-mysql-release
+      resource: cf-mysql-previous-release
   - task: make-manifest
     config:
       platform: *platform
@@ -900,7 +908,7 @@ jobs:
     params:
       target_file: bosh-lite-environment/name
       manifest: deployment-manifest/deployment.yml
-      releases: [cf-mysql-final-release/release.tgz]
+      releases: [cf-mysql-latest-release-tarball/release.tgz]
       stemcells: [bosh-lite-stemcell/*.tgz]
 
 - name: broker-registrar-previous-on-upgrade
