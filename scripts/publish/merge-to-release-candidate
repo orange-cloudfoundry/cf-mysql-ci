@@ -11,8 +11,10 @@ ssh-add git-private-key-file
 
 cd cf-mysql-release
 
-git checkout release-candidate
+CURRENT_TESTED_COMMIT=$(git rev-parse HEAD)
 
-git rebase develop
+git co release-candidate
+
+git merge ${CURRENT_TESTED_COMMIT}
 
 git push origin release-candidate
