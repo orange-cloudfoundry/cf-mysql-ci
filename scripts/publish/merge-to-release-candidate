@@ -13,7 +13,7 @@ cd cf-mysql-release
 
 CURRENT_TESTED_COMMIT=$(git rev-parse HEAD)
 
-git co release-candidate
+git checkout release-candidate
 
 git merge ${CURRENT_TESTED_COMMIT}
 
