@@ -32,3 +32,5 @@ if [ ${DEPLOYMENT_GREP_RESULT} -eq 0 ]; then
 else
   echo "deployment ${DEPLOYMENT_NAME} not found - nothing to delete"
 fi
+
+bosh -n cleanup --all
