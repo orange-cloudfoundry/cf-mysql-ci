@@ -53,8 +53,8 @@ resources:
 - name: cf-mysql-previous-release
   type: git
   source:
-    uri: git@github.com:pcf-core-services-writer/cf-mysql-release-v26.git
-    branch: v26-patched
+    uri: git@github.com:cloudfoundry/cf-mysql-release.git
+    branch: releases/v26
     private_key: {{git-writer-private-key}}
 
 - name: cf-mysql-release-master
