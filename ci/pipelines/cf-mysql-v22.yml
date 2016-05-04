@@ -1,28 +1,7 @@
 ---
 ### RESOURCES
 resources:
-- name: cf-mysql-ci-image
-  type: docker-image
-  source:
-    username: {{pivotal-docker-username}}
-    email: {{pivotal-docker-email}}
-    password: {{pivotal-docker-password}}
-    repository: cloudfoundry/cf-mysql-ci
-
-- name: cf-mysql-dockerfile
-  type: git
-  source:
-    uri: https://github.com/cloudfoundry-incubator/cf-mysql-ci.git
-    branch: master
-    paths:
-    - scripts/Dockerfile
-
 - name: aws-bosh-stemcell
-  type: bosh-io-stemcell
-  source:
-    name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
-
-- name: integration-env-bosh-stemcell
   type: bosh-io-stemcell
   source:
     name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
@@ -47,21 +26,8 @@ resources:
   type: git
   source:
     uri: git@github.com:cloudfoundry/cf-mysql-release.git
-    branch: develop
+    branch: releases/v22
     private_key: {{git-writer-private-key}}
-
-- name: cf-mysql-previous-release
-  type: git
-  source:
-    uri: git@github.com:cloudfoundry/cf-mysql-release.git
-    branch: releases/v26
-    private_key: {{git-writer-private-key}}
-
-- name: cf-mysql-release-master
-  type: git
-  source:
-    uri: https://github.com/cloudfoundry/cf-mysql-release.git
-    branch: master
 
 - name: aws-deployment
   type: bosh-deployment
@@ -79,28 +45,12 @@ resources:
     deployment: cf-warden-mysql
     ignore_ssl: true
 
-- name: integration-deployment
-  type: bosh-deployment
-  source:
-    username: {{integration_env_bosh_username}}
-    password: {{integration_env_bosh_password}}
-    deployment: cf-a1-mysql
-    ignore_ssl: true
-
 - name: aws-environment
   type: pool
   source:
     uri: &pool-uri git@github.com:pivotal-cf-experimental/core-services-oss-env-resource-pool
     branch: master
     pool: aws
-    private_key: {{git-writer-private-key}}
-
-- name: integration-environment
-  type: pool
-  source:
-    uri: *pool-uri
-    branch: master
-    pool: aws-integration
     private_key: {{git-writer-private-key}}
 
 - name: bosh-lite-environment
@@ -111,37 +61,8 @@ resources:
     pool: bosh-lites-working
     private_key: {{git-writer-private-key}}
 
-- name: bosh-lite-no-cf-environment
-  type: pool
-  source:
-    uri: *pool-uri
-    branch: master
-    pool: bosh-lites-no-cf
-    private_key: {{git-writer-private-key}}
-
-- name: cf-mysql-latest-release-tarball
-  type: bosh-io-release
-  source:
-    repository: cloudfoundry/cf-mysql-release
-
-- name: cf-mysql-rc-artifacts
-  type: s3
-  source:
-    bucket: cf-mysql-releases
-    regexp: release\-candidate\/cf\-mysql\-.*\.tgz
-    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
-    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
-
 ### JOBS
 jobs:
-- name: build-dockerfile
-  plan:
-  - get: cf-mysql-dockerfile
-    trigger: true
-  - put: cf-mysql-ci-image
-    params:
-      build: cf-mysql-dockerfile/scripts/
-
 - name: test-unit
   plan:
   - aggregate:
@@ -198,7 +119,7 @@ jobs:
       passed: [claim-aws-environment]
       trigger: true
     - get: cf-mysql-ci
-  - try: 
+  - try:
       task: run-broker-deregistrar
       config:
         platform: *platform
@@ -211,7 +132,7 @@ jobs:
           ENV_METADATA: aws-environment/metadata
           ERRAND: broker-deregistrar
           SKIP_IF_NO_DEPLOYMENT: true
-          DEPLOYMENT_NAME: cf-mysql  
+          DEPLOYMENT_NAME: cf-mysql
         run:
           path: cf-mysql-ci/scripts/bosh/run_errand
   - task: delete-aws-deployment
@@ -224,7 +145,7 @@ jobs:
       params:
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
-        DEPLOYMENT_NAME: cf-mysql  
+        DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
 
@@ -589,133 +510,6 @@ jobs:
     params:
       release: bosh-lite-environment
 
-# ARB-TO-FULL-SCALING
-- name: claim-bosh-lite-arb-to-full-scaling
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [run-acceptance-tests-initial,dashboard-test-initial]
-      trigger: true
-    - put: bosh-lite-environment
-      params:
-        acquire: true
-
-- name: release-arb-to-full-scaling-environment-manual
-  plan:
-  - aggregate:
-    - get: bosh-lite-environment
-      passed: [claim-bosh-lite-arb-to-full-scaling]
-  - put: bosh-lite-environment
-    params:
-      release: bosh-lite-environment
-
-- name: delete-arb-to-full-scaling-deployment
-  plan:
-  - aggregate:
-    - get: bosh-lite-environment
-      passed: [claim-bosh-lite-arb-to-full-scaling]
-      trigger: true
-    - get: cf-mysql-release
-      passed: [claim-bosh-lite-arb-to-full-scaling]
-      trigger: true
-    - get: cf-mysql-ci
-  - try: *broker-deregistrar-bosh-lite
-  - *delete-deployment-bosh-lite
-
-- name: deploy-to-arb-to-full-scaling
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [delete-arb-to-full-scaling-deployment]
-      trigger: true
-    - get: bosh-lite-stemcell
-    - get: bosh-lite-environment
-      passed: [delete-arb-to-full-scaling-deployment]
-      trigger: true
-  - aggregate:
-    - *create-release
-    - &make-manifest-bosh-lite
-      task: make-manifest
-      config:
-        platform: *platform
-        image: *docker-image
-        inputs:
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
-        - name: bosh-lite-environment
-        outputs:
-          - name: deployment-manifest
-        params:
-          OUTPUT_FILE: deployment-manifest/deployment.yml
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-        run:
-          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-  - *deploy-to-bosh-lite
-
-- name: arb-to-full-scaling-broker-registrar
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [deploy-to-arb-to-full-scaling]
-      trigger: true
-    - get: bosh-lite-environment
-      passed: [deploy-to-arb-to-full-scaling]
-      trigger: true
-  - *broker-registrar-bosh-lite
-
-- name: arb-to-full-scaling-smoke-tests
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [arb-to-full-scaling-broker-registrar]
-      trigger: true
-    - get: bosh-lite-environment
-      passed: [arb-to-full-scaling-broker-registrar]
-      trigger: true
-  - *smoke-tests-bosh-lite
-
-- name: arb-to-full-scaling-tests
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [arb-to-full-scaling-smoke-tests]
-      trigger: true
-    - get: bosh-lite-environment
-      passed: [arb-to-full-scaling-smoke-tests]
-      trigger: true
-  - task: run-arb-to-full-scaling-tests
-    config:
-      platform: *platform
-      image: *docker-image
-      inputs:
-        - name: cf-mysql-ci
-        - name: bosh-lite-environment
-        - name: cf-mysql-release
-      params:
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-        BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
-      run:
-        path: cf-mysql-ci/scripts/scaling/scaling-arb-to-full-test
-
-- name: release-arb-to-full-scaling-environment
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [arb-to-full-scaling-tests]
-      trigger: true
-    - get: bosh-lite-environment
-      passed: [arb-to-full-scaling-tests]
-      trigger: true
-  - put: bosh-lite-environment
-    params:
-      release: bosh-lite-environment
-
 ### FAILOVER
 - name: claim-bosh-lite-failover
   plan:
@@ -843,524 +637,34 @@ jobs:
     params:
       release: bosh-lite-environment
 
-### UPGRADE
-- name: claim-bosh-lite-upgrade
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [run-acceptance-tests-initial,dashboard-test-initial]
-      trigger: true
-    - put: bosh-lite-environment
-      params:
-        acquire: true
-
-- name: release-upgrade-environment-manual
-  plan:
-  - aggregate:
-    - get: bosh-lite-environment
-      passed: [claim-bosh-lite-upgrade]
-  - put: bosh-lite-environment
-    params:
-      release: bosh-lite-environment
-
-- name: delete-upgrade-deployment
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [claim-bosh-lite-upgrade]
-      trigger: true
-    - get: bosh-lite-environment
-      passed: [claim-bosh-lite-upgrade]
-      trigger: true
-    - get: cf-mysql-ci
-  - try: *broker-deregistrar-bosh-lite
-  - *delete-deployment-bosh-lite
-
-- name: deploy-previous-to-upgrade
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: bosh-lite-stemcell
-    - get: bosh-lite-environment
-      passed: [delete-upgrade-deployment]
-      trigger: true
-    - get: cf-mysql-latest-release-tarball
-    - get: cf-mysql-release
-      resource: cf-mysql-previous-release
-  - task: make-manifest
-    config:
-      platform: *platform
-      image: *docker-image
-      inputs:
-      - name: cf-mysql-release
-      - name: cf-mysql-ci
-      - name: bosh-lite-environment
-      outputs:
-      - name: deployment-manifest
-      params:
-        OUTPUT_FILE: deployment-manifest/deployment.yml
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-        USE_PREVIOUS_RELEASE: true
-      run:
-        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-  - put: bosh-lite-deployment
-    params:
-      target_file: bosh-lite-environment/name
-      manifest: deployment-manifest/deployment.yml
-      releases: [cf-mysql-latest-release-tarball/release.tgz]
-      stemcells: [bosh-lite-stemcell/*.tgz]
-
-- name: broker-registrar-previous-on-upgrade
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      # we don't use current cf-mysql in deploy stage
-      passed: [delete-upgrade-deployment]
-    - get: bosh-lite-environment
-      passed: [deploy-previous-to-upgrade]
-      trigger: true
-  - *broker-registrar-bosh-lite
-
-- name: persistence-test-data-write-before-upgrade
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [broker-registrar-previous-on-upgrade]
-      trigger: true
-    - get: bosh-lite-environment
-      passed: [broker-registrar-previous-on-upgrade]
-      trigger: true
-  - &persistence-test-data-write
-    task: persistence-test-data-write
-    config:
-      platform: *platform
-      image: docker:///pivotalcf/mysql-restore
-      inputs:
-      - name: bosh-lite-environment
-      - name: cf-mysql-ci
-      params:
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
-      run:
-        path: cf-mysql-ci/scripts/persistence/load-test-data
-
-- name: deploy-current-to-upgrade
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [persistence-test-data-write-before-upgrade]
-      trigger: true
-    - get: bosh-lite-stemcell
-    - get: bosh-lite-environment
-      passed: [persistence-test-data-write-before-upgrade]
-      trigger: true
-  - aggregate:
-    - *create-release
-    - task: make-manifest
-      config:
-        platform: *platform
-        image: *docker-image
-        inputs:
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
-        - name: bosh-lite-environment
-        outputs:
-          - name: deployment-manifest
-        params:
-          OUTPUT_FILE: deployment-manifest/deployment.yml
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-        run:
-          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-  - *deploy-to-bosh-lite
-
-- name: persistence-test-data-read-after-upgrade
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [deploy-current-to-upgrade]
-      trigger: true
-    - get: bosh-lite-environment
-      passed: [deploy-current-to-upgrade]
-      trigger: true
-  - &persistence-test-data-read
-    task: persistence-test-data-read
-    config:
-      platform: *platform
-      image: docker:///pivotalcf/mysql-restore
-      inputs:
-      - name: bosh-lite-environment
-      - name: cf-mysql-ci
-      params:
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
-      run:
-        path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data
-
-- name: smoke-tests-current-on-upgrade
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [deploy-current-to-upgrade]
-      trigger: true
-    - get: bosh-lite-environment
-      passed: [deploy-current-to-upgrade]
-      trigger: true
-  - *smoke-tests-bosh-lite
-
-- name: dashboard-test-bosh-lite
-  plan:
-    - aggregate:
-      - get: bosh-lite-environment
-        passed: [deploy-current-to-upgrade]
-      - get: cf-mysql-release
-        passed: [deploy-current-to-upgrade]
-        trigger: true
-      - get: cf-mysql-ci
-    - task: dashboard-test-bosh-lite
-      config:
-        platform: *platform
-        image: *docker-image
-        inputs:
-        - name: cf-mysql-release
-        - name: bosh-lite-environment
-        - name: cf-mysql-ci
-        params:
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-          USE_SMALL_PLANS: true
-          USE_HTTPS: false
-        run:
-          path: cf-mysql-ci/scripts/dashboard/test-dashboard
-
-- name: release-upgrade-environment
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [smoke-tests-current-on-upgrade, dashboard-test-bosh-lite, persistence-test-data-read-after-upgrade]
-      trigger: true
-    - get: bosh-lite-environment
-      passed: [smoke-tests-current-on-upgrade, dashboard-test-bosh-lite, persistence-test-data-read-after-upgrade]
-      trigger: true
-  - put: bosh-lite-environment
-    params:
-      release: bosh-lite-environment
-
-### STANDALONE DEPLOY
-
-- name: claim-bosh-lite-standalone
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [run-acceptance-tests-initial,dashboard-test-initial]
-      trigger: true
-    - put: bosh-lite-environment
-      resource: bosh-lite-no-cf-environment
-      params:
-        acquire: true
-
-- name: release-standalone-environment-manual
-  plan:
-  - aggregate:
-    - get: bosh-lite-environment
-      resource: bosh-lite-no-cf-environment
-      passed: [claim-bosh-lite-standalone]
-  - put: bosh-lite-environment
-    resource: bosh-lite-no-cf-environment
-    params:
-      release: bosh-lite-environment
-
-- name: delete-standalone-deployment
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [claim-bosh-lite-standalone]
-      trigger: true
-    - get: bosh-lite-environment
-      resource: bosh-lite-no-cf-environment
-      passed: [claim-bosh-lite-standalone]
-      trigger: true
-    - get: cf-mysql-ci
-  - *delete-deployment-bosh-lite
-
-- name: deploy-to-standalone
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [delete-standalone-deployment]
-      trigger: true
-    - get: bosh-lite-stemcell
-    - get: bosh-lite-environment
-      resource: bosh-lite-no-cf-environment
-      passed: [delete-standalone-deployment]
-      trigger: true
-  - aggregate:
-    - *create-release
-    - task: make-manifest
-      config:
-        platform: *platform
-        image: *docker-image
-        inputs:
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
-        - name: bosh-lite-environment
-        outputs:
-          - name: deployment-manifest
-        params:
-          OUTPUT_FILE: deployment-manifest/deployment.yml
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-          STANDALONE_MODE: true
-        run:
-          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-  - *deploy-to-bosh-lite
-
-- name: persistence-test-data-write-before-bootstrap
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [deploy-to-standalone]
-      trigger: true
-    - get: bosh-lite-environment
-      resource: bosh-lite-no-cf-environment
-      passed: [deploy-to-standalone]
-      trigger: true
-  - *persistence-test-data-write
-
-- name: test-bootstrap
-  plan:
-    - aggregate:
-      - get: cf-mysql-ci
-      - get: cf-mysql-release
-        passed: [persistence-test-data-write-before-bootstrap]
-        trigger: true
-      - get: bosh-lite-environment
-        resource: bosh-lite-no-cf-environment
-        passed: [persistence-test-data-write-before-bootstrap]
-        trigger: true
-    - task: break-mysql-cluster
-      config:
-        platform: *platform
-        image: *docker-image
-        inputs:
-        - name: cf-mysql-ci
-        - name: bosh-lite-environment
-        params:
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-          BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
-        run:
-          path: cf-mysql-ci/scripts/bootstrap/break-mysql-cluster
-    - task: bootstrap
-      config:
-        platform: *platform
-        image: *docker-image
-        inputs:
-          - name: bosh-lite-environment
-          - name: cf-mysql-ci
-        params:
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          BOSH_USER: {{bosh-lite-username}}
-          ENV_METADATA: bosh-lite-environment/metadata
-          DEPLOYMENT_NAME: cf-warden-mysql
-          ERRAND: bootstrap
-        run:
-          path: cf-mysql-ci/scripts/bosh/run_errand
-
-- name: persistence-test-data-read-after-bootstrap
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [test-bootstrap]
-      trigger: true
-    - get: bosh-lite-environment
-      resource: bosh-lite-no-cf-environment
-      passed: [test-bootstrap]
-      trigger: true
-  - *persistence-test-data-read
-
-- name: release-standalone-environment
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [persistence-test-data-read-after-bootstrap]
-      trigger: true
-    - get: bosh-lite-environment
-      resource: bosh-lite-no-cf-environment
-      passed: [persistence-test-data-read-after-bootstrap]
-      trigger: true
-  - put: bosh-lite-environment
-    resource: bosh-lite-no-cf-environment
-    params:
-      release: bosh-lite-environment
-
 ### INTEGRATION DEPLOY
-- name: claim-integration-environment
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed:
-      # all bosh-lite pipelines
-      - release-upgrade-environment
-      - release-failover-environment
-      - release-scaling-environment
-      - release-standalone-environment
-      - release-arb-to-full-scaling-environment  
-      trigger: true
-  - put: integration-environment
-    params:
-      acquire: true
-
-- name: deploy-to-integration
-  serial: true
-  plan:
-  - aggregate:
-    - get: deployments-configuration
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [claim-integration-environment]
-      trigger: true
-    - get: integration-env-bosh-stemcell
-    - get: integration-environment
-      passed: [claim-integration-environment]
-      trigger: true
-  - aggregate:
-    - *create-release
-    - task: make-manifest
-      config:
-        platform: *platform
-        image: *docker-image
-        inputs:
-        - name: deployments-configuration
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
-        - name: integration-environment
-        outputs:
-          - name: deployment-manifest
-        params:
-          ENV_TARGET_FILE: integration-environment/name
-          ENV_METADATA: integration-environment/metadata
-          DEPLOYMENTS_DIR: deployments-configuration
-          USE_EXISTING_CF_MANIFEST: true
-        run:
-          path: cf-mysql-ci/scripts/bosh/make_manifest
-  - put: integration-deployment
-    params:
-      target_file: integration-environment/name
-      manifest: deployment-manifest/deployment.yml
-      releases: [release-tarball/*.tgz]
-      stemcells: [integration-env-bosh-stemcell/*.tgz]
-
-- name: run-smoke-tests-integration
-  plan:
-  - aggregate:
-    - get: integration-environment
-      passed: [deploy-to-integration]
-    - get: cf-mysql-release
-      passed: [deploy-to-integration]
-      trigger: true
-    - get: cf-mysql-ci
-  - task: run-broker-registrar
-    config:
-      platform: *platform
-      image: *docker-image
-      inputs:
-        - name: cf-mysql-ci
-        - name: integration-environment
-      params:
-        ENV_TARGET_FILE: integration-environment/name
-        ENV_METADATA: integration-environment/metadata
-        ERRAND: broker-registrar
-        DEPLOYMENT_NAME: cf-a1-mysql  
-      run:
-        path: cf-mysql-ci/scripts/bosh/run_errand
-  - task: run-smoke-tests
-    config:
-      platform: *platform
-      image: *docker-image
-      inputs:
-        - name: cf-mysql-ci
-        - name: integration-environment
-      params:
-        ENV_TARGET_FILE: integration-environment/name
-        ENV_METADATA: integration-environment/metadata
-        ERRAND: acceptance-tests
-        DEPLOYMENT_NAME: cf-a1-mysql  
-      run:
-        path: cf-mysql-ci/scripts/bosh/run_errand
-
-- name: release-integration-environment
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [run-smoke-tests-integration]
-      trigger: true
-    - get: integration-environment
-      passed: [run-smoke-tests-integration]
-      trigger: true
-  - put: integration-environment
-    params:
-      release: integration-environment
-
-- name: upload-rc-artifacts
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [run-smoke-tests-integration]
-      trigger: true
-    - get: cf-mysql-ci
-  - task: create-rc-release-artifacts
-    config:
-      platform: *platform
-      image: *docker-image
-      inputs:
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
-      outputs:
-        - name: release-tarball
-      params:
-        RELEASE_RELATIVE_DIR: cf-mysql-release
-      run:
-        path: cf-mysql-ci/scripts/create_release
-  - put: cf-mysql-rc-artifacts
-    params:
-      from: release\-tarball\/cf\-mysql.*\.tgz
-      to: release-candidate/
-
 - name: promote-to-rc
   plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [run-smoke-tests-integration]
-      trigger: true
-      params:
-        fetch: [release-candidate]
-    - get: cf-mysql-ci
-  - task: merge-and-push-to-release-candidate
+  - get: cf-mysql-release
+    passed:
+    - release-failover-environment
+    - release-scaling-environment
+    trigger: true
+  - task: rc-tag-file
     config:
       platform: *platform
       image: *docker-image
-      inputs:
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
       run:
-        path: cf-mysql-ci/scripts/publish/merge-to-release-candidate
-      params:
-        GIT_PRIVATE_KEY: {{git-writer-private-key}}
+        path: /bin/bash
+        args:
+          - '-c'
+          - mkdir -p rc-tag-dir && echo -n "release-candidate-v22" > rc-tag-dir/rc-tag-file
+      outputs:
+        - name: rc-tag-dir
+  - put: cf-mysql-release
+    params:
+      repository: cf-mysql-release
+      tag: rc-tag-dir/rc-tag-file
+      only_tag: true
 
 groups:
-- name: cf-mysql
+- name: cf-mysql-v22
   jobs:
-  - build-dockerfile
   - test-unit
   - test-sample-stubs
   - claim-aws-environment
@@ -1387,39 +691,7 @@ groups:
   - failover-smoke-tests
   - failover-tests
   - release-failover-environment
-  - claim-bosh-lite-upgrade
-  - release-upgrade-environment-manual
-  - delete-upgrade-deployment
-  - deploy-previous-to-upgrade
-  - broker-registrar-previous-on-upgrade
-  - persistence-test-data-write-before-upgrade
-  - deploy-current-to-upgrade
-  - persistence-test-data-read-after-upgrade
-  - smoke-tests-current-on-upgrade
-  - dashboard-test-bosh-lite
-  - release-upgrade-environment
-  - claim-bosh-lite-standalone
-  - release-standalone-environment-manual
-  - delete-standalone-deployment
-  - deploy-to-standalone
-  - persistence-test-data-write-before-bootstrap
-  - test-bootstrap
-  - persistence-test-data-read-after-bootstrap
-  - release-standalone-environment
-  - claim-integration-environment
-  - deploy-to-integration
-  - run-smoke-tests-integration
-  - release-integration-environment
-  - upload-rc-artifacts
   - promote-to-rc
-  - claim-bosh-lite-arb-to-full-scaling
-  - release-arb-to-full-scaling-environment-manual
-  - delete-arb-to-full-scaling-deployment
-  - deploy-to-arb-to-full-scaling
-  - arb-to-full-scaling-broker-registrar
-  - arb-to-full-scaling-smoke-tests
-  - arb-to-full-scaling-tests
-  - release-arb-to-full-scaling-environment
 - name: failover
   jobs:
   - claim-bosh-lite-failover
@@ -1430,29 +702,6 @@ groups:
   - failover-smoke-tests
   - failover-tests
   - release-failover-environment
-- name: standalone
-  jobs:
-  - claim-bosh-lite-standalone
-  - release-standalone-environment-manual
-  - delete-standalone-deployment
-  - deploy-to-standalone
-  - release-standalone-environment
-  - persistence-test-data-write-before-bootstrap
-  - test-bootstrap
-  - persistence-test-data-read-after-bootstrap
-- name: upgrade
-  jobs:
-  - claim-bosh-lite-upgrade
-  - release-upgrade-environment-manual
-  - delete-upgrade-deployment
-  - deploy-previous-to-upgrade
-  - broker-registrar-previous-on-upgrade
-  - persistence-test-data-write-before-upgrade
-  - deploy-current-to-upgrade
-  - persistence-test-data-read-after-upgrade
-  - smoke-tests-current-on-upgrade
-  - dashboard-test-bosh-lite
-  - release-upgrade-environment
 - name: scaling
   jobs:
   - claim-bosh-lite-scaling
@@ -1463,13 +712,3 @@ groups:
   - scaling-smoke-tests
   - scaling-tests
   - release-scaling-environment
-- name: arb-to-full
-  jobs:
-  - claim-bosh-lite-arb-to-full-scaling
-  - release-arb-to-full-scaling-environment-manual
-  - delete-arb-to-full-scaling-deployment
-  - deploy-to-arb-to-full-scaling
-  - arb-to-full-scaling-broker-registrar
-  - arb-to-full-scaling-smoke-tests
-  - arb-to-full-scaling-tests
-  - release-arb-to-full-scaling-environment
