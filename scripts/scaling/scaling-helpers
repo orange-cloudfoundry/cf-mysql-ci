@@ -76,8 +76,8 @@ function scale_down_to_minimal() {
   bosh -n deploy
 }
 
-function scale_up_to_arb() {
-  echo "Scaling up to full deployment (2 nodes plus arbitrator)"
+function scale_up_to_default() {
+  echo "Scaling up to full deployment (2 nodes plus arbitrator or 3 nodes depending on release of cf-mysql)"
   MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
 
   MINIMAL_MODE=false \

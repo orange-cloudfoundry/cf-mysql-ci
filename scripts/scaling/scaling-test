@@ -24,7 +24,7 @@ scale_down_to_minimal
 clear_data
 write_some_data 1000
 
-scale_up_to_arb
+scale_up_to_default
 verify_replicated_row_count_is 1000
 
 scale_down_to_minimal
