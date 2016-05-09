@@ -108,6 +108,9 @@ jobs:
     - get: cf-mysql-release
       passed: [test-sample-stubs, test-unit]
       trigger: true
+    - get: weekly-trigger
+      passed: [test-sample-stubs, test-unit]
+      trigger: true
     - put: aws-environment
       params:
         acquire: true
@@ -126,9 +129,11 @@ jobs:
   - aggregate:
     - get: aws-environment
       passed: [claim-aws-environment]
+      trigger: true
+    - get: weekly-trigger
+      passed: [claim-aws-environment]
     - get: cf-mysql-release
       passed: [claim-aws-environment]
-      trigger: true
     - get: cf-mysql-ci
   - try:
       task: run-broker-deregistrar
@@ -167,10 +172,12 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [delete-aws-deployment]
-      trigger: true
     - get: aws-bosh-stemcell
+    - get: weekly-trigger
+      passed: [delete-aws-deployment]
     - get: aws-environment
       passed: [delete-aws-deployment]
+      trigger: true
   - aggregate:
     - &create-release
       task: create-release
@@ -215,9 +222,11 @@ jobs:
   - aggregate:
     - get: aws-environment
       passed: [deploy-to-initial]
+      trigger: true
+    - get: weekly-trigger
+      passed: [deploy-to-initial]
     - get: cf-mysql-release
       passed: [deploy-to-initial]
-      trigger: true
     - get: cf-mysql-ci
   - task: run-broker-registrar
     config:
@@ -253,9 +262,11 @@ jobs:
   - aggregate:
     - get: aws-environment
       passed: [run-smoke-tests-initial]
+      trigger: true
+    - get: weekly-trigger
+      passed: [run-smoke-tests-initial]
     - get: cf-mysql-release
       passed: [run-smoke-tests-initial]
-      trigger: true
     - get: deployments-configuration
     - get: cf-mysql-ci
   - task: recreate-manifest-to-run-acceptance-tests
@@ -302,9 +313,11 @@ jobs:
   - aggregate:
       - get: aws-environment
         passed: [run-smoke-tests-initial]
+        trigger: true
+      - get: weekly-trigger
+        passed: [run-smoke-tests-initial]
       - get: cf-mysql-release
         passed: [run-smoke-tests-initial]
-        trigger: true
       - get: cf-mysql-ci
   - task: dashboard-test
     config:
@@ -324,7 +337,6 @@ jobs:
   plan:
   - get: cf-mysql-release
     passed: [run-acceptance-tests-initial,dashboard-test-initial]
-    trigger: true
   - get: aws-environment
     passed: [run-acceptance-tests-initial,dashboard-test-initial]
     trigger: true
@@ -337,6 +349,9 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
+      passed: [run-acceptance-tests-initial,dashboard-test-initial]
+      trigger: true
+    - get: weekly-trigger
       passed: [run-acceptance-tests-initial,dashboard-test-initial]
       trigger: true
     - put: bosh-lite-environment
@@ -526,6 +541,9 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
+      passed: [run-acceptance-tests-initial,dashboard-test-initial]
+      trigger: true
+    - get: weekly-trigger
       passed: [run-acceptance-tests-initial,dashboard-test-initial]
       trigger: true
     - put: bosh-lite-environment
