@@ -64,7 +64,9 @@ resources:
 - name: weekly-trigger
   type: time
   source:
-    interval: 7d
+    days:
+    - Monday
+    interval: 24h
 
 ### JOBS
 jobs:
