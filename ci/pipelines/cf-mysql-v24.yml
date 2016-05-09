@@ -61,12 +61,19 @@ resources:
     pool: bosh-lites-working
     private_key: {{git-writer-private-key}}
 
+- name: weekly-trigger
+  type: time
+  source:
+    interval: 7d
+
 ### JOBS
 jobs:
 - name: test-unit
   plan:
   - aggregate:
     - get: cf-mysql-release
+      trigger: true
+    - get: weekly-trigger
       trigger: true
   - task: test-unit
     config:
@@ -81,6 +88,8 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
+      trigger: true
+    - get: weekly-trigger
       trigger: true
   - task: test-sample-stubs
     config:
