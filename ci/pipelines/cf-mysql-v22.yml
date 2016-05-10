@@ -685,6 +685,21 @@ jobs:
           - mkdir -p rc-tag-dir && echo -n "release-candidate-v22" > rc-tag-dir/rc-tag-file
       outputs:
         - name: rc-tag-dir
+  - try:
+      task: delete-tag
+      config:
+        platform: *platform
+        image: *docker-image
+        inputs:
+          - name: cf-mysql-ci
+          - name: cf-mysql-release
+          - name: rc-tag-dir
+        params:
+          GIT_AUTHOR_NAME: {{oss-git-writer-name}}
+          GIT_AUTHOR_EMAIL: {{oss-git-writer-email}}
+          GIT_PRIVATE_KEY: {{git-writer-private-key}}
+        run:
+          path: cf-mysql-ci/scripts/publish/delete-tag
   - put: cf-mysql-release
     params:
       repository: cf-mysql-release

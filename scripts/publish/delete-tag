@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
+RELEASE_DIR="$(cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
+
+TAG=$(cat ${WORKSPACE_DIR}/rc-tag-dir/rc-tag-file)
+
+SSH_DIR=$HOME/.ssh
+SSH_KEY=${SSH_DIR}/id_rsa_github
+
+mkdir -p ${SSH_DIR}
+echo -e "Host *\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile=/dev/null" >> $SSH_DIR/config
+echo -n "${GIT_PRIVATE_KEY:?}" > "${SSH_KEY}"
+chmod 0600 "${SSH_KEY}"
+
+eval $(ssh-agent)
+ssh-add "${SSH_KEY}"
+
+git config --global user.name "${GIT_AUTHOR_NAME:?}"
+git config --global user.email "${GIT_AUTHOR_EMAIL:?}"
+
+pushd RELEASE_DIR
+  git tag -d ${TAG}
+  git push origin :${TAG}
+popd
+
