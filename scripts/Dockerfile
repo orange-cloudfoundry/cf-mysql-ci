@@ -78,6 +78,11 @@ RUN wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py && \
           pip install awscli
 
 RUN \
+  wget -q https://releases.hashicorp.com/consul/0.5.2/consul_0.5.2_linux_amd64.zip -P /tmp/ && \
+  unzip /tmp/consul_0.5.2_linux_amd64.zip -d /usr/local/bin && \
+  rm /tmp/consul_0.5.2_linux_amd64.zip
+
+RUN \
       apt-get update && \
       apt-get -y install --fix-missing \
         bc \
