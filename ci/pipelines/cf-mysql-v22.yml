@@ -669,11 +669,13 @@ jobs:
 ### INTEGRATION DEPLOY
 - name: promote-to-rc
   plan:
-  - get: cf-mysql-release
-    passed:
-    - release-failover-environment
-    - release-scaling-environment
-    trigger: true
+  - aggregate:
+    - get: cf-mysql-release
+      passed:
+      - release-failover-environment
+      - release-scaling-environment
+      trigger: true
+    - get: cf-mysql-ci
   - task: rc-tag-file
     config:
       platform: *platform

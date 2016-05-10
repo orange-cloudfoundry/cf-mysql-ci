@@ -22,7 +22,7 @@ ssh-add "${SSH_KEY}"
 git config --global user.name "${GIT_AUTHOR_NAME:?}"
 git config --global user.email "${GIT_AUTHOR_EMAIL:?}"
 
-pushd RELEASE_DIR
+pushd ${RELEASE_DIR}
   git tag -d ${TAG}
   git push origin :${TAG}
 popd
