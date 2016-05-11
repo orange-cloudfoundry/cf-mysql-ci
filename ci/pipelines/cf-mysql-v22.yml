@@ -67,7 +67,12 @@ resources:
     days:
     - Monday
     interval: 24h
-
+- name: pcf-mysql-rc-artifacts
+  type: s3
+  source:
+    bucket: pcf-mysql-releases
+    access_key_id: {{pcf-mysql-ci-aws-access-key-id}}
+    secret_access_key: {{pcf-mysql-ci-aws-secret-access-key}}
 ### JOBS
 jobs:
 - name: test-unit
@@ -707,6 +712,34 @@ jobs:
       repository: cf-mysql-release
       tag: rc-tag-dir/rc-tag-file
       only_tag: true
+- name: upload-rc-artifacts
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      passed:
+      - release-failover-environment
+      - release-scaling-environment
+      trigger: true
+    - get: cf-mysql-ci
+  - task: create-rc-release-artifacts
+    config:
+      platform: *platform
+      image: *docker-image
+      inputs:
+        - name: cf-mysql-ci
+        - name: cf-mysql-release
+      outputs:
+        - name: release-tarball
+      params:
+        RELEASE_RELATIVE_DIR: cf-mysql-release
+        TAG_MATCH: v22
+      run:
+        path: cf-mysql-ci/scripts/create_release
+  - put: pcf-mysql-rc-artifacts
+    params:
+      from: release\-tarball\/cf\-mysql.*\.tgz
+      to: releases-22/tested/
+
 
 groups:
 - name: cf-mysql-v22
@@ -738,6 +771,7 @@ groups:
   - failover-tests
   - release-failover-environment
   - promote-to-rc
+  - upload-rc-artifacts
 - name: failover
   jobs:
   - claim-bosh-lite-failover

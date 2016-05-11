@@ -7,6 +7,7 @@ WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 
 RELEASE_DIR="${WORKSPACE_DIR}/${RELEASE_RELATIVE_DIR:-cf-mysql-release}"
 OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-release-tarball}"
+TAG_MATCH=${TAG_MATCH:-}
 
 pushd "${RELEASE_DIR}"
 
@@ -20,7 +21,11 @@ pushd "${RELEASE_DIR}"
     # Version 0 uploaded, so Bosh will not upload our changes.
     # Manually adding a timestamp to the version number fixes this.
     # We also include the latest OSS release tag in the version for clarity.
-    GIT_DESCRIBE=$(git describe --long --tags)
+    if [ -n "${TAG_MATCH}" ]; then
+      GIT_DESCRIBE=$(git describe --long --tags --match ${TAG_MATCH})
+    else
+      GIT_DESCRIBE=$(git describe --long --tags)
+    fi
     GIT_DESCRIBE="${GIT_DESCRIBE#v}" # remove leading 'v'
     MAJOR=$(echo $GIT_DESCRIBE | cut -f1 -d-)
     MINOR=$(echo $GIT_DESCRIBE | cut -f2 -d-)
