@@ -73,6 +73,7 @@ resources:
     bucket: pcf-mysql-releases
     access_key_id: {{pcf-mysql-ci-aws-access-key-id}}
     secret_access_key: {{pcf-mysql-ci-aws-secret-access-key}}
+    regexp: pcf-mysql-releases/releases-22/tested/cf-mysql-(\d+\.\d+)\+.*.tgz
 ### JOBS
 jobs:
 - name: test-unit
