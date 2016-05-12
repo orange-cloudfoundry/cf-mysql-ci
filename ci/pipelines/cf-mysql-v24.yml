@@ -595,8 +595,7 @@ jobs:
       trigger: true
   - aggregate:
     - *create-release
-    - &make-manifest-bosh-lite
-      task: make-manifest
+    - task: make-manifest
       config:
         platform: *platform
         image: *docker-image
@@ -726,8 +725,7 @@ jobs:
       trigger: true
   - aggregate:
     - *create-release
-    - &make-manifest-bosh-lite
-      task: make-manifest
+    - task: make-manifest
       config:
         platform: *platform
         image: *docker-image
