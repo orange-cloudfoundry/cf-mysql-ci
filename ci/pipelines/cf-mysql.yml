@@ -1209,6 +1209,111 @@ jobs:
     params:
       release: bosh-lite-environment
 
+### DATA-LOSS
+- name: claim-bosh-lite-data-loss
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      passed: [run-acceptance-tests-initial,dashboard-test-initial]
+      trigger: true
+    - put: bosh-lite-environment
+      params:
+        acquire: true
+
+- name: release-data-loss-environment-manual
+  plan:
+  - try:
+      do:
+      - get: bosh-lite-environment
+        passed: [claim-bosh-lite-data-loss]
+      - put: bosh-lite-environment
+        params:
+          release: bosh-lite-environment
+
+- name: delete-data-loss-deployment
+  plan:
+  - aggregate:
+    - get: bosh-lite-environment
+      passed: [claim-bosh-lite-data-loss]
+      trigger: true
+    - get: cf-mysql-release
+      passed: [claim-bosh-lite-data-loss]
+      trigger: true
+    - get: cf-mysql-ci
+  - try: *broker-deregistrar-bosh-lite
+  - *delete-deployment-bosh-lite
+
+- name: deploy-to-data-loss
+  plan:
+  - aggregate:
+    - get: cf-mysql-ci
+    - get: cf-mysql-release
+      passed: [delete-data-loss-deployment]
+      trigger: true
+    - get: bosh-lite-stemcell
+    - get: bosh-lite-environment
+      passed: [delete-data-loss-deployment]
+      trigger: true
+  - aggregate:
+    - *create-release
+    - task: make-manifest
+      config:
+        platform: *platform
+        image: *docker-image
+        inputs:
+        - name: cf-mysql-ci
+        - name: cf-mysql-release
+        - name: bosh-lite-environment
+        outputs:
+          - name: deployment-manifest
+        params:
+          OUTPUT_FILE: deployment-manifest/deployment.yml
+          ENV_TARGET_FILE: bosh-lite-environment/name
+          ENV_METADATA: bosh-lite-environment/metadata
+          TINY_GCACHE: true
+        run:
+          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
+  - *deploy-to-bosh-lite
+
+- name: data-loss-tests
+  plan:
+  - aggregate:
+    - get: cf-mysql-ci
+    - get: cf-mysql-release
+      passed: [deploy-to-data-loss]
+      trigger: true
+    - get: bosh-lite-environment
+      passed: [deploy-to-data-loss]
+      trigger: true
+  - task: run-data-loss-tests
+    config:
+      platform: *platform
+      image: *docker-image
+      inputs:
+        - name: cf-mysql-ci
+        - name: bosh-lite-environment
+        - name: cf-mysql-release
+      params:
+        ENV_TARGET_FILE: bosh-lite-environment/name
+        ENV_METADATA: bosh-lite-environment/metadata
+        BOSH_SSH_KEY: {{bosh-lite-private-key}}
+        DEPLOYMENT_NAME: cf-warden-mysql
+      run:
+        path: cf-mysql-ci/scripts/data-loss/force-sst-test
+
+- name: release-data-loss-environment
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      passed: [data-loss-tests]
+      trigger: true
+    - get: bosh-lite-environment
+      passed: [data-loss-tests]
+      trigger: true
+  - put: bosh-lite-environment
+    params:
+      release: bosh-lite-environment
+
 ### INTEGRATION DEPLOY
 - name: claim-integration-environment
   plan:
@@ -1220,7 +1325,8 @@ jobs:
       - release-failover-environment
       - release-scaling-environment
       - release-standalone-environment
-      - release-arb-to-full-scaling-environment  
+      - release-arb-to-full-scaling-environment
+      - release-data-loss-environment
       trigger: true
   - put: integration-environment
     params:
@@ -1412,6 +1518,12 @@ groups:
   - test-bootstrap
   - persistence-test-data-read-after-bootstrap
   - release-standalone-environment
+  - claim-bosh-lite-data-loss
+  - release-data-loss-environment-manual
+  - delete-data-loss-deployment
+  - deploy-to-data-loss
+  - data-loss-tests
+  - release-data-loss-environment
   - claim-integration-environment
   - deploy-to-integration
   - run-smoke-tests-integration
@@ -1479,3 +1591,11 @@ groups:
   - arb-to-full-scaling-smoke-tests
   - arb-to-full-scaling-tests
   - release-arb-to-full-scaling-environment
+- name: data-loss
+  jobs:
+  - claim-bosh-lite-data-loss
+  - release-data-loss-environment-manual
+  - delete-data-loss-deployment
+  - deploy-to-data-loss
+  - data-loss-tests
+  - release-data-loss-environment
