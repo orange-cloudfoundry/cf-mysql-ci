@@ -20,6 +20,7 @@ trap '{ rm -rf ${tmpdir}; }' EXIT
 : "${STANDALONE_MODE:=false}"
 : "${NO_ARBITRATOR:=false}"
 : "${FULL_PLUS_ARBITRATOR:=false}"
+: "${TINY_GCACHE:=false}"
 
 if [[ "${OUTPUT_FILE}" != /* ]]; then
   OUTPUT_FILE="${WORKSPACE_DIR}/${OUTPUT_FILE}"
@@ -67,6 +68,8 @@ elif [ "${NO_ARBITRATOR}" = "true" ]; then
   INSTANCE_COUNT_OVERRIDE="${RELEASE_DIR}/manifest-generation/examples/no-arbitrator/instance-count-overrides.yml"
 elif [ "${FULL_PLUS_ARBITRATOR}" = "true" ]; then
   INSTANCE_COUNT_OVERRIDE="${RELEASE_DIR}/manifest-generation/examples/upgrade-to-arbitrator/deploy-arbitrator/instance-count-overrides.yml"
+elif [ "${TINY_GCACHE}" = "true" ]; then
+  PROPERTY_OVERRIDES="$PROPERTY_OVERRIDES ${CI_DIR}/stubs/property-overrides-tiny-gcache.yml"
 fi
 
 if [ "${USE_PREVIOUS_RELEASE}" = "true" ]; then
