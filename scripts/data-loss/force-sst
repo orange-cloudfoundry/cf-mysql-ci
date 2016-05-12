@@ -22,6 +22,7 @@ MYSQL_TUNNEL_PORT=3307
 MYSQL_TUNNEL_USERNAME=ubuntu
 MYSQL_VM_IP=10.244.7.2
 MYSQL_VM_PORT=3306
+GCACHE_SIZE_PLUS_ONE=129
 
 function close-ssh-tunnels() {
   echo "Closing SSH tunnels ..."
@@ -59,7 +60,7 @@ function write_data_to_overflow_gcache() {
     --user=root \
     --password=password < ${MY_DIR}/setup-test-data-schema.sql
 
-  for i in `seq 1 129`;
+  for i in `seq 1 ${GCACHE_SIZE_PLUS_ONE}`;
   do
     echo "INSERT INTO test_table(id, text) VALUES ('${i}', REPEAT('A', 1024 * 1024));"
   done |  mysql --host=${MYSQL_HOST} \
