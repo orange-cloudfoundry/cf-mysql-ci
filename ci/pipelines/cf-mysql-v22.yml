@@ -123,12 +123,13 @@ jobs:
 
 - name: release-aws-environment-manual
   plan:
-  - aggregate:
-    - get: aws-environment
-      passed: [claim-aws-environment]
-  - put: aws-environment
-    params:
-      release: aws-environment
+  - try:
+      do:
+      - get: aws-environment
+        passed: [claim-aws-environment]
+      - put: aws-environment
+        params:
+          release: aws-environment
 
 - name: delete-aws-deployment
   plan:
@@ -366,12 +367,13 @@ jobs:
 
 - name: release-scaling-environment-manual
   plan:
-  - aggregate:
-    - get: bosh-lite-environment
-      passed: [claim-bosh-lite-scaling]
-  - put: bosh-lite-environment
-    params:
-      release: bosh-lite-environment
+  - try:
+      do:
+      - get: bosh-lite-environment
+        passed: [claim-bosh-lite-scaling]
+      - put: bosh-lite-environment
+        params:
+          release: bosh-lite-environment
 
 - name: delete-scaling-deployment
   plan:
@@ -558,12 +560,13 @@ jobs:
 
 - name: release-failover-environment-manual
   plan:
-  - aggregate:
-    - get: bosh-lite-environment
-      passed: [claim-bosh-lite-failover]
-  - put: bosh-lite-environment
-    params:
-      release: bosh-lite-environment
+  - try:
+      do:
+      - get: bosh-lite-environment
+        passed: [claim-bosh-lite-failover]
+      - put: bosh-lite-environment
+        params:
+          release: bosh-lite-environment
 
 - name: delete-failover-deployment
   plan:
