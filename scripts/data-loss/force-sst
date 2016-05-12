@@ -70,9 +70,9 @@ function write_data_to_overflow_gcache() {
     --database=mysql_data_loss_test
 }
 
-function attempt_to_start_mysql_z2() {
+function attempt_to_start_mysql_z2_0() {
   set +e
-  bosh -n start mysql_z2
+  bosh -n start mysql_z2 0
   set -e
 }
 
@@ -99,5 +99,5 @@ trap close-ssh-tunnels EXIT
 open_ssh_tunnel_to_bosh_lite
 stop_mysql_z2_0
 write_data_to_overflow_gcache
-attempt_to_start_mysql_z2
+attempt_to_start_mysql_z2_0
 assert_mysql_z2_did_not_join
