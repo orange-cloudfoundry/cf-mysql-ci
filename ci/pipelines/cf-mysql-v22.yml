@@ -198,6 +198,7 @@ jobs:
         - name: release-tarball
         params:
           RELEASE_RELATIVE_DIR: cf-mysql-release/
+          TAG_MATCH: v22
         run:
           path: cf-mysql-ci/scripts/create_release
     - task: make-manifest
