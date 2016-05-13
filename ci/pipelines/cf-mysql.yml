@@ -1332,6 +1332,16 @@ jobs:
     params:
       acquire: true
 
+- name: release-integration-environment-manual
+  plan:
+  - try:
+      do:
+      - get: integration-environment
+        passed: [claim-integration-environment]
+      - put: integration-environment
+        params:
+          release: integration-environment
+
 - name: deploy-to-integration
   serial: true
   plan:
@@ -1525,6 +1535,7 @@ groups:
   - data-loss-tests
   - release-data-loss-environment
   - claim-integration-environment
+  - release-integration-environment-manual
   - deploy-to-integration
   - run-smoke-tests-integration
   - release-integration-environment
