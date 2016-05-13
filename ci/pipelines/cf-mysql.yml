@@ -1432,6 +1432,7 @@ jobs:
       - release-standalone-environment
       - release-arb-to-full-scaling-environment
       - release-data-loss-environment
+      - release-verify-cluster-schemas-environment
       trigger: true
   - put: integration-environment
     params:
@@ -1639,6 +1640,12 @@ groups:
   - deploy-to-data-loss
   - data-loss-tests
   - release-data-loss-environment
+  - claim-bosh-lite-verify-cluster-schemas
+  - release-verify-cluster-schemas-environment-manual
+  - delete-verify-cluster-schemas-deployment
+  - deploy-to-verify-cluster-schemas
+  - verify-cluster-schemas-tests
+  - release-verify-cluster-schemas-environment
   - claim-integration-environment
   - release-integration-environment-manual
   - deploy-to-integration
