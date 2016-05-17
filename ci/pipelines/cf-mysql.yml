@@ -1419,7 +1419,7 @@ jobs:
         BOSH_SSH_KEY: {{bosh-lite-private-key}}
         DEPLOYMENT_NAME: cf-warden-mysql
       run:
-        path: cf-mysql-ci/scripts/data-loss/force-sst-test  #TODO: Add schemas tests here
+        path: cf-mysql-ci/scripts/verify-cluster-schemas/force-divergent-schemas-test
 
 - name: release-verify-cluster-schemas-environment
   plan:
