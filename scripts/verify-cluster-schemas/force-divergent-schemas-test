@@ -86,7 +86,7 @@ function confirm_schemas_are_equivalent() {
   set +e
   output=$(verify_schemas)
   echo ${output}
-  echo ${output} | grep "Sucess. All schemas are equal"
+  echo ${output} | grep "Success: All schemas are equal"
 
   if [ $? != "0" ]; then
     echo "Error: Initial schemas are out of sync"
