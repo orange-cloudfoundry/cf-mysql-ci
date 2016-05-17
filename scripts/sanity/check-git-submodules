@@ -18,11 +18,11 @@ function main() {
   with_protocol="$(count_with_protocol "${root_dir}" "${protocol}")"
 
   if [ "${total}" != "${with_protocol}" ]; then
-    echo "found git submodules not using ${protocol}"
+    echo "ERROR: Found git submodules not using ${protocol}"
     grep "url = " "${root_dir}/.gitmodules" | grep -v "url = ${protocol}://"
     exit 1
   else
-    echo "all submodules use ${protocol}, I'm happy"
+    echo "All submodules use ${protocol}, I'm happy"
     exit 0
   fi
 }

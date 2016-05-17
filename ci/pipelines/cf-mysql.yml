@@ -142,6 +142,22 @@ jobs:
     params:
       build: cf-mysql-dockerfile/scripts/
 
+- name: check-submodules
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      trigger: true
+    - get: cf-mysql-ci
+  - task: check-git-submodules
+    config:
+      platform: &platform linux
+      image: &docker-image docker:///cloudfoundry/cf-mysql-ci
+      inputs:
+      - name: cf-mysql-release
+      - name: cf-mysql-ci
+      run:
+        path: cf-mysql-ci/scripts/sanity/check-git-submodules
+
 - name: test-unit
   plan:
   - aggregate:
@@ -149,8 +165,8 @@ jobs:
       trigger: true
   - task: test-unit
     config:
-      platform: &platform linux
-      image: &docker-image docker:///cloudfoundry/cf-mysql-ci
+      platform: *platform
+      image: *docker-image
       inputs:
       - name: cf-mysql-release
       run:
@@ -174,7 +190,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-sample-stubs, test-unit, check-submodules]
       trigger: true
     - put: aws-environment
       params:
@@ -1603,6 +1619,7 @@ jobs:
 groups:
 - name: cf-mysql
   jobs:
+  - check-submodules
   - build-dockerfile
   - test-unit
   - test-sample-stubs
