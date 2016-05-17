@@ -61,8 +61,8 @@ function verify_schemas() {
   bosh -n download manifest ${DEPLOYMENT_NAME} ${DEPLOYMENT_NAME}.yml
   bosh deployment ${DEPLOYMENT_NAME}.yml
 
-  bosh run errand verify_cluster_schemas --keep-alive
-  return $?
+  output="$(bosh run errand verify-cluster-schemas --keep-alive)"
+  echo $output
 }
 
 function drop_test_database_if_exists() {
@@ -84,7 +84,10 @@ function update_schema_on_one_node() {
 
 function confirm_schemas_are_equivalent() {
   set +e
-  verify_schemas
+  output=$(verify_schemas)
+  echo ${output}
+  echo ${output} | grep "Sucess. All schemas are equal"
+
   if [ $? != "0" ]; then
     echo "Error: Initial schemas are out of sync"
     exit 1
@@ -94,8 +97,11 @@ function confirm_schemas_are_equivalent() {
 
 function confirm_schemas_are_out_of_sync() {
   set +e
-  verify_schemas
-  if [ $? != "1" ]; then
+  output=$(verify_schemas)
+  echo ${output}
+  echo ${output} | grep "Error: Cluster schemas are not consistent"
+
+  if [ $? != "0" ]; then
     echo "Error: Schemas should be out of sync, but report in sync"
     exit 1
   fi
