@@ -1314,7 +1314,7 @@ jobs:
         DEPLOYMENT_NAME: cf-warden-mysql
         ERRAND: force-rejoin
       run:
-        path: cf-mysql-ci/scripts/run_errand
+        path: cf-mysql-ci/scripts/bosh/run_errand
 
 - name: release-data-loss-environment
   plan:
