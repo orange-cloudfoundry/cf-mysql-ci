@@ -21,6 +21,9 @@ MYSQL_TUNNEL_PORT=3307
 MYSQL_TUNNEL_USERNAME=vcap
 MYSQL_VM_IP=10.244.7.2
 MYSQL_VM_PORT=3306
+HEALTHCHECK_PORT=9200
+HEALTHCHECK_USER=username
+HEALTHCHECK_PASSWORD=password
 
 function write_mysql_config() {
   cat << EOF > ${MYSQL_CONFIG}
@@ -38,6 +41,7 @@ function open_ssh_tunnel_to_bosh_lite() {
   chmod 600 "${SSH_KEY_FILE}"
 
   ssh -L ${MYSQL_TUNNEL_PORT}:${MYSQL_VM_IP}:${MYSQL_VM_PORT} \
+    -L ${HEALTHCHECK_PORT}:${MYSQL_VM_IP}:${HEALTHCHECK_PORT} \
     -nNTf \
     -o StrictHostKeyChecking=no \
     -i "${SSH_KEY_FILE}" \
@@ -96,6 +100,11 @@ function confirm_schemas_are_out_of_sync() {
   echo "Success: Schemas are now diverged!"
 }
 
+function stop_mysql_on_node() {
+  curl -X POST http://${HEALTHCHECK_USER}:${HEALTHCHECK_PASSWORD}@127.0.0.1:${HEALTHCHECK_PORT}/stop_mysql
+  sleep 6
+}
+
 write_mysql_config
 
 trap close-ssh-tunnels EXIT
@@ -108,6 +117,8 @@ confirm_schemas_are_equivalent
 
 update_osu_method "RSU"
 update_schema_on_one_node
+
+stop_mysql_on_node
 
 confirm_schemas_are_out_of_sync
 
