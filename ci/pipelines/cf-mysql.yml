@@ -405,13 +405,47 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/dashboard/test-dashboard
 
+- name: cleanup-aws-deployment
+  plan:
+  - aggregate:
+    - get: aws-environment
+      trigger: true
+      passed: [run-acceptance-tests-initial,dashboard-test-initial]
+    - get: cf-mysql-ci
+  - try:
+      task: run-broker-deregistrar
+      config:
+        platform: *platform
+        image: *docker-image
+        inputs:
+        - name: cf-mysql-ci
+        - name: aws-environment
+        params:
+          ENV_TARGET_FILE: aws-environment/name
+          ENV_METADATA: aws-environment/metadata
+          ERRAND: broker-deregistrar
+          SKIP_IF_NO_DEPLOYMENT: true
+          DEPLOYMENT_NAME: cf-mysql
+        run:
+          path: cf-mysql-ci/scripts/bosh/run_errand
+  - task: delete-aws-deployment
+    config:
+      platform: *platform
+      image: *docker-image
+      inputs:
+      - name: cf-mysql-ci
+      - name: aws-environment
+      params:
+        ENV_TARGET_FILE: aws-environment/name
+        ENV_METADATA: aws-environment/metadata
+        DEPLOYMENT_NAME: cf-mysql
+      run:
+        path: cf-mysql-ci/scripts/bosh/delete_deployment
+
 - name: release-aws-environmment
   plan:
-  - get: cf-mysql-release
-    passed: [run-acceptance-tests-initial,dashboard-test-initial]
-    trigger: true
   - get: aws-environment
-    passed: [run-acceptance-tests-initial,dashboard-test-initial]
+    passed: [cleanup-aws-deployment]
     trigger: true
   - put: aws-environment
     params:
@@ -1630,6 +1664,7 @@ groups:
   - run-smoke-tests-initial
   - run-acceptance-tests-initial
   - dashboard-test-initial
+  - cleanup-aws-deployment
   - release-aws-environmment
   - claim-bosh-lite-scaling
   - release-scaling-environment-manual
