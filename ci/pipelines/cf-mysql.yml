@@ -442,7 +442,7 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
 
-- name: release-aws-environmment
+- name: release-aws-environment
   plan:
   - get: aws-environment
     passed: [cleanup-aws-deployment]
