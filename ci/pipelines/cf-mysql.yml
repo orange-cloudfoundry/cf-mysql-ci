@@ -1665,7 +1665,7 @@ groups:
   - run-acceptance-tests-initial
   - dashboard-test-initial
   - cleanup-aws-deployment
-  - release-aws-environmment
+  - release-aws-environment
   - claim-bosh-lite-scaling
   - release-scaling-environment-manual
   - delete-scaling-deployment
