@@ -806,6 +806,15 @@ jobs:
         DEPLOYMENT_NAME: cf-warden-mysql
       run:
         path: cf-mysql-ci/scripts/data-loss/force-sst-test
+  - task: wait-for-monit
+    config:
+      platform: *platform
+      image: *docker-image
+      run:
+        path: /bin/bash
+        args:
+        - "-c"
+        - "sleep 300"
   - task: run-rejoin-unsafe-errand
     config:
       platform: *platform
