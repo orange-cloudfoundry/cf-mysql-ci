@@ -1379,6 +1379,143 @@ jobs:
     params:
       release: bosh-lite-environment
 
+### DISABLE-PARANOID
+- name: claim-bosh-lite-disable-paranoid
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      passed: [run-acceptance-tests-initial,dashboard-test-initial]
+      trigger: true
+    - put: bosh-lite-environment
+      params:
+        acquire: true
+
+- name: release-disable-paranoid-environment-manual
+  plan:
+  - try:
+      do:
+      - get: bosh-lite-environment
+        passed: [claim-bosh-lite-disable-paranoid]
+      - put: bosh-lite-environment
+        params:
+          release: bosh-lite-environment
+
+- name: delete-disable-paranoid-deployment
+  plan:
+  - aggregate:
+    - get: bosh-lite-environment
+      passed: [claim-bosh-lite-disable-paranoid]
+      trigger: true
+    - get: cf-mysql-release
+      passed: [claim-bosh-lite-disable-paranoid]
+      trigger: true
+    - get: cf-mysql-ci
+  - try: *broker-deregistrar-bosh-lite
+  - *delete-deployment-bosh-lite
+
+- name: deploy-to-disable-paranoid
+  plan:
+  - aggregate:
+    - get: cf-mysql-ci
+    - get: cf-mysql-release
+      passed: [delete-disable-paranoid-deployment]
+      trigger: true
+    - get: bosh-lite-stemcell
+    - get: bosh-lite-environment
+      passed: [delete-disable-paranoid-deployment]
+      trigger: true
+  - aggregate:
+    - *create-release
+    - task: make-manifest
+      config:
+        platform: *platform
+        image: *docker-image
+        inputs:
+        - name: cf-mysql-ci
+        - name: cf-mysql-release
+        - name: bosh-lite-environment
+        outputs:
+          - name: deployment-manifest
+        params:
+          OUTPUT_FILE: deployment-manifest/deployment.yml
+          ENV_TARGET_FILE: bosh-lite-environment/name
+          ENV_METADATA: bosh-lite-environment/metadata
+          TINY_GCACHE: true
+        run:
+          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
+  - *deploy-to-bosh-lite
+
+- name: disable-paranoid-tests
+  plan:
+  - aggregate:
+    - get: cf-mysql-ci
+    - get: cf-mysql-release
+      passed: [deploy-to-disable-paranoid]
+      trigger: true
+    - get: bosh-lite-environment
+      passed: [deploy-to-disable-paranoid]
+      trigger: true
+  - task: run-disable-paranoid-tests
+    config:
+      platform: *platform
+      image: *docker-image
+      inputs:
+        - name: cf-mysql-ci
+        - name: bosh-lite-environment
+        - name: cf-mysql-release
+      params:
+        ENV_TARGET_FILE: bosh-lite-environment/name
+        ENV_METADATA: bosh-lite-environment/metadata
+        BOSH_SSH_KEY: {{bosh-lite-private-key}}
+        DEPLOYMENT_NAME: cf-warden-mysql
+      run:
+        path: cf-mysql-ci/scripts/data-loss/force-sst-test
+- name: deploy-without-paranoia
+  plan:
+  - aggregate:
+    - get: cf-mysql-ci
+    - get: cf-mysql-release
+      passed: [disable-paranoid-tests]
+      trigger: true
+    - get: bosh-lite-stemcell
+    - get: bosh-lite-environment
+      passed: [disable-paranoid-tests]
+      trigger: true
+  - aggregate:
+    - *create-release
+    - task: make-manifest
+      config:
+        platform: *platform
+        image: *docker-image
+        inputs:
+        - name: cf-mysql-ci
+        - name: cf-mysql-release
+        - name: bosh-lite-environment
+        outputs:
+          - name: deployment-manifest
+        params:
+          OUTPUT_FILE: deployment-manifest/deployment.yml
+          ENV_TARGET_FILE: bosh-lite-environment/name
+          ENV_METADATA: bosh-lite-environment/metadata
+          TINY_GCACHE: true
+          DISABLE_PARANOIA: true
+        run:
+          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
+  - *deploy-to-bosh-lite
+
+- name: release-disable-paranoid-environment
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      passed: [deploy-without-paranoia]
+      trigger: true
+    - get: bosh-lite-environment
+      passed: [deploy-without-paranoia]
+      trigger: true
+  - put: bosh-lite-environment
+    params:
+      release: bosh-lite-environment
+
 ### VERIFY CLUSTER SCHEMAS
 - name: claim-bosh-lite-verify-cluster-schemas
   plan:
@@ -1497,6 +1634,7 @@ jobs:
       - release-standalone-environment
       - release-arb-to-full-scaling-environment
       - release-data-loss-environment
+      - release-disable-paranoid-environment
       - release-verify-cluster-schemas-environment
       trigger: true
   - put: integration-environment
@@ -1707,6 +1845,13 @@ groups:
   - deploy-to-data-loss
   - data-loss-tests
   - release-data-loss-environment
+  - claim-bosh-lite-disable-paranoid
+  - release-disable-paranoid-environment-manual
+  - delete-disable-paranoid-deployment
+  - deploy-to-disable-paranoid
+  - disable-paranoid-tests
+  - deploy-without-paranoia
+  - release-disable-paranoid-environment
   - claim-bosh-lite-verify-cluster-schemas
   - release-verify-cluster-schemas-environment-manual
   - delete-verify-cluster-schemas-deployment
@@ -1789,6 +1934,15 @@ groups:
   - deploy-to-data-loss
   - data-loss-tests
   - release-data-loss-environment
+- name: disable-paranoid
+  jobs:
+  - claim-bosh-lite-disable-paranoid
+  - release-disable-paranoid-environment-manual
+  - delete-disable-paranoid-deployment
+  - deploy-to-disable-paranoid
+  - disable-paranoid-tests
+  - deploy-without-paranoia
+  - release-disable-paranoid-environment
 - name: verify-schemas
   jobs:
   - claim-bosh-lite-verify-cluster-schemas
