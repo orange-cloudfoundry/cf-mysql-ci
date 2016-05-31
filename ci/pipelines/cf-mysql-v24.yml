@@ -814,7 +814,7 @@ jobs:
         path: /bin/bash
         args:
         - "-c"
-        - "sleep 300"
+        - "sleep 600"
   - task: run-rejoin-unsafe-errand
     config:
       platform: *platform
