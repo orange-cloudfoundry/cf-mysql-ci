@@ -21,7 +21,7 @@ function start_mysql_z2_0() {
   bosh -n target "${BOSH_TARGET}"
   bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
   bosh deployment ${DEPLOYMENT_MANIFEST}
-  bosh -n start mysql_z2 0
+  bosh -n start mysql_z2 0 --force
 }
 
 start_mysql_z2_0
