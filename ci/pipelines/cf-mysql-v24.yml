@@ -956,6 +956,15 @@ jobs:
           DISABLE_PARANOIA: true
         run:
           path: cf-mysql-ci/scripts/bosh-lite/make_manifest
+  - task: wait-for-monit
+    config:
+      platform: *platform
+      image: *docker-image
+      run:
+        path: /bin/bash
+        args:
+        - "-c"
+        - "sleep 600"
   - task: disable-paranoid-to-fix-cluster
     config:
       platform: *platform
