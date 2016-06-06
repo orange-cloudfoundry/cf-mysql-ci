@@ -964,7 +964,7 @@ jobs:
         path: /bin/bash
         args:
         - "-c"
-        - "sleep 600"
+        - "sleep 200"
   - task: disable-paranoid-to-fix-cluster
     config:
       platform: *platform
