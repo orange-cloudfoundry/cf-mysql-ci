@@ -28,6 +28,16 @@ jobs:
     params:
       acquire: true
 
+- name: release-integration-environment-manual
+  plan:
+  - try:
+      do:
+      - get: integration-environment
+        passed: [claim-integration-environment]
+      - put: integration-environment
+        params:
+          release: integration-environment
+
 - name: run-smoke-tests-integration
   plan:
   - aggregate:
@@ -53,4 +63,4 @@ jobs:
     params:
       release: integration-environment
 
-groups: [{name: cf-mysql-misc, jobs: [claim-integration-environment,run-smoke-tests-integration]}]
+groups: [{name: cf-mysql-misc, jobs: [claim-integration-environment,release-integration-environment-manual,run-smoke-tests-integration]}]
