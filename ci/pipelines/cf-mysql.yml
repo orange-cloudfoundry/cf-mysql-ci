@@ -252,9 +252,9 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [delete-aws-deployment]
-      trigger: true
     - get: aws-bosh-stemcell
     - get: aws-environment
+      trigger: true
       passed: [delete-aws-deployment]
   - aggregate:
     - &create-release
@@ -300,9 +300,9 @@ jobs:
   - aggregate:
     - get: aws-environment
       passed: [deploy-to-initial]
+      trigger: true
     - get: cf-mysql-release
       passed: [deploy-to-initial]
-      trigger: true
     - get: cf-mysql-ci
   - task: run-broker-registrar
     config:
