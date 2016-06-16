@@ -31,10 +31,10 @@ jobs:
 - name: release-integration-environment-manual
   plan:
   - try:
-      do:
-      - get: integration-environment
-        passed: [claim-integration-environment]
-      - put: integration-environment
+      get: integration-environment
+      passed: [claim-integration-environment]
+      on_success:
+        put: integration-environment
         params:
           release: integration-environment
 
