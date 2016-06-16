@@ -211,9 +211,9 @@ jobs:
   - aggregate:
     - get: aws-environment
       passed: [claim-aws-environment]
+      trigger: true
     - get: cf-mysql-release
       passed: [claim-aws-environment]
-      trigger: true
     - get: cf-mysql-ci
   - try: 
       task: run-broker-deregistrar
