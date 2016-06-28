@@ -1,11 +1,14 @@
 #!/bin/bash
 
-set -ex
+set -eux
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 
-RELEASE_DIR="${WORKSPACE_DIR}/${RELEASE_RELATIVE_DIR:-cf-mysql-release}"
+: "${RELEASE_NAME:?}"
+
+default_release_name="${RELEASE_NAME}-release"
+RELEASE_DIR="${WORKSPACE_DIR}/${RELEASE_RELATIVE_DIR:-${default_release_name}}"
 OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-release-tarball}"
 TAG_MATCH=${TAG_MATCH:-}
 
@@ -22,37 +25,38 @@ pushd "${RELEASE_DIR}"
     # Manually adding a timestamp to the version number fixes this.
     # We also include the latest OSS release tag in the version for clarity.
     if [ -n "${TAG_MATCH}" ]; then
-      GIT_DESCRIBE=$(git describe --long --tags --match ${TAG_MATCH})
+      git_describe_output=$(git describe --long --tags --match ${TAG_MATCH})
     else
-      GIT_DESCRIBE=$(git describe --long --tags)
+      git_describe_output=$(git describe --long --tags)
     fi
-    GIT_DESCRIBE="${GIT_DESCRIBE#v}" # remove leading 'v'
-    MAJOR=$(echo $GIT_DESCRIBE | cut -f1 -d-)
-    MINOR=$(echo $GIT_DESCRIBE | cut -f2 -d-)
-    SHA=$(echo $GIT_DESCRIBE | cut -f3 -d-)
-    VERSION=$MAJOR.$MINOR+$SHA
+    git_describe_output="${git_describe_output#v}" # remove leading 'v'
 
-    CREATE_RELEASE="bosh -n create release --name cf-mysql --version ${VERSION} --with-tarball --force"
+    major=$(echo ${git_describe_output} | cut -f1 -d-)
+    minor=$(echo ${git_describe_output} | cut -f2 -d-)
+    sha=$(echo ${git_describe_output} | cut -f3 -d-)
+    version=$major.$minor+$sha
+
+    create_release_command="bosh -n create release --name "${RELEASE_NAME}" --version ${version} --with-tarball --force"
 
     set +e
-    CF_MYSQL_OUTPUT=$(${CREATE_RELEASE} 2>&1)
-    CF_MYSQL_EXIT_CODE=$?
+    create_release_output=$(${create_release_command} 2>&1)
+    create_release_exit_code=$?
     set -e
 
-    if [ "${CF_MYSQL_EXIT_CODE}" -ne 0 ]; then
+    if [ "${create_release_exit_code}" -ne 0 ]; then
       # retry on blobstore error, else exit
 
       # turn off trace to avoid printing output twice
       set +x
-      if [[ "${CF_MYSQL_OUTPUT}" == *"Blobstore error"* ]]; then
+      if [[ "${create_release_output}" == *"Blobstore error"* ]]; then
         set -x
-        ${CREATE_RELEASE}
-        cp dev_releases/cf-mysql/cf-mysql-*.tgz ${OUTPUT_DIR}/
+        ${create_release_command}
+        cp "dev_releases/${RELEASE_NAME}/${RELEASE_NAME}"-*.tgz ${OUTPUT_DIR}/
       else
         set -x
-        exit ${CF_MYSQL_EXIT_CODE}
+        exit "${create_release_exit_code}"
       fi
     else
-      cp dev_releases/cf-mysql/cf-mysql-*.tgz ${OUTPUT_DIR}/
+      cp dev_releases/"${RELEASE_NAME}"/"${RELEASE_NAME}"-*.tgz ${OUTPUT_DIR}/
     fi
 popd
