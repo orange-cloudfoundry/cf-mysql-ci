@@ -268,7 +268,7 @@ jobs:
         outputs:
         - name: release-tarball
         params:
-          RELEASE_RELATIVE_DIR: cf-mysql-release/
+          RELEASE_NAME: cf-mysql
         run:
           path: cf-mysql-ci/scripts/create_release
     - task: make-manifest
@@ -281,7 +281,7 @@ jobs:
         - name: cf-mysql-release
         - name: aws-environment
         outputs:
-        - name: deployment-manifest 
+        - name: deployment-manifest
         params:
           ENV_TARGET_FILE: aws-environment/name
           ENV_METADATA: aws-environment/metadata
@@ -1760,7 +1760,7 @@ jobs:
       outputs:
         - name: release-tarball
       params:
-        RELEASE_RELATIVE_DIR: cf-mysql-release
+        RELEASE_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/create_release
   - put: cf-mysql-rc-artifacts

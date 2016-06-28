@@ -115,7 +115,7 @@ jobs:
         outputs:
         - name: release-tarball
         params:
-          RELEASE_RELATIVE_DIR: cf-mysql-release/
+          RELEASE_NAME: cf-mysql
           OUTPUT_DIR: release-tarball
         run:
           path: cf-mysql-ci/scripts/create_release
@@ -132,7 +132,7 @@ jobs:
         - name: deployment-manifest
         params:
           ENV_TARGET_FILE: aws-acceptance-environment/name
-          ENV_METADATA: aws-acceptance-environment/metadata  
+          ENV_METADATA: aws-acceptance-environment/metadata
           DEPLOYMENTS_DIR: deployments-configuration
           MANIFEST_DIR: deployment-manifest
         run:
