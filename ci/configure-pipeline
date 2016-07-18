@@ -30,7 +30,7 @@ get_jobs() {
 
 update_pipeline_groups() {
   # bail if master since we've added more groups
-  if [[ "${PIPELINE_NAME}" != cf-mysql && "${PIPELINE_NAME}" != cf-mysql-v22 && "${PIPELINE_NAME}" != cf-mysql-v24 ]]; then
+  if [[ "${PIPELINE_NAME}" != cf-mysql && "${PIPELINE_NAME}" != cf-mysql-v22 && "${PIPELINE_NAME}" != cf-mysql-v24 && "${PIPELINE_NAME}" != cf-mysql-v26 ]]; then
     job_list=$(get_jobs)
     groups="groups: [{name: ${PIPELINE_NAME}, jobs: ${job_list}}]"
     sed "s/groups.*/${groups}/g" "${PIPELINE_PATH}" > "/tmp/groups.yml"
