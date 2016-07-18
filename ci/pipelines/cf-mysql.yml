@@ -641,7 +641,7 @@ jobs:
     params:
       release: bosh-lite-environment
 
-# ARB-TO-FULL-SCALING
+### ARB-TO-FULL-SCALING
 - name: claim-bosh-lite-arb-to-full-scaling
   plan:
   - aggregate:
