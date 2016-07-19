@@ -33,7 +33,7 @@ resources:
   type: git
   source:
     uri: git@github.com:cloudfoundry/cf-mysql-release.git
-    branch: v24.5
+    branch: v26.2
     private_key: {{git-writer-private-key}}
 
 - name: aws-deployment
