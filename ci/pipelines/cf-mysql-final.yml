@@ -73,7 +73,10 @@ jobs:
       - task: final-release
         config:
           platform: linux
-          image: docker:///cloudfoundry/cf-mysql-ci
+          image_resource: &image_resource
+            type: docker-image
+            source:
+              repository: cloudfoundry/cf-mysql-ci
           inputs:
           - name: cf-mysql-ci
           - name: cf-mysql-master
@@ -94,7 +97,7 @@ jobs:
       - task: merge-master-into-develop
         config:
           platform: linux
-          image: docker:///cloudfoundry/cf-mysql-ci
+          image_resource: *image_resource
           inputs:
           - name: cf-mysql-ci
           - name: cf-mysql-develop

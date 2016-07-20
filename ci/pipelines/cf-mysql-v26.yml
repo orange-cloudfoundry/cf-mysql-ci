@@ -101,7 +101,10 @@ jobs:
   - task: test-unit
     config:
       platform: &platform linux
-      image: &docker-image docker:///cloudfoundry/cf-mysql-ci
+      image_resource: &image_resource
+        type: docker-image
+        source:
+          repository: cloudfoundry/cf-mysql-ci
       inputs:
       - name: cf-mysql-release
       run:
@@ -117,7 +120,7 @@ jobs:
   - task: test-sample-stubs
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
       - name: cf-mysql-release
       run:
@@ -161,7 +164,7 @@ jobs:
       task: run-broker-deregistrar
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
         - name: aws-environment
@@ -176,7 +179,7 @@ jobs:
   - task: delete-aws-deployment
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
       - name: cf-mysql-ci
       - name: aws-environment
@@ -205,7 +208,7 @@ jobs:
       task: create-release
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
@@ -219,7 +222,7 @@ jobs:
     - task: make-manifest
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
         - name: deployments-configuration
         - name: cf-mysql-ci
@@ -254,7 +257,7 @@ jobs:
   - task: run-broker-registrar
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
         - name: aws-environment
@@ -268,7 +271,7 @@ jobs:
   - task: run-smoke-tests
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
         - name: aws-environment
@@ -295,7 +298,7 @@ jobs:
   - task: recreate-manifest-to-run-acceptance-tests
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
         - name: cf-mysql-release
         - name: deployments-configuration
@@ -319,7 +322,7 @@ jobs:
   - task: run-acceptance-tests
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
         - name: aws-environment
@@ -345,7 +348,7 @@ jobs:
   - task: dashboard-test
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
         - name: cf-mysql-release
         - name: cf-mysql-ci
@@ -367,7 +370,7 @@ jobs:
       task: run-broker-deregistrar
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
         - name: aws-environment
@@ -382,7 +385,7 @@ jobs:
   - task: delete-aws-deployment
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
       - name: cf-mysql-ci
       - name: aws-environment
@@ -441,7 +444,7 @@ jobs:
       task: run-broker-deregistrar
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
           - name: bosh-lite-environment
           - name: cf-mysql-ci
@@ -456,7 +459,7 @@ jobs:
     task: delete-deployment
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
         - name: bosh-lite-environment
         - name: cf-mysql-ci
@@ -482,7 +485,7 @@ jobs:
     - task: make-manifest
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
@@ -518,7 +521,7 @@ jobs:
     task: run-broker-registrar
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
@@ -543,7 +546,7 @@ jobs:
     task: run-smoke-tests
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
@@ -567,7 +570,7 @@ jobs:
   - task: run-scaling-tests
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
@@ -645,7 +648,7 @@ jobs:
       task: make-manifest
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
@@ -697,7 +700,7 @@ jobs:
   - task: run-arb-to-full-scaling-tests
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
@@ -774,7 +777,7 @@ jobs:
     - task: make-manifest
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
@@ -823,7 +826,7 @@ jobs:
   - task: run-failover-tests
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
@@ -899,7 +902,7 @@ jobs:
     - task: make-manifest
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
         - name: cf-mysql-release
         - name: cf-mysql-ci
@@ -941,7 +944,10 @@ jobs:
     task: persistence-test-data-write
     config:
       platform: *platform
-      image: docker:///pivotalcf/mysql-restore
+      image_resource:
+        type: docker-image
+        source:
+          repository: pivotalcf/mysql-restore
       inputs:
       - name: bosh-lite-environment
       - name: cf-mysql-ci
@@ -967,7 +973,7 @@ jobs:
     - task: make-manifest
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
@@ -996,7 +1002,10 @@ jobs:
     task: persistence-test-data-read
     config:
       platform: *platform
-      image: docker:///pivotalcf/mysql-restore
+      image_resource:
+        type: docker-image
+        source:
+          repository: pivotalcf/mysql-restore
       inputs:
       - name: bosh-lite-environment
       - name: cf-mysql-ci
@@ -1030,7 +1039,7 @@ jobs:
     - task: dashboard-test-bosh-lite
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
         - name: cf-mysql-release
         - name: bosh-lite-environment
@@ -1114,7 +1123,7 @@ jobs:
     - task: make-manifest
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
@@ -1157,7 +1166,7 @@ jobs:
     - task: break-mysql-cluster
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
@@ -1170,7 +1179,7 @@ jobs:
     - task: bootstrap
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
           - name: bosh-lite-environment
           - name: cf-mysql-ci
@@ -1262,7 +1271,7 @@ jobs:
     - task: make-manifest
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
@@ -1290,7 +1299,7 @@ jobs:
   - task: run-data-loss-tests
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
@@ -1305,7 +1314,7 @@ jobs:
   - task: wait-for-monit
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       run:
         path: /bin/bash
         args:
@@ -1314,7 +1323,7 @@ jobs:
   - task: run-rejoin-unsafe-errand
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
@@ -1390,7 +1399,7 @@ jobs:
     - task: make-manifest
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
@@ -1419,7 +1428,7 @@ jobs:
     - task: break-cluster
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
           - name: cf-mysql-ci
           - name: bosh-lite-environment
@@ -1433,7 +1442,7 @@ jobs:
     - task: make-manifest
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
@@ -1451,7 +1460,7 @@ jobs:
   - task: wait-for-monit
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       run:
         path: /bin/bash
         args:
@@ -1460,7 +1469,7 @@ jobs:
   - task: disable-paranoid-to-fix-cluster
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
@@ -1504,7 +1513,7 @@ jobs:
   - task: rc-tag-file
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       run:
         path: /bin/bash
         args:
@@ -1516,7 +1525,7 @@ jobs:
       task: delete-tag
       config:
         platform: *platform
-        image: *docker-image
+        image_resource: *image_resource
         inputs:
           - name: cf-mysql-ci
           - name: cf-mysql-release
@@ -1550,7 +1559,7 @@ jobs:
   - task: create-rc-release-artifacts
     config:
       platform: *platform
-      image: *docker-image
+      image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
