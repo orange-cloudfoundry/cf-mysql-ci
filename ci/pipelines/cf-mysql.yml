@@ -128,7 +128,7 @@ resources:
   type: s3
   source:
     bucket: cf-mysql-releases
-    regexp: release\-candidate\/cf\-mysql\-.*\.tgz
+    regexp: release-candidate/cf-mysql-(\d+\.\d+)\+.*.tgz
     access_key_id: {{cf-mysql-ci-aws-access-key-id}}
     secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
 
@@ -1765,8 +1765,7 @@ jobs:
         path: cf-mysql-ci/scripts/create_release
   - put: cf-mysql-rc-artifacts
     params:
-      from: release\-tarball\/cf\-mysql.*\.tgz
-      to: release-candidate/
+      file: release-tarball/cf-mysql*.tgz
 
 - name: promote-to-rc
   plan:

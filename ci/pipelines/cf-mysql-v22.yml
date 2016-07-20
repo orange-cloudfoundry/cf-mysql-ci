@@ -1171,8 +1171,7 @@ jobs:
         path: cf-mysql-ci/scripts/create_release
   - put: pcf-mysql-rc-artifacts
     params:
-      from: release\-tarball\/cf\-mysql.*\.tgz
-      to: releases-22/tested/
+      file: release-tarball/cf-mysql*.tgz
 
 
 groups:

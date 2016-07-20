@@ -37,6 +37,7 @@ resources:
   type: s3
   source:
     bucket: cf-mysql-releases
+    regexp: final/cf-mysql-(.*).tgz
     access_key_id: {{cf-mysql-ci-aws-access-key-id}}
     secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
 
@@ -121,7 +122,6 @@ jobs:
           tag_prefix: cf-mysql-
       - put: s3-resource-final-release
         params:
-          from: output-release-dir\/release-artifacts\/.*\.tgz
-          to: final/
+          file: output-release-dir/release-artifacts/*.tgz
 
 groups: [{name: cf-mysql-final, jobs: [final-release]}]
