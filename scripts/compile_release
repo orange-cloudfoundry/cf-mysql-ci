@@ -9,6 +9,7 @@ DEPLOYMENT_NAME=$(cat /proc/sys/kernel/random/uuid)
 STEMCELL_VERSION=$(cat *stemcell/version)
 RELEASE_NAME=$(ls release-tarball/ | sed 's/\(.*\)-[0-9].*/\1/')
 RELEASE_VERSION=$(ls release-tarball/ | sed 's/.*-\([0-9].*\).tgz/\1/')
+RELEASE_FILE=$(ls release-tarball/)
 
 pushd "${WORKSPACE_DIR}"
   cat << EOF > deployment.yml
@@ -20,6 +21,7 @@ director_uuid: 28dc9bd9-c145-4048-b4b1-7e3582a51e9f
 releases:
 - name: ${RELEASE_NAME}
   version: "${RELEASE_VERSION}"
+  file: "file://release-tarball/${RELEASE_FILE}"
 
 stemcells:
 - alias: default
@@ -40,4 +42,5 @@ EOF
   set -x
 
   bosh deployment deployment.yml
+  bosh upload stemcell *stemcell/*.tgz --skip-if-exists
 popd
