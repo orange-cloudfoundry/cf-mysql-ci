@@ -11,7 +11,7 @@ RELEASE_NAME=$(ls release-tarball/ | sed 's/\(.*\)-[0-9].*/\1/')
 RELEASE_VERSION=$(ls release-tarball/ | sed 's/.*-\([0-9].*\).tgz/\1/')
 
 pushd "${WORKSPACE_DIR}"
-  echo <<EOF > deployment.yml
+  cat << EOF > deployment.yml
 ---
 name: ${DEPLOYMENT_NAME}
 
@@ -35,9 +35,9 @@ update:
   update_watch_time: 1000-90000
 EOF
   set +x
-    $(bosh -u ${BOSH_USERNAME} -p ${BOSH_PASSWORD} target ${BOSH_DIRECTOR})
-    $(bosh login ${BOSH_USERNAME} ${BOSH_PASSWORD})
+    bosh -u ${BOSH_USERNAME} -p ${BOSH_PASSWORD} target ${BOSH_DIRECTOR}
+    bosh login ${BOSH_USERNAME} ${BOSH_PASSWORD}
   set -x
 
-  $(bosh deployment deployment.yml)
+  bosh deployment deployment.yml
 popd
