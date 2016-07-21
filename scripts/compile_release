@@ -36,6 +36,7 @@ update:
   canary_watch_time: 1000-90000
   update_watch_time: 1000-90000
 EOF
+  echo "Targeting ${BOSH_DIRECTOR}"
   set +x
     bosh -u ${BOSH_USERNAME} -p ${BOSH_PASSWORD} target ${BOSH_DIRECTOR}
     bosh login ${BOSH_USERNAME} ${BOSH_PASSWORD}
