@@ -6,9 +6,9 @@ MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-release-tarball}"
 DEPLOYMENT_NAME=$(cat /proc/sys/kernel/random/uuid)
-STEMCELL_VERSION="UNKNOWN"
-RELEASE_NAME="cf-mysql"
-RELEASE_VERSION="UNKNOWN"
+STEMCELL_VERSION=$(cat *stemcell/version)
+RELEASE_NAME=$(ls release-tarball/ | sed 's/\(.*\)-[0-9].*/\1/')
+RELEASE_VERSION=$(ls release-tarball/ | sed 's/.*-\([0-9].*\).tgz/\1/')
 
 pushd "${WORKSPACE_DIR}"
   echo <<EOF > deployment.yml
@@ -35,8 +35,8 @@ update:
   update_watch_time: 1000-90000
 EOF
   set +x
-    $(bosh -u ${BOSH_USER} -p ${BOSH_PASSWORD} target ${BOSH_DIRECTOR})
-    $(bosh login ${BOSH_USER} ${BOSH_PASSWORD})
+    $(bosh -u ${BOSH_USERNAME} -p ${BOSH_PASSWORD} target ${BOSH_DIRECTOR})
+    $(bosh login ${BOSH_USERNAME} ${BOSH_PASSWORD})
   set -x
 
   $(bosh deployment deployment.yml)
