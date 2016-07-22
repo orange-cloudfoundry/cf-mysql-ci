@@ -1175,7 +1175,6 @@ jobs:
   - put: pcf-mysql-rc-artifacts
     params:
       file: release-tarball/cf-mysql*.tgz
-      to: releases-24/tested/
 
 groups:
 - name: cf-mysql-v24
