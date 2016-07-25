@@ -8,9 +8,9 @@ OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-compiled-release-tarball}"
 DEPLOYMENT_NAME=d-$(cat /proc/sys/kernel/random/uuid)
 STEMCELL_VERSION=$(cat *stemcell/version)
 RELEASE_TARBALL_DIR=${RELEASE_TARBALL_DIR:-release-tarball}
-RELEASE_NAME=$(ls ${RELEASE_TARBALL_DIR}/ | sed 's/\(.*\)-[0-9].*/\1/')
-RELEASE_VERSION=$(ls ${RELEASE_TARBALL_DIR}/ | sed 's/.*-\([0-9].*\).tgz/\1/')
-RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/)
+RELEASE_NAME=$(ls ${RELEASE_TARBALL_DIR}/*.tgz | sed 's/\(.*\)-[0-9].*/\1/')
+RELEASE_VERSION=$(ls ${RELEASE_TARBALL_DIR}/*.tgz | sed 's/.*-\([0-9].*\).tgz/\1/')
+RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/*.tgz)
 
 pushd "${WORKSPACE_DIR}"
   cat << EOF > deployment.yml
