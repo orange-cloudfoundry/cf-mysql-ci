@@ -7,9 +7,10 @@ WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-compiled-release-tarball}"
 DEPLOYMENT_NAME=d-$(cat /proc/sys/kernel/random/uuid)
 STEMCELL_VERSION=$(cat *stemcell/version)
-RELEASE_NAME=$(ls release-tarball/ | sed 's/\(.*\)-[0-9].*/\1/')
-RELEASE_VERSION=$(ls release-tarball/ | sed 's/.*-\([0-9].*\).tgz/\1/')
-RELEASE_FILE=$(ls release-tarball/)
+RELEASE_TARBALL_DIR=${RELEASE_TARBALL_DIR:-release-tarball}
+RELEASE_NAME=$(ls ${RELEASE_TARBALL_DIR}/ | sed 's/\(.*\)-[0-9].*/\1/')
+RELEASE_VERSION=$(ls ${RELEASE_TARBALL_DIR}/ | sed 's/.*-\([0-9].*\).tgz/\1/')
+RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/)
 
 pushd "${WORKSPACE_DIR}"
   cat << EOF > deployment.yml
@@ -21,7 +22,7 @@ director_uuid: 28dc9bd9-c145-4048-b4b1-7e3582a51e9f
 releases:
 - name: ${RELEASE_NAME}
   version: "${RELEASE_VERSION}"
-  url: "file://${WORKSPACE_DIR}/release-tarball/${RELEASE_FILE}"
+  url: "file://${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}/${RELEASE_FILE}"
 
 stemcells:
 - alias: default
