@@ -55,10 +55,11 @@ jobs:
   - aggregate:
     - get: aws-acceptance-environment
       passed: [claim-aws-environment]
+      trigger: true
+      version: every
     - get: cf-mysql-release
       resource: cf-mysql-release-rc
       passed: [claim-aws-environment]
-      trigger: true
     - get: cf-mysql-ci
     - get: deployments-configuration
   - task: run-broker-deregistrar
@@ -103,10 +104,11 @@ jobs:
     - get: cf-mysql-release
       resource: cf-mysql-release-rc
       passed: [delete-acceptance-deployment]
-      trigger: true
     - get: acceptance-env-bosh-stemcell
     - get: aws-acceptance-environment
       passed: [delete-acceptance-deployment]
+      trigger: true
+      version: every
   - aggregate:
     - task: create-release
       config:
@@ -152,10 +154,11 @@ jobs:
   - aggregate:
     - get: aws-acceptance-environment
       passed: [deploy-to-acceptance]
+      trigger: true
+      version: every
     - get: cf-mysql-release
       resource: cf-mysql-release-rc
       passed: [deploy-to-acceptance]
-      trigger: true
     - get: cf-mysql-ci
     - get: deployments-configuration
   - task: run-broker-registrar
@@ -195,9 +198,10 @@ jobs:
     - get: cf-mysql-release
       resource: cf-mysql-release-rc
       passed: [run-smoke-tests-acceptance]
-      trigger: true
     - get: aws-acceptance-environment
       passed: [run-smoke-tests-acceptance]
+      trigger: true
+      version: every
   - put: aws-acceptance-environment
     params:
       release: aws-acceptance-environment

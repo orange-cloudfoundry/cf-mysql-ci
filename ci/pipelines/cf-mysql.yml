@@ -215,6 +215,7 @@ jobs:
     - get: aws-environment
       passed: [claim-aws-environment]
       trigger: true
+      version: every
     - get: cf-mysql-release
       passed: [claim-aws-environment]
     - get: cf-mysql-ci
@@ -258,6 +259,7 @@ jobs:
     - get: aws-bosh-stemcell
     - get: aws-environment
       trigger: true
+      version: every
       passed: [delete-aws-deployment]
   - aggregate:
     - &create-release
@@ -304,6 +306,7 @@ jobs:
     - get: aws-environment
       passed: [deploy-to-initial]
       trigger: true
+      version: every
     - get: cf-mysql-release
       passed: [deploy-to-initial]
     - get: cf-mysql-ci
@@ -341,9 +344,10 @@ jobs:
   - aggregate:
     - get: aws-environment
       passed: [run-smoke-tests-initial]
+      trigger: true
+      version: every
     - get: cf-mysql-release
       passed: [run-smoke-tests-initial]
-      trigger: true
     - get: deployments-configuration
     - get: cf-mysql-ci
   - task: recreate-manifest-to-run-acceptance-tests
@@ -390,9 +394,10 @@ jobs:
   - aggregate:
       - get: aws-environment
         passed: [run-smoke-tests-initial]
+        trigger: true
+        version: every
       - get: cf-mysql-release
         passed: [run-smoke-tests-initial]
-        trigger: true
       - get: cf-mysql-ci
   - task: dashboard-test
     config:
@@ -413,6 +418,7 @@ jobs:
   - aggregate:
     - get: aws-environment
       trigger: true
+      version: every
       passed: [run-acceptance-tests-initial,dashboard-test-initial]
     - get: cf-mysql-ci
   - try:
@@ -450,6 +456,7 @@ jobs:
   - get: aws-environment
     passed: [cleanup-aws-deployment]
     trigger: true
+    version: every
   - put: aws-environment
     params:
       release: aws-environment
@@ -481,9 +488,9 @@ jobs:
     - get: bosh-lite-environment
       passed: [claim-bosh-lite-scaling]
       trigger: true
+      version: every
     - get: cf-mysql-release
       passed: [claim-bosh-lite-scaling]
-      trigger: true
     - get: cf-mysql-ci
   - try: &broker-deregistrar-bosh-lite
       task: run-broker-deregistrar
@@ -520,12 +527,12 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [delete-scaling-deployment]
-      trigger: true
     - get: bosh-lite-stemcell
     - get: cf-mysql-ci
     - get: bosh-lite-environment
       passed: [delete-scaling-deployment]
       trigger: true
+      version: every
   - aggregate:
     - *create-release
     - task: make-manifest
@@ -560,10 +567,10 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [deploy-to-scaling]
-      trigger: true
     - get: bosh-lite-environment
       passed: [deploy-to-scaling]
       trigger: true
+      version: every
   - &broker-registrar-bosh-lite
     task: run-broker-registrar
     config:
@@ -586,10 +593,10 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [scaling-broker-registrar]
-      trigger: true
     - get: bosh-lite-environment
       passed: [scaling-broker-registrar]
       trigger: true
+      version: every
   - &smoke-tests-bosh-lite
     task: run-smoke-tests
     config:
@@ -612,10 +619,10 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [scaling-smoke-tests]
-      trigger: true
     - get: bosh-lite-environment
       passed: [scaling-smoke-tests]
       trigger: true
+      version: every
   - task: run-scaling-tests
     config:
       platform: *platform
@@ -636,10 +643,10 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [scaling-tests]
-      trigger: true
     - get: bosh-lite-environment
       passed: [scaling-tests]
       trigger: true
+      version: every
   - put: bosh-lite-environment
     params:
       release: bosh-lite-environment
@@ -671,9 +678,9 @@ jobs:
     - get: bosh-lite-environment
       passed: [claim-bosh-lite-arb-to-full-scaling]
       trigger: true
+      version: every
     - get: cf-mysql-release
       passed: [claim-bosh-lite-arb-to-full-scaling]
-      trigger: true
     - get: cf-mysql-ci
   - try: *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
@@ -684,11 +691,11 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [delete-arb-to-full-scaling-deployment]
-      trigger: true
     - get: bosh-lite-stemcell
     - get: bosh-lite-environment
       passed: [delete-arb-to-full-scaling-deployment]
       trigger: true
+      version: every
   - aggregate:
     - *create-release
     - &make-manifest-bosh-lite
@@ -716,10 +723,10 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [deploy-to-arb-to-full-scaling]
-      trigger: true
     - get: bosh-lite-environment
       passed: [deploy-to-arb-to-full-scaling]
       trigger: true
+      version: every
   - *broker-registrar-bosh-lite
 
 - name: arb-to-full-scaling-smoke-tests
@@ -728,10 +735,10 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [arb-to-full-scaling-broker-registrar]
-      trigger: true
     - get: bosh-lite-environment
       passed: [arb-to-full-scaling-broker-registrar]
       trigger: true
+      version: every
   - *smoke-tests-bosh-lite
 
 - name: arb-to-full-scaling-tests
@@ -740,10 +747,10 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [arb-to-full-scaling-smoke-tests]
-      trigger: true
     - get: bosh-lite-environment
       passed: [arb-to-full-scaling-smoke-tests]
       trigger: true
+      version: every
   - task: run-arb-to-full-scaling-tests
     config:
       platform: *platform
@@ -764,10 +771,10 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [arb-to-full-scaling-tests]
-      trigger: true
     - get: bosh-lite-environment
       passed: [arb-to-full-scaling-tests]
       trigger: true
+      version: every
   - put: bosh-lite-environment
     params:
       release: bosh-lite-environment
@@ -799,9 +806,9 @@ jobs:
     - get: bosh-lite-environment
       passed: [claim-bosh-lite-failover]
       trigger: true
+      version: every
     - get: cf-mysql-release
       passed: [claim-bosh-lite-failover]
-      trigger: true
     - get: cf-mysql-ci
   - try: *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
@@ -812,11 +819,11 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [delete-failover-deployment]
-      trigger: true
     - get: bosh-lite-stemcell
     - get: bosh-lite-environment
       passed: [delete-failover-deployment]
       trigger: true
+      version: every
   - aggregate:
     - *create-release
     - &make-manifest-bosh-lite
@@ -844,10 +851,10 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [deploy-to-failover]
-      trigger: true
     - get: bosh-lite-environment
       passed: [deploy-to-failover]
       trigger: true
+      version: every
   - *broker-registrar-bosh-lite
 
 - name: failover-smoke-tests
@@ -856,10 +863,10 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [failover-broker-registrar]
-      trigger: true
     - get: bosh-lite-environment
       passed: [failover-broker-registrar]
       trigger: true
+      version: every
   - *smoke-tests-bosh-lite
 
 - name: failover-tests
@@ -868,10 +875,10 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [failover-smoke-tests]
-      trigger: true
     - get: bosh-lite-environment
       passed: [failover-smoke-tests]
       trigger: true
+      version: every
   - task: run-failover-tests
     config:
       platform: *platform
@@ -892,10 +899,10 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [failover-tests]
-      trigger: true
     - get: bosh-lite-environment
       passed: [failover-tests]
       trigger: true
+      version: every
   - put: bosh-lite-environment
     params:
       release: bosh-lite-environment
@@ -926,10 +933,10 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [claim-bosh-lite-upgrade]
-      trigger: true
     - get: bosh-lite-environment
       passed: [claim-bosh-lite-upgrade]
       trigger: true
+      version: every
     - get: cf-mysql-ci
   - try: *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
@@ -942,6 +949,7 @@ jobs:
     - get: bosh-lite-environment
       passed: [delete-upgrade-deployment]
       trigger: true
+      version: every
     - get: cf-mysql-latest-release-tarball
     - get: cf-mysql-release
       resource: cf-mysql-previous-release
@@ -979,6 +987,7 @@ jobs:
     - get: bosh-lite-environment
       passed: [deploy-previous-to-upgrade]
       trigger: true
+      version: every
   - *broker-registrar-bosh-lite
 
 - name: persistence-test-data-write-before-upgrade
@@ -987,10 +996,10 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [broker-registrar-previous-on-upgrade]
-      trigger: true
     - get: bosh-lite-environment
       passed: [broker-registrar-previous-on-upgrade]
       trigger: true
+      version: every
   - &persistence-test-data-write
     task: persistence-test-data-write
     config:
@@ -1014,11 +1023,11 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [persistence-test-data-write-before-upgrade]
-      trigger: true
     - get: bosh-lite-stemcell
     - get: bosh-lite-environment
       passed: [persistence-test-data-write-before-upgrade]
       trigger: true
+      version: every
   - aggregate:
     - *create-release
     - task: make-manifest
@@ -1045,10 +1054,10 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [deploy-current-to-upgrade]
-      trigger: true
     - get: bosh-lite-environment
       passed: [deploy-current-to-upgrade]
       trigger: true
+      version: every
   - &persistence-test-data-read
     task: persistence-test-data-read
     config:
@@ -1072,10 +1081,10 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [deploy-current-to-upgrade]
-      trigger: true
     - get: bosh-lite-environment
       passed: [deploy-current-to-upgrade]
       trigger: true
+      version: every
   - *smoke-tests-bosh-lite
 
 - name: dashboard-test-bosh-lite
@@ -1083,9 +1092,10 @@ jobs:
     - aggregate:
       - get: bosh-lite-environment
         passed: [deploy-current-to-upgrade]
+        trigger: true
+        version: every
       - get: cf-mysql-release
         passed: [deploy-current-to-upgrade]
-        trigger: true
       - get: cf-mysql-ci
     - task: dashboard-test-bosh-lite
       config:
@@ -1108,10 +1118,10 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [smoke-tests-current-on-upgrade, dashboard-test-bosh-lite, persistence-test-data-read-after-upgrade]
-      trigger: true
     - get: bosh-lite-environment
       passed: [smoke-tests-current-on-upgrade, dashboard-test-bosh-lite, persistence-test-data-read-after-upgrade]
       trigger: true
+      version: every
   - put: bosh-lite-environment
     params:
       release: bosh-lite-environment
@@ -1146,11 +1156,11 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [claim-bosh-lite-standalone]
-      trigger: true
     - get: bosh-lite-environment
       resource: bosh-lite-no-cf-environment
       passed: [claim-bosh-lite-standalone]
       trigger: true
+      version: every
     - get: cf-mysql-ci
   - *delete-deployment-bosh-lite
 
@@ -1160,12 +1170,12 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [delete-standalone-deployment]
-      trigger: true
     - get: bosh-lite-stemcell
     - get: bosh-lite-environment
       resource: bosh-lite-no-cf-environment
       passed: [delete-standalone-deployment]
       trigger: true
+      version: every
   - aggregate:
     - *create-release
     - task: make-manifest
@@ -1193,11 +1203,11 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [deploy-to-standalone]
-      trigger: true
     - get: bosh-lite-environment
       resource: bosh-lite-no-cf-environment
       passed: [deploy-to-standalone]
       trigger: true
+      version: every
   - *persistence-test-data-write
 
 - name: test-bootstrap
@@ -1206,11 +1216,11 @@ jobs:
       - get: cf-mysql-ci
       - get: cf-mysql-release
         passed: [persistence-test-data-write-before-bootstrap]
-        trigger: true
       - get: bosh-lite-environment
         resource: bosh-lite-no-cf-environment
         passed: [persistence-test-data-write-before-bootstrap]
         trigger: true
+        version: every
     - task: break-mysql-cluster
       config:
         platform: *platform
@@ -1246,11 +1256,11 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [test-bootstrap]
-      trigger: true
     - get: bosh-lite-environment
       resource: bosh-lite-no-cf-environment
       passed: [test-bootstrap]
       trigger: true
+      version: every
   - *persistence-test-data-read
 
 - name: release-standalone-environment
@@ -1258,11 +1268,11 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [persistence-test-data-read-after-bootstrap]
-      trigger: true
     - get: bosh-lite-environment
       resource: bosh-lite-no-cf-environment
       passed: [persistence-test-data-read-after-bootstrap]
       trigger: true
+      version: every
   - put: bosh-lite-environment
     resource: bosh-lite-no-cf-environment
     params:
@@ -1295,9 +1305,9 @@ jobs:
     - get: bosh-lite-environment
       passed: [claim-bosh-lite-data-loss]
       trigger: true
+      version: every
     - get: cf-mysql-release
       passed: [claim-bosh-lite-data-loss]
-      trigger: true
     - get: cf-mysql-ci
   - try: *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
@@ -1308,11 +1318,11 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [delete-data-loss-deployment]
-      trigger: true
     - get: bosh-lite-stemcell
     - get: bosh-lite-environment
       passed: [delete-data-loss-deployment]
       trigger: true
+      version: every
   - aggregate:
     - *create-release
     - task: make-manifest
@@ -1340,10 +1350,10 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [deploy-to-data-loss]
-      trigger: true
     - get: bosh-lite-environment
       passed: [deploy-to-data-loss]
       trigger: true
+      version: every
   - task: run-data-loss-tests
     config:
       platform: *platform
@@ -1380,10 +1390,10 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [data-loss-tests]
-      trigger: true
     - get: bosh-lite-environment
       passed: [data-loss-tests]
       trigger: true
+      version: every
   - put: bosh-lite-environment
     params:
       release: bosh-lite-environment
@@ -1415,9 +1425,9 @@ jobs:
     - get: bosh-lite-environment
       passed: [claim-bosh-lite-disable-paranoid]
       trigger: true
+      version: every
     - get: cf-mysql-release
       passed: [claim-bosh-lite-disable-paranoid]
-      trigger: true
     - get: cf-mysql-ci
   - try: *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
@@ -1428,11 +1438,11 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [delete-disable-paranoid-deployment]
-      trigger: true
     - get: bosh-lite-stemcell
     - get: bosh-lite-environment
       passed: [delete-disable-paranoid-deployment]
       trigger: true
+      version: every
   - aggregate:
     - *create-release
     - task: make-manifest
@@ -1460,10 +1470,10 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [deploy-to-disable-paranoid]
-      trigger: true
     - get: bosh-lite-environment
       passed: [deploy-to-disable-paranoid]
       trigger: true
+      version: every
   - aggregate:
     - task: break-cluster
       config:
@@ -1518,10 +1528,10 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [disable-paranoid-tests]
-      trigger: true
     - get: bosh-lite-environment
       passed: [disable-paranoid-tests]
       trigger: true
+      version: every
   - put: bosh-lite-environment
     params:
       release: bosh-lite-environment
@@ -1553,9 +1563,9 @@ jobs:
     - get: bosh-lite-environment
       passed: [claim-bosh-lite-verify-cluster-schemas]
       trigger: true
+      version: every
     - get: cf-mysql-release
       passed: [claim-bosh-lite-verify-cluster-schemas]
-      trigger: true
     - get: cf-mysql-ci
   - try: *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
@@ -1566,11 +1576,11 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [delete-verify-cluster-schemas-deployment]
-      trigger: true
     - get: bosh-lite-stemcell
     - get: bosh-lite-environment
       passed: [delete-verify-cluster-schemas-deployment]
       trigger: true
+      version: every
   - aggregate:
     - *create-release
     - task: make-manifest
@@ -1598,10 +1608,10 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [deploy-to-verify-cluster-schemas]
-      trigger: true
     - get: bosh-lite-environment
       passed: [deploy-to-verify-cluster-schemas]
       trigger: true
+      version: every
   - task: run-verify-cluster-schemas-tests
     config:
       platform: *platform
@@ -1623,10 +1633,10 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [verify-cluster-schemas-tests]
-      trigger: true
     - get: bosh-lite-environment
       passed: [verify-cluster-schemas-tests]
       trigger: true
+      version: every
   - put: bosh-lite-environment
     params:
       release: bosh-lite-environment
@@ -1669,11 +1679,11 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [claim-integration-environment]
-      trigger: true
     - get: integration-env-bosh-stemcell
     - get: integration-environment
       passed: [claim-integration-environment]
       trigger: true
+      version: every
   - aggregate:
     - *create-release
     - task: make-manifest
@@ -1706,9 +1716,10 @@ jobs:
   - aggregate:
     - get: integration-environment
       passed: [deploy-to-integration]
+      trigger: true
+      version: every
     - get: cf-mysql-release
       passed: [deploy-to-integration]
-      trigger: true
     - get: cf-mysql-ci
   - task: run-broker-registrar
     config:
@@ -1744,10 +1755,10 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [run-smoke-tests-integration]
-      trigger: true
     - get: integration-environment
       passed: [run-smoke-tests-integration]
       trigger: true
+      version: every
   - put: integration-environment
     params:
       release: integration-environment
