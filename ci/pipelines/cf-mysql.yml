@@ -1884,6 +1884,7 @@ groups:
   - build-dockerfile
   - test-unit
   - test-sample-stubs
+  - create-and-compile-release
   - claim-aws-environment
   - release-aws-environment-manual
   - delete-aws-deployment
