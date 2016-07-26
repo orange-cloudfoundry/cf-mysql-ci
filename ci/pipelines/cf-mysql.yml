@@ -1003,6 +1003,7 @@ jobs:
       version: every
     - get: cf-mysql-release
       resource: cf-mysql-previous-release
+    - get: aws-bosh-stemcell
   - aggregate:
     - *create-release
     - task: make-manifest
