@@ -509,7 +509,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [run-acceptance-tests-initial,dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -701,7 +701,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [run-acceptance-tests-initial,dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -832,7 +832,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [run-acceptance-tests-initial,dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -963,7 +963,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [run-acceptance-tests-initial,dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -1186,7 +1186,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [run-acceptance-tests-initial,dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - put: bosh-lite-environment
       resource: bosh-lite-no-cf-environment
@@ -1340,7 +1340,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [run-acceptance-tests-initial,dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -1463,7 +1463,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [run-acceptance-tests-initial,dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -1604,7 +1604,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [run-acceptance-tests-initial,dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
