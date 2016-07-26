@@ -1307,7 +1307,7 @@ jobs:
       passed: [test-sample-stubs, test-unit]
     - get: weekly-trigger
       passed: [test-sample-stubs, test-unit]
-#      trigger: true
+      trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
