@@ -198,6 +198,7 @@ jobs:
         path: cf-mysql-release/scripts/test-sample-stubs
 
 - name: create-and-compile-release
+  serial: true
   plan:
   - aggregate:
     - get: cf-mysql-release
