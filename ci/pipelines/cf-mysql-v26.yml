@@ -97,7 +97,7 @@ resources:
     bucket: cf-mysql-releases
     access_key_id: {{cf-mysql-ci-aws-access-key-id}}
     secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
-    versioned_file: compiled-releases/cf-mysql-ubuntu-trusty.tgz
+    versioned_file: compiled-releases/cf-mysql-ubuntu-trusty-v26.tgz
 
 ### JOBS
 jobs:
