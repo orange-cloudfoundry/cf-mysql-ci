@@ -54,7 +54,7 @@ resources:
   type: git
   source:
     uri: git@github.com:cloudfoundry/cf-mysql-release.git
-    branch: v26.1
+    branch: v26.2
     private_key: {{git-writer-private-key}}
 
 - name: cf-mysql-release-master
@@ -1001,32 +1001,29 @@ jobs:
       passed: [delete-upgrade-deployment]
       trigger: true
       version: every
-    - get: cf-mysql-latest-release-tarball
     - get: cf-mysql-release
       resource: cf-mysql-previous-release
-  - task: make-manifest
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-release
-      - name: cf-mysql-ci
-      - name: bosh-lite-environment
-      outputs:
-      - name: deployment-manifest
-      params:
-        OUTPUT_FILE: deployment-manifest/deployment.yml
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-        USE_PREVIOUS_RELEASE: true
-      run:
-        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-  - put: bosh-lite-deployment
-    params:
-      target_file: bosh-lite-environment/name
-      manifest: deployment-manifest/deployment.yml
-      releases: [cf-mysql-latest-release-tarball/release.tgz]
-      stemcells: [bosh-lite-stemcell/*.tgz]
+  - aggregate:
+    - *create-release
+    - task: make-manifest
+      config:
+        platform: *platform
+        image_resource: *image_resource
+        inputs:
+        - name: cf-mysql-release
+        - name: cf-mysql-ci
+        - name: bosh-lite-environment
+        outputs:
+        - name: deployment-manifest
+        params:
+          OUTPUT_FILE: deployment-manifest/deployment.yml
+          ENV_TARGET_FILE: bosh-lite-environment/name
+          ENV_METADATA: bosh-lite-environment/metadata
+          USE_PREVIOUS_RELEASE: true
+        run:
+          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
+  - *compile-release
+  - *deploy-to-bosh-lite
 
 - name: broker-registrar-previous-on-upgrade
   plan:
