@@ -1,0 +1,9 @@
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: cloudfoundry/cf-mysql-ci
+inputs:
+- name: cf-mysql-release
+run:
+  path: cf-mysql-release/scripts/test-unit

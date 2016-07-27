@@ -108,17 +108,9 @@ jobs:
       trigger: true
     - get: weekly-trigger
       trigger: true
+    - get: cf-mysql-ci
   - task: test-unit
-    config:
-      platform: &platform linux
-      image_resource: &image_resource
-        type: docker-image
-        source:
-          repository: cloudfoundry/cf-mysql-ci
-      inputs:
-      - name: cf-mysql-release
-      run:
-        path: cf-mysql-release/scripts/test-unit
+    file: cf-mysql-ci/ci/tasks/test-unit.yml
 
 - name: test-sample-stubs
   plan:
@@ -127,14 +119,9 @@ jobs:
       trigger: true
     - get: weekly-trigger
       trigger: true
+    - get: cf-mysql-ci
   - task: test-sample-stubs
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-release
-      run:
-        path: cf-mysql-release/scripts/test-sample-stubs
+    file: cf-mysql-ci/ci/tasks/test-sample-stubs.yml
 
 - name: create-and-compile-release
   serial: true
@@ -1306,6 +1293,7 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [test-sample-stubs, test-unit]
+      trigger: true
     - get: weekly-trigger
       passed: [test-sample-stubs, test-unit]
       trigger: true
