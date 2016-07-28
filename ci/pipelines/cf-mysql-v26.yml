@@ -1591,7 +1591,7 @@ jobs:
       - release-arb-to-full-scaling-environment
       - release-upgrade-environment
       - release-standalone-environment
-#      - release-data-loss-environment
+      - release-data-loss-environment
 #      - release-disable-paranoid-environment
 #      - release-verify-cluster-schemas-environment
       trigger: true
