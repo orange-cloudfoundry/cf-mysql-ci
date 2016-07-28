@@ -77,21 +77,25 @@ function attempt_to_start_mysql_z2_0() {
 }
 
 function assert_mysql_z2_did_not_join() {
-  cluster_size=$(mysql --host=${MYSQL_HOST} \
-    --port=${MYSQL_PORT} \
-    --user=root \
-    --password=password \
-    --skip-column-names \
-    --silent \
-    -e "show status like 'wsrep_cluster_size'" 2>/dev/null | awk '{print $NF}')
+  for i in $(seq 1 10); do
+    cluster_size=$(mysql --host=${MYSQL_HOST} \
+      --port=${MYSQL_PORT} \
+      --user=root \
+      --password=password \
+      --skip-column-names \
+      --silent \
+      -e "show status like 'wsrep_cluster_size'" 2>/dev/null | awk '{print $NF}')
 
-  echo "Cluster size is: ${cluster_size}"
+    echo "Attempt #${i}: Cluster size is: ${cluster_size}"
 
-  if [ "${cluster_size}" == "2" ]; then
-    exit 0
-  else
-    exit 1
-  fi
+    if [ "${cluster_size}" == "2" ]; then
+      exit 0
+    fi
+    sleep 1
+  done
+
+  echo "Cluster size never converged to 2, is at: ${cluster_size}"
+  exit 1
 }
 
 trap close-ssh-tunnels EXIT
