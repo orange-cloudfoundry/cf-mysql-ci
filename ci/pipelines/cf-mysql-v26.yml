@@ -274,6 +274,7 @@ jobs:
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
         DEPLOYMENTS_DIR: deployments-configuration
+        RUN_ALL_ACCEPTANCE_TESTS: true
       run:
         path: cf-mysql-ci/scripts/bosh/make_manifest
   - put: aws-deployment
@@ -322,56 +323,6 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
 
-- name: run-acceptance-tests-initial
-  plan:
-  - aggregate:
-    - get: aws-environment
-      passed: [run-smoke-tests-initial]
-      trigger: true
-      version: every
-    - get: cf-mysql-release
-      passed: [run-smoke-tests-initial]
-    - get: deployments-configuration
-    - get: cf-mysql-ci
-  - task: recreate-manifest-to-run-acceptance-tests
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: cf-mysql-release
-        - name: deployments-configuration
-        - name: cf-mysql-ci
-        - name: aws-environment
-      outputs:
-        - name: deployment-manifest
-      params:
-        ENV_TARGET_FILE: aws-environment/name
-        ENV_METADATA: aws-environment/metadata
-        DEPLOYMENTS_DIR: deployments-configuration
-        RUN_ALL_ACCEPTANCE_TESTS: true
-      run:
-        path: cf-mysql-ci/scripts/bosh/make_manifest
-  - put: aws-deployment
-    params:
-      target_file: aws-environment/name
-      manifest: deployment-manifest/deployment.yml
-      releases: []
-      stemcells: []
-  - task: run-acceptance-tests
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: cf-mysql-ci
-        - name: aws-environment
-      params:
-        ENV_TARGET_FILE: aws-environment/name
-        ENV_METADATA: aws-environment/metadata
-        ERRAND: acceptance-tests
-        DEPLOYMENT_NAME: cf-mysql
-      run:
-        path: cf-mysql-ci/scripts/bosh/run_errand
-
 - name: dashboard-test-initial
   plan:
   - aggregate:
@@ -402,7 +353,7 @@ jobs:
     - get: aws-environment
       trigger: true
       version: every
-      passed: [run-acceptance-tests-initial,dashboard-test-initial]
+      passed: [dashboard-test-initial]
     - get: cf-mysql-ci
   - try:
       task: run-broker-deregistrar
@@ -437,7 +388,7 @@ jobs:
 - name: release-aws-environment
   plan:
   - get: cf-mysql-release
-    passed: [run-acceptance-tests-initial,dashboard-test-initial]
+    passed: [dashboard-test-initial]
   - get: aws-environment
     passed: [cleanup-aws-deployment]
     trigger: true
@@ -1671,7 +1622,6 @@ groups:
   - delete-aws-deployment
   - deploy-to-initial
   - run-smoke-tests-initial
-  - run-acceptance-tests-initial
   - dashboard-test-initial
   - cleanup-aws-deployment
   - release-aws-environment
