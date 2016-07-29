@@ -119,6 +119,14 @@ resources:
     pool: bosh-lites-no-cf
     private_key: {{git-writer-private-key}}
 
+- name: compiled-packages-lock
+  type: pool
+  source:
+    uri: *pool-uri
+    branch: master
+    pool: compiled-packages
+    private_key: {{git-writer-private-key}}
+
 - name: cf-mysql-latest-release-tarball
   type: bosh-io-release
   source:
@@ -222,6 +230,9 @@ jobs:
         RELEASE_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/create_release
+  - put: compiled-packages-lock
+    params:
+      acquire: true
   - &compile-release
     task: compile-release
     config:
@@ -239,6 +250,10 @@ jobs:
         BOSH_DIRECTOR: {{bosh_compilation_director}}
       run:
         path: cf-mysql-ci/scripts/compile_release
+    ensure:
+      put: compiled-packages-lock
+      params:
+        release: compiled-packages-lock
   - put: cf-mysql-compiled-release
     params:
       file: compiled-release-tarball/*.tgz
@@ -975,6 +990,9 @@ jobs:
           USE_PREVIOUS_RELEASE: true
         run:
           path: cf-mysql-ci/scripts/bosh-lite/make_manifest
+  - put: compiled-packages-lock
+    params:
+      acquire: true
   - *compile-release
   - *deploy-to-bosh-lite
 

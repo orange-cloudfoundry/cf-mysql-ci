@@ -68,6 +68,14 @@ resources:
     pool: bosh-lites-working
     private_key: {{git-writer-private-key}}
 
+- name: compiled-packages-lock
+  type: pool
+  source:
+    uri: *pool-uri
+    branch: master
+    pool: compiled-packages
+    private_key: {{git-writer-private-key}}
+
 - name: weekly-trigger
   type: time
   source:
@@ -149,8 +157,10 @@ jobs:
         TAG_MATCH: v24
       run:
         path: cf-mysql-ci/scripts/create_release
-  - &compile-release
-    task: compile-release
+  - put: compiled-packages-lock
+    params:
+      acquire: true
+  - task: compile-release
     config:
       platform: *platform
       image_resource: *image_resource
@@ -166,6 +176,10 @@ jobs:
         BOSH_DIRECTOR: {{bosh_compilation_director}}
       run:
         path: cf-mysql-ci/scripts/compile_release
+    ensure:
+      put: compiled-packages-lock
+      params:
+        release: compiled-packages-lock
   - put: cf-mysql-compiled-release
     params:
       file: compiled-release-tarball/*.tgz
