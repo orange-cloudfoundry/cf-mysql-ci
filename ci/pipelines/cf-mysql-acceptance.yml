@@ -1,6 +1,6 @@
 ---
 resources:
-- name: acceptance-env-bosh-stemcell
+- name: aws-bosh-stemcell
   type: bosh-io-stemcell
   source:
     name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
@@ -75,7 +75,7 @@ jobs:
         - name: aws-acceptance-environment
       params:
         ENV_TARGET_FILE: aws-acceptance-environment/name
-        ENV_METADATA: aws-acceptance-environment/metadata  
+        ENV_METADATA: aws-acceptance-environment/metadata
         ERRAND: broker-deregistrar
         SKIP_IF_NO_DEPLOYMENT: true
         DEPLOYMENT_NAME: cf-mysql
@@ -104,7 +104,7 @@ jobs:
     - get: cf-mysql-release
       resource: cf-mysql-release-rc
       passed: [delete-acceptance-deployment]
-    - get: acceptance-env-bosh-stemcell
+    - get: aws-bosh-stemcell
     - get: aws-acceptance-environment
       passed: [delete-acceptance-deployment]
       trigger: true
@@ -122,6 +122,7 @@ jobs:
         params:
           RELEASE_NAME: cf-mysql
           OUTPUT_DIR: release-tarball
+          TAG_MATCH: v26
         run:
           path: cf-mysql-ci/scripts/create_release
     - task: make-manifest
@@ -142,12 +143,28 @@ jobs:
           MANIFEST_DIR: deployment-manifest
         run:
           path: cf-mysql-ci/scripts/bosh/make_manifest
+  - task: compile-release
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: release-tarball
+      - name: aws-bosh-stemcell
+      outputs:
+      - name: compiled-release-tarball
+      params:
+        BOSH_USERNAME: {{bosh_compilation_username}}
+        BOSH_PASSWORD: {{bosh_compilation_password}}
+        BOSH_DIRECTOR: {{bosh_compilation_director}}
+      run:
+        path: cf-mysql-ci/scripts/compile_release
   - put: acceptance-deployment
     params:
       target_file: aws-acceptance-environment/name
       manifest: deployment-manifest/deployment.yml
-      releases: [release-tarball/*.tgz]
-      stemcells: [acceptance-env-bosh-stemcell/*.tgz]
+      releases: [compiled-release-tarball/*.tgz]
+      stemcells: [aws-bosh-stemcell/*.tgz]
 
 - name: run-smoke-tests-acceptance
   plan:
