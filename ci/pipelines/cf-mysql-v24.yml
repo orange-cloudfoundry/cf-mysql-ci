@@ -29,6 +29,13 @@ resources:
     branch: releases/v24
     private_key: {{git-writer-private-key}}
 
+- name: cf-mysql-previous-release
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/cf-mysql-release.git
+    branch: v24.5
+    private_key: {{git-writer-private-key}}
+
 - name: aws-deployment
   type: bosh-deployment
   source:
@@ -67,6 +74,7 @@ resources:
     days:
     - Monday
     interval: 24h
+
 - name: pcf-mysql-rc-artifacts
   type: s3
   source:
@@ -74,6 +82,15 @@ resources:
     access_key_id: {{pcf-mysql-ci-aws-access-key-id}}
     secret_access_key: {{pcf-mysql-ci-aws-secret-access-key}}
     regexp: pcf-mysql-releases/releases-24/tested/cf-mysql-(\d+\.\d+)\+.*.tgz
+
+- name: cf-mysql-compiled-release
+  type: s3
+  source:
+    bucket: cf-mysql-releases
+    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
+    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
+    versioned_file: compiled-releases/cf-mysql-ubuntu-trusty-v24.tgz
+
 ### JOBS
 jobs:
 - name: test-unit
@@ -83,17 +100,9 @@ jobs:
       trigger: true
     - get: weekly-trigger
       trigger: true
+    - get: cf-mysql-ci
   - task: test-unit
-    config:
-      platform: &platform linux
-      image_resource: &image_resource
-        type: docker-image
-        source:
-          repository: cloudfoundry/cf-mysql-ci
-      inputs:
-      - name: cf-mysql-release
-      run:
-        path: cf-mysql-release/scripts/test-unit
+    file: cf-mysql-ci/ci/tasks/test-unit.yml
 
 - name: test-sample-stubs
   plan:
@@ -102,15 +111,66 @@ jobs:
       trigger: true
     - get: weekly-trigger
       trigger: true
+    - get: cf-mysql-ci
   - task: test-sample-stubs
+    file: cf-mysql-ci/ci/tasks/test-sample-stubs.yml
+
+- name: create-and-compile-release
+  serial: true
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      trigger: true
+      passed:
+        - test-unit
+        - test-sample-stubs
+    - get: weekly-trigger
+      trigger: true
+      passed:
+        - test-unit
+        - test-sample-stubs
+    - get: cf-mysql-ci
+    - get: aws-bosh-stemcell
+  - &create-release
+    task: create-release
+    config:
+      platform: &platform linux
+      image_resource: &image_resource
+        type: docker-image
+        source:
+          repository: cloudfoundry/cf-mysql-ci
+      inputs:
+      - name: cf-mysql-ci
+      - name: cf-mysql-release
+      outputs:
+      - name: release-tarball
+      params:
+        RELEASE_NAME: cf-mysql
+        TAG_MATCH: v24
+      run:
+        path: cf-mysql-ci/scripts/create_release
+  - &compile-release
+    task: compile-release
     config:
       platform: *platform
       image_resource: *image_resource
       inputs:
-      - name: cf-mysql-release
+      - name: cf-mysql-ci
+      - name: release-tarball
+      - name: aws-bosh-stemcell
+      outputs:
+      - name: compiled-release-tarball
+      params:
+        BOSH_USERNAME: {{bosh_compilation_username}}
+        BOSH_PASSWORD: {{bosh_compilation_password}}
+        BOSH_DIRECTOR: {{bosh_compilation_director}}
       run:
-        path: cf-mysql-release/scripts/test-sample-stubs
+        path: cf-mysql-ci/scripts/compile_release
+  - put: cf-mysql-compiled-release
+    params:
+      file: compiled-release-tarball/*.tgz
 
+### AWS
 - name: claim-aws-environment
   plan:
   - aggregate:
@@ -141,8 +201,6 @@ jobs:
       passed: [claim-aws-environment]
       trigger: true
       version: every
-    - get: weekly-trigger
-      passed: [claim-aws-environment]
     - get: cf-mysql-release
       passed: [claim-aws-environment]
     - get: cf-mysql-ci
@@ -182,53 +240,40 @@ jobs:
     - get: deployments-configuration
     - get: cf-mysql-ci
     - get: cf-mysql-release
-      passed: [delete-aws-deployment]
+      passed:
+        - delete-aws-deployment
+        - create-and-compile-release
     - get: aws-bosh-stemcell
-    - get: weekly-trigger
-      passed: [delete-aws-deployment]
     - get: aws-environment
       passed: [delete-aws-deployment]
       trigger: true
       version: every
-  - aggregate:
-    - &create-release
-      task: create-release
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
-        outputs:
-        - name: release-tarball
-        params:
-          RELEASE_NAME: cf-mysql
-          TAG_MATCH: v24
-        run:
-          path: cf-mysql-ci/scripts/create_release
-    - task: make-manifest
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-        - name: deployments-configuration
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
-        - name: aws-environment
-        outputs:
-        - name: deployment-manifest
-        params:
-          ENV_TARGET_FILE: aws-environment/name
-          ENV_METADATA: aws-environment/metadata
-          DEPLOYMENTS_DIR: deployments-configuration
-          RUN_ALL_ACCEPTANCE_TESTS: true
-        run:
-          path: cf-mysql-ci/scripts/bosh/make_manifest
+    - get: compiled-release-tarball
+      resource: cf-mysql-compiled-release
+      passed: [create-and-compile-release]
+  - task: make-manifest
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: deployments-configuration
+      - name: cf-mysql-ci
+      - name: cf-mysql-release
+      - name: aws-environment
+      outputs:
+      - name: deployment-manifest
+      params:
+        ENV_TARGET_FILE: aws-environment/name
+        ENV_METADATA: aws-environment/metadata
+        DEPLOYMENTS_DIR: deployments-configuration
+        RUN_ALL_ACCEPTANCE_TESTS: true
+      run:
+        path: cf-mysql-ci/scripts/bosh/make_manifest
   - put: aws-deployment
     params:
       target_file: aws-environment/name
       manifest: deployment-manifest/deployment.yml
-      releases: [release-tarball/*.tgz]
+      releases: [compiled-release-tarball/*.tgz]
       stemcells: [aws-bosh-stemcell/*.tgz]
 
 - name: run-smoke-tests-initial
@@ -238,8 +283,6 @@ jobs:
       passed: [deploy-to-initial]
       trigger: true
       version: every
-    - get: weekly-trigger
-      passed: [deploy-to-initial]
     - get: cf-mysql-release
       passed: [deploy-to-initial]
     - get: cf-mysql-ci
@@ -279,8 +322,6 @@ jobs:
         passed: [run-smoke-tests-initial]
         trigger: true
         version: every
-      - get: weekly-trigger
-        passed: [run-smoke-tests-initial]
       - get: cf-mysql-release
         passed: [run-smoke-tests-initial]
       - get: cf-mysql-ci
@@ -353,10 +394,10 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - get: weekly-trigger
-      passed: [dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -416,39 +457,41 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [delete-scaling-deployment]
+      passed:
+      - delete-scaling-deployment
+      - create-and-compile-release
     - get: bosh-lite-stemcell
     - get: cf-mysql-ci
     - get: bosh-lite-environment
       passed: [delete-scaling-deployment]
       trigger: true
       version: every
-  - aggregate:
-    - *create-release
-    - task: make-manifest
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
-        - name: bosh-lite-environment
-        outputs:
-          - name: deployment-manifest
-        params:
-          OUTPUT_FILE: deployment-manifest/deployment.yml
-          MINIMAL_MODE: true
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-        run:
-          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-
+    - get: compiled-release-tarball
+      resource: cf-mysql-compiled-release
+      passed: [create-and-compile-release]
+  - task: make-manifest
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: cf-mysql-release
+      - name: bosh-lite-environment
+      outputs:
+        - name: deployment-manifest
+      params:
+        OUTPUT_FILE: deployment-manifest/deployment.yml
+        MINIMAL_MODE: true
+        ENV_TARGET_FILE: bosh-lite-environment/name
+        ENV_METADATA: bosh-lite-environment/metadata
+      run:
+        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - &deploy-to-bosh-lite
     put: bosh-lite-deployment
     params:
       target_file: bosh-lite-environment/name
       manifest: deployment-manifest/deployment.yml
-      releases: [release-tarball/*.tgz]
+      releases: [compiled-release-tarball/*.tgz]
       stemcells: [bosh-lite-stemcell/*.tgz]
 
 - name: scaling-broker-registrar
@@ -546,10 +589,10 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - get: weekly-trigger
-      passed: [dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -583,30 +626,33 @@ jobs:
   - aggregate:
     - get: cf-mysql-ci
     - get: cf-mysql-release
-      passed: [delete-failover-deployment]
+      passed:
+      - delete-failover-deployment
+      - create-and-compile-release
     - get: bosh-lite-stemcell
     - get: bosh-lite-environment
       passed: [delete-failover-deployment]
       trigger: true
       version: every
-  - aggregate:
-    - *create-release
-    - task: make-manifest
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
-        - name: bosh-lite-environment
-        outputs:
-          - name: deployment-manifest
-        params:
-          OUTPUT_FILE: deployment-manifest/deployment.yml
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-        run:
-          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
+    - get: compiled-release-tarball
+      resource: cf-mysql-compiled-release
+      passed: [create-and-compile-release]
+  - task: make-manifest
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: cf-mysql-release
+      - name: bosh-lite-environment
+      outputs:
+        - name: deployment-manifest
+      params:
+        OUTPUT_FILE: deployment-manifest/deployment.yml
+        ENV_TARGET_FILE: bosh-lite-environment/name
+        ENV_METADATA: bosh-lite-environment/metadata
+      run:
+        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
 - name: failover-broker-registrar
@@ -676,10 +722,10 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - get: weekly-trigger
-      passed: [dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -713,31 +759,34 @@ jobs:
   - aggregate:
     - get: cf-mysql-ci
     - get: cf-mysql-release
-      passed: [delete-data-loss-deployment]
+      passed:
+      - delete-data-loss-deployment
+      - create-and-compile-release
     - get: bosh-lite-stemcell
     - get: bosh-lite-environment
       passed: [delete-data-loss-deployment]
       trigger: true
       version: every
-  - aggregate:
-    - *create-release
-    - task: make-manifest
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
-        - name: bosh-lite-environment
-        outputs:
-          - name: deployment-manifest
-        params:
-          OUTPUT_FILE: deployment-manifest/deployment.yml
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-          TINY_GCACHE: true
-        run:
-          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
+    - get: compiled-release-tarball
+      resource: cf-mysql-compiled-release
+      passed: [create-and-compile-release]
+  - task: make-manifest
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: cf-mysql-release
+      - name: bosh-lite-environment
+      outputs:
+        - name: deployment-manifest
+      params:
+        OUTPUT_FILE: deployment-manifest/deployment.yml
+        ENV_TARGET_FILE: bosh-lite-environment/name
+        ENV_METADATA: bosh-lite-environment/metadata
+        TINY_GCACHE: true
+      run:
+        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
 - name: data-loss-tests
@@ -808,10 +857,10 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - get: weekly-trigger
-      passed: [dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -845,31 +894,34 @@ jobs:
   - aggregate:
     - get: cf-mysql-ci
     - get: cf-mysql-release
-      passed: [delete-disable-paranoid-deployment]
+      passed:
+      - delete-disable-paranoid-deployment
+      - create-and-compile-release
     - get: bosh-lite-stemcell
     - get: bosh-lite-environment
       passed: [delete-disable-paranoid-deployment]
       trigger: true
       version: every
-  - aggregate:
-    - *create-release
-    - task: make-manifest
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
-        - name: bosh-lite-environment
-        outputs:
-          - name: deployment-manifest
-        params:
-          OUTPUT_FILE: deployment-manifest/deployment.yml
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-          TINY_GCACHE: true
-        run:
-          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
+    - get: compiled-release-tarball
+      resource: cf-mysql-compiled-release
+      passed: [create-and-compile-release]
+  - task: make-manifest
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: cf-mysql-release
+      - name: bosh-lite-environment
+      outputs:
+        - name: deployment-manifest
+      params:
+        OUTPUT_FILE: deployment-manifest/deployment.yml
+        ENV_TARGET_FILE: bosh-lite-environment/name
+        ENV_METADATA: bosh-lite-environment/metadata
+        TINY_GCACHE: true
+      run:
+        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
 - name: disable-paranoid-tests
@@ -958,10 +1010,10 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - get: weekly-trigger
-      passed: [dashboard-test-initial]
+      passed: [test-sample-stubs, test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -995,31 +1047,34 @@ jobs:
   - aggregate:
     - get: cf-mysql-ci
     - get: cf-mysql-release
-      passed: [delete-verify-cluster-schemas-deployment]
+      passed:
+      - delete-verify-cluster-schemas-deployment
+      - create-and-compile-release
     - get: bosh-lite-stemcell
     - get: bosh-lite-environment
       passed: [delete-verify-cluster-schemas-deployment]
       trigger: true
       version: every
-  - aggregate:
-    - *create-release
-    - task: make-manifest
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
-        - name: bosh-lite-environment
-        outputs:
-          - name: deployment-manifest
-        params:
-          OUTPUT_FILE: deployment-manifest/deployment.yml
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-          TINY_GCACHE: true
-        run:
-          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
+    - get: compiled-release-tarball
+      resource: cf-mysql-compiled-release
+      passed: [create-and-compile-release]
+  - task: make-manifest
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: cf-mysql-release
+      - name: bosh-lite-environment
+      outputs:
+        - name: deployment-manifest
+      params:
+        OUTPUT_FILE: deployment-manifest/deployment.yml
+        ENV_TARGET_FILE: bosh-lite-environment/name
+        ENV_METADATA: bosh-lite-environment/metadata
+        TINY_GCACHE: true
+      run:
+        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
 - name: verify-cluster-schemas-tests
@@ -1068,6 +1123,7 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed:
+      - release-aws-environment
       - release-failover-environment
       - release-scaling-environment
       - release-data-loss-environment
@@ -1110,6 +1166,7 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed:
+      - release-aws-environment
       - release-failover-environment
       - release-scaling-environment
       - release-data-loss-environment
@@ -1140,6 +1197,7 @@ groups:
   jobs:
   - test-unit
   - test-sample-stubs
+  - create-and-compile-release
   - claim-aws-environment
   - release-aws-environment-manual
   - delete-aws-deployment
