@@ -97,7 +97,7 @@ resources:
     bucket: pcf-mysql-releases
     access_key_id: {{pcf-mysql-ci-aws-access-key-id}}
     secret_access_key: {{pcf-mysql-ci-aws-secret-access-key}}
-    regexp: pcf-mysql-releases/releases-26/tested/cf-mysql-(\d+\.\d+)\+.*.tgz
+    regexp: releases-26/tested/cf-mysql-([\d+\.]+)\+.*.tgz
 
 - name: cf-mysql-compiled-release
   type: s3
@@ -162,7 +162,7 @@ jobs:
       - name: release-tarball
       params:
         RELEASE_NAME: cf-mysql
-        TAG_MATCH: v26
+        TAG_MATCH: v26*
       run:
         path: cf-mysql-ci/scripts/create_release
   - put: compiled-packages-lock
@@ -1622,7 +1622,7 @@ jobs:
         - name: release-tarball
       params:
         RELEASE_NAME: cf-mysql
-        TAG_MATCH: v26
+        TAG_MATCH: v26*
       run:
         path: cf-mysql-ci/scripts/create_release
   - put: pcf-mysql-rc-artifacts
