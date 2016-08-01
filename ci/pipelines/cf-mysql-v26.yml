@@ -1400,10 +1400,10 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [test-sample-stubs, test-unit]
-#      trigger: true
+      trigger: true
     - get: weekly-trigger
       passed: [test-sample-stubs, test-unit]
-#      trigger: true
+      trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
@@ -1561,8 +1561,7 @@ jobs:
       - release-upgrade-environment
       - release-standalone-environment
       - release-data-loss-environment
-#      - release-disable-paranoid-environment
-#      - release-verify-cluster-schemas-environment
+      - release-disable-paranoid-environment
       trigger: true
   - task: rc-tag-file
     config:
@@ -1607,8 +1606,7 @@ jobs:
       - release-upgrade-environment
       - release-standalone-environment
       - release-data-loss-environment
-#      - release-disable-paranoid-environment
-#      - release-verify-cluster-schemas-environment
+      - release-disable-paranoid-environment
       trigger: true
     - get: cf-mysql-ci
   - task: create-rc-release-artifacts
