@@ -395,7 +395,7 @@ jobs:
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
         ERRAND: acceptance-tests
-        DEPLOYMENT_NAME: cf-mysql  
+        DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
 
@@ -429,7 +429,9 @@ jobs:
     - get: aws-environment
       trigger: true
       version: every
-      passed: [run-smoke-tests-initial,dashboard-test-initial]
+      passed: [dashboard-test-initial]
+    - get: cf-mysql-release
+      passed: [dashboard-test-initial]
     - get: cf-mysql-ci
   - try:
       task: run-broker-deregistrar
@@ -467,6 +469,8 @@ jobs:
     passed: [cleanup-aws-deployment]
     trigger: true
     version: every
+  - get: cf-mysql-release
+    passed: [cleanup-aws-deployment]
   - put: aws-environment
     params:
       release: aws-environment
@@ -1682,6 +1686,7 @@ jobs:
     - get: cf-mysql-release
       passed:
       # all bosh-lite pipelines
+      - release-aws-environment
       - release-upgrade-environment
       - release-failover-environment
       - release-scaling-environment
