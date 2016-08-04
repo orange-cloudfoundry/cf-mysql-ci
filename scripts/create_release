@@ -11,6 +11,7 @@ default_release_name="${RELEASE_NAME}-release"
 RELEASE_DIR="${WORKSPACE_DIR}/${RELEASE_RELATIVE_DIR:-${default_release_name}}"
 OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-release-tarball}"
 TAG_MATCH=${TAG_MATCH:-}
+FINAL=${FINAL:-}
 
 pushd "${RELEASE_DIR}"
 
@@ -34,7 +35,12 @@ pushd "${RELEASE_DIR}"
     major=$(echo ${git_describe_output} | cut -f1 -d-)
     minor=$(echo ${git_describe_output} | cut -f2 -d-)
     sha=$(echo ${git_describe_output} | cut -f3 -d-)
-    version=$major.$minor+$sha
+
+    if [ -n "${FINAL}" ]; then
+      version=$major.$minor
+    else
+      version=$major.$minor+$sha
+    fi
 
     create_release_command="bosh -n create release --name "${RELEASE_NAME}" --version ${version} --with-tarball --force"
 
