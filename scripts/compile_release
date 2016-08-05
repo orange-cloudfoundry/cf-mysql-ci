@@ -6,11 +6,15 @@ MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-compiled-release-tarball}"
 DEPLOYMENT_NAME=d-$(cat /proc/sys/kernel/random/uuid)
-STEMCELL_VERSION=$(cat *stemcell/version)
+
 RELEASE_TARBALL_DIR=${RELEASE_TARBALL_DIR:-release-tarball}
-RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/ | grep tgz)
+RELEASE_FILENAME=${RELEASE_FILENAME:-tgz}
+RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/ | grep ${RELEASE_FILENAME})
 RELEASE_NAME=$(echo ${RELEASE_FILE} | sed 's/\(.*\)-[0-9].*/\1/')
 RELEASE_VERSION=$(echo ${RELEASE_FILE} | sed 's/.*-\([0-9].*\).tgz/\1/')
+
+# egrep for pivnet-resource stemcells that will have the etag after the version
+STEMCELL_VERSION=$(cat *stemcell/version | egrep -o '^[1-9.]+')
 
 pushd "${WORKSPACE_DIR}"
   cat << EOF > deployment.yml
