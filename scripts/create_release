@@ -32,7 +32,9 @@ pushd "${RELEASE_DIR}"
     fi
     git_describe_output="${git_describe_output#v}" # remove leading 'v'
 
-    major=$(echo ${git_describe_output} | cut -f1 -d-)
+    unparsed_major=$(echo ${git_describe_output} | cut -f1 -d-)
+    major=$( echo ${unparsed_major} | sed 's/_/-/')
+
     minor=$(echo ${git_describe_output} | cut -f2 -d-)
     sha=$(echo ${git_describe_output} | cut -f3 -d-)
 
