@@ -40,7 +40,7 @@ pushd "${RELEASE_DIR}"
       version=$major.$minor
     else
       # Handle alpha versions
-      if [ $(echo ${major} | grep "alpha") ]; then 
+      if [ $(echo ${major} | grep "alpha") ]; then
         major=$(echo ${major} | grep -o -E "[0-9.]+")
         version=$major.0.0-alpha.$minor+$sha
       else
