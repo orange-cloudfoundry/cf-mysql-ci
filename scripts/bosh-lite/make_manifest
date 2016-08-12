@@ -32,6 +32,9 @@ pushd "${WORKSPACE_DIR}"
 
   BOSH_USERNAME="$(jq_val "bosh_user" "${ENV_METADATA}")"
   BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
+
+  CF_API_USER="$(jq_val "cf_api_user" "${ENV_METADATA}")"
+  CF_API_PASSWORD="$(jq_val "cf_api_password" "${ENV_METADATA}")"
 popd
 
 get_previous_version() {
@@ -78,6 +81,17 @@ fi
 if [ "${DISABLE_PARANOIA}" = "true" ]; then
   PROPERTY_OVERRIDES="$PROPERTY_OVERRIDES ${CI_DIR}/stubs/property-overrides-disable-paranoia.yml"
 fi
+
+CF_CREDENTIALS_STUB="${tmpdir}/cf-credentials-overrides.yml"
+cat > ${CF_CREDENTIALS_STUB} <<EOF
+director_uuid: $(bosh status --uuid)
+property_overrides:
+  cf:
+    admin_username: ${CF_API_USER}
+    admin_password: ${CF_API_PASSWORD}
+EOF
+
+PROPERTY_OVERRIDES="$PROPERTY_OVERRIDES ${CF_CREDENTIALS_STUB}"
 
 if [ "${USE_PREVIOUS_RELEASE}" = "true" ]; then
   MYSQL_VERSION="$(get_previous_version)"
