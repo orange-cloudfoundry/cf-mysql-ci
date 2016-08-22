@@ -148,14 +148,6 @@ resources:
     secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
     versioned_file: compiled-releases/cf-mysql-ubuntu-trusty-develop.tgz
 
-- name: cf-mysql-broker-security-report
-  type: s3
-  source:
-    bucket: cf-mysql-broker-security
-    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
-    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
-    versioned_file: dependency-check-report.html
-
 ### JOBS
 jobs:
 - name: build-dockerfile
@@ -197,19 +189,29 @@ jobs:
       attempts: 5
     - task: test-broker
       file: cf-mysql-ci/ci/tasks/test-broker.yml
+    - task: test-broker-dependencies
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source:
+            repository: ruby
+            tag: '2.3.1'
+        inputs:
+        - name: cf-mysql-release
+        run:
+          path: bash
+          args:
+          - -c
+          - |
+            set -eux
 
-- name: broker-security-audit
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      trigger: true
-  - aggregate:
-    - task: test-broker-dependencies-security
-      file: cf-mysql-ci/ci/tasks/test-broker-dependencies-security.yml
-  - put: cf-mysql-broker-security-report
-    params:
-      file: reports/dependency-check-report.html
+            gem install bundler-audit
+            bundle-audit update
+
+            cd cf-mysql-release/src/cf-mysql-broker
+
+            bundle-audit
 
 - name: test-sample-stubs
   plan:
@@ -1877,7 +1879,6 @@ groups:
   - build-dockerfile
   - test-unit
   - test-sample-stubs
-  - broker-security-audit
   - create-and-compile-release
   - claim-aws-environment
   - release-aws-environment-manual
