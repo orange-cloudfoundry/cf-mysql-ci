@@ -1,0 +1,44 @@
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: ruby
+    tag: 2.3.1
+
+inputs:
+- name: cf-mysql-release
+
+outputs:
+- name: reports
+
+run:
+  path: bash
+  args:
+  - -c
+  - |
+    set -eux
+
+    apt-get update &&
+    apt-get -y install --fix-missing \
+      unzip \
+      openjdk-7-jre-headless
+
+    # TODO: Check sha256 sum against c40c3b403e424618a52bb2dd8ac436ec7ef40dbe3b0fb2640e5e9c33cebf3aa2
+    wget http://dl.bintray.com/jeremy-long/owasp/dependency-check-1.4.2-release.zip
+
+    unzip dependency-check-1.4.2-release.zip
+
+    export PATH=$PATH:$PWD/dependency-check/bin
+
+    pushd cf-mysql-release/src/cf-mysql-broker
+      rm -rf vendor
+      rm -rf .bundle
+
+      gem install bundler-audit
+      bundle-audit update
+
+      mkdir -p $PWD/out
+      dependency-check.sh --enableExperimental --project broker --out $PWD/out --format ALL --scan .
+    popd
+
+    cp cf-mysql-release/src/cf-mysql-broker/out/* reports/
