@@ -180,17 +180,15 @@ jobs:
 - name: test-unit
   plan:
   - aggregate:
+    - get: cf-mysql-ci
     - get: cf-mysql-release
       trigger: true
-  - task: test-unit
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-release
-      run:
-        path: cf-mysql-release/scripts/test-unit
-    attempts: 5
+  - aggregate:
+    - task: test-unit
+      file: cf-mysql-ci/ci/tasks/test-unit.yml
+      attempts: 5
+    - task: test-broker
+      file: cf-mysql-ci/ci/tasks/test-broker.yml
 
 - name: test-sample-stubs
   plan:
