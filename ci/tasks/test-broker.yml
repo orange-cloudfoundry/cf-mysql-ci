@@ -6,7 +6,7 @@ image_resource:
 inputs:
 - name: cf-mysql-release
 params:
-  RAILS_ENV: travis_test
+  RAILS_ENV: ci_test
 run:
   path: bash
   args:
@@ -20,7 +20,7 @@ run:
 
     pushd cf-mysql-release/src/cf-mysql-broker
       rm -rf vendor
-      bundle install
+      bundle install --deployment --without development
       bundle exec rake db:create db:migrate
 
       mysql -uroot -e "set global innodb_stats_on_metadata=ON"
