@@ -119,6 +119,7 @@ jobs:
     - get: cf-mysql-ci
   - task: test-unit
     file: cf-mysql-ci/ci/tasks/test-unit.yml
+    attempts: 5
 
 - name: test-sample-stubs
   plan:

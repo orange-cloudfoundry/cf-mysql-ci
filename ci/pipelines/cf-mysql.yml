@@ -190,6 +190,7 @@ jobs:
       - name: cf-mysql-release
       run:
         path: cf-mysql-release/scripts/test-unit
+    attempts: 5
 
 - name: test-sample-stubs
   plan:
