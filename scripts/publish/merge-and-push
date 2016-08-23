@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CI_DIR="$(cd "${MY_DIR}/../.." && pwd )"
+WORKSPACE_DIR="$(cd "${CI_DIR}/.." && pwd )"
+RELEASE_DIR="$(cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
+
+SOURCE_BRANCH="${SOURCE_BRANCH:?}"
+BRANCH_TO_MERGE="${BRANCH_TO_MERGE:?}"
+GIT_PRIVATE_KEY="${GIT_PRIVATE_KEY:?}"
+
+SSH_DIR=$HOME/.ssh
+SSH_KEY=${SSH_DIR}/id_rsa_github
+
+mkdir -p ${SSH_DIR}
+echo -e "Host *\n\tStrictHostKeyChecking no\n\tUserKnownHostsFile=/dev/null" >> $SSH_DIR/config
+echo -n "${GIT_PRIVATE_KEY}" > "${SSH_KEY}"
+chmod 0600 "${SSH_KEY}"
+
+eval $(ssh-agent)
+ssh-add "${SSH_KEY}"
+
+git config --global user.email "core-services-bot@pivotal.io"
+git config --global user.name "Final Release Builder"
+
+pushd ${RELEASE_DIR}
+  git pull -r
+  git checkout ${SOURCE_BRANCH}
+  git merge --no-edit ${BRANCH_TO_MERGE}
+  git push origin ${SOURCE_BRANCH}
+popd
