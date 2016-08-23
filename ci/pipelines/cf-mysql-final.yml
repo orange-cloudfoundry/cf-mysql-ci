@@ -65,6 +65,7 @@ jobs:
             fetch:
             - develop
             - release-candidate
+            submodules: none
         - get: cf-mysql-ci
         - get: deployments-core-services
         - get: cf-mysql-develop
@@ -94,15 +95,6 @@ jobs:
             RELEASE_SECRET_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
           outputs:
             - name: output-release-dir
-      - task: merge-master-into-develop
-        config:
-          platform: linux
-          image_resource: *image_resource
-          inputs:
-          - name: cf-mysql-ci
-          - name: cf-mysql-develop
-          run:
-            path: cf-mysql-ci/scripts/publish/merge-master-into-develop
       - put: publish-github-release
         params:
           name: output-release-dir/cf-mysql-tag
@@ -127,4 +119,31 @@ jobs:
         params:
           file: output-release-dir/release-artifacts/*.tgz
 
-groups: [{name: cf-mysql-final, jobs: [final-release]}]
+  - name: merge-master-into-develop
+    plan:
+    - aggregate:
+      - get: cf-mysql-master
+        trigger: true
+        params:
+          submodules: none
+      - get: cf-mysql-develop
+        params:
+          fetch:
+          - master
+      - get: cf-mysql-ci
+    - task: merge-master-into-develop
+      config:
+        platform: linux
+        image_resource: *image_resource
+        inputs:
+        - name: cf-mysql-ci
+        - name: cf-mysql-develop
+          path: cf-mysql-release
+        run:
+          path: cf-mysql-ci/scripts/publish/merge-and-push
+        params:
+          SOURCE_BRANCH: develop
+          BRANCH_TO_MERGE: master
+          GIT_PRIVATE_KEY: {{git-writer-private-key}}
+
+groups: [{name: cf-mysql-final, jobs: [final-release,merge-master-into-develop]}]

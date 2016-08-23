@@ -1868,8 +1868,10 @@ jobs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
       run:
-        path: cf-mysql-ci/scripts/publish/merge-to-release-candidate
+        path: cf-mysql-ci/scripts/publish/merge-and-push
       params:
+        SOURCE_BRANCH: release-candidate
+        BRANCH_TO_MERGE: develop
         GIT_PRIVATE_KEY: {{git-writer-private-key}}
 
 groups:
