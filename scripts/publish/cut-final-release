@@ -83,6 +83,6 @@ pushd ${RELEASE_DIR}
   git rev-parse HEAD > ${OUTPUT_RELEASE_COMMIT}
 popd
 
-mv ${RELEASE_DIR} "${OUTPUT_REPO_DIRECTORY}/"
+cp -r ${RELEASE_DIR} "${OUTPUT_REPO_DIRECTORY}/"
 
 echo "Successfully created cf-mysql final release ${VERSION_TAG}"
