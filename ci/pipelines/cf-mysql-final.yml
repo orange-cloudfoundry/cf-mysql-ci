@@ -24,13 +24,15 @@ resources:
 - name: cf-mysql-ci
   type: git
   source:
-    uri: https://github.com/cloudfoundry-incubator/cf-mysql-ci.git
+    uri: git@github.com:cloudfoundry-incubator/cf-mysql-ci.git
+    branch: master
     private_key: {{git-writer-private-key}}
 
 - name: deployments-core-services
   type: git
   source:
     uri: git@github.com:pivotal-cf/deployments-core-services
+    branch: master
     private_key: {{git-writer-private-key}}
 
 - name: s3-resource-final-release
@@ -83,6 +85,9 @@ jobs:
           - name: cf-mysql-master
             path: cf-mysql-release
           - name: release-notes
+          outputs:
+            - name: output-release-dir
+            - name: output-repo
           run:
             path: cf-mysql-ci/scripts/publish/cut-final-release
           params:
@@ -91,33 +96,38 @@ jobs:
             OUTPUT_RELEASE_TAG: output-release-dir/cf-mysql-tag
             OUTPUT_RELEASE_NOTES: output-release-dir/generated-release-notes
             OUTPUT_RELEASE_COMMIT: output-release-dir/git-commit
+            OUTPUT_REPO_DIRECTORY: output-repo
             RELEASE_ACCESS_KEY: {{cf-mysql-publish-blobs-aws-access-key-id}}
             RELEASE_SECRET_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
-          outputs:
-            - name: output-release-dir
-      - put: publish-github-release
-        params:
-          name: output-release-dir/cf-mysql-tag
-          tag: output-release-dir/cf-mysql-tag
-          body: output-release-dir/generated-release-notes
-          commitish: output-release-dir/git-commit
-          globs:
-          - output-release-dir/release-artifacts/*.tgz
-      - put: cf-mysql-ci
-        params:
-          repository: cf-mysql-ci
-          tag: output-release-dir/cf-mysql-tag
-          only_tag: true
-          tag_prefix: cf-mysql-
-      - put: deployments-core-services
-        params:
-          repository: deployments-core-services
-          tag: output-release-dir/cf-mysql-tag
-          only_tag: true
-          tag_prefix: cf-mysql-
-      - put: s3-resource-final-release
-        params:
-          file: output-release-dir/release-artifacts/*.tgz
+      - aggregate:
+        - do:
+          - put: cf-mysql-master
+            params:
+              repository: output-repo/cf-mysql-release
+              tag: output-release-dir/cf-mysql-tag
+          - put: publish-github-release
+            params:
+              name: output-release-dir/cf-mysql-tag
+              tag: output-release-dir/cf-mysql-tag
+              body: output-release-dir/generated-release-notes
+              commitish: output-release-dir/git-commit
+              globs:
+              - output-release-dir/release-artifacts/*.tgz
+        - put: cf-mysql-ci
+          params:
+            repository: cf-mysql-ci
+            tag: output-release-dir/cf-mysql-tag
+            only_tag: true
+            tag_prefix: cf-mysql-
+        - put: deployments-core-services
+          params:
+            repository: deployments-core-services
+            tag: output-release-dir/cf-mysql-tag
+            only_tag: true
+            tag_prefix: cf-mysql-
+        - put: s3-resource-final-release
+          params:
+            file: output-release-dir/release-artifacts/*.tgz
 
   - name: merge-master-into-develop
     plan:
