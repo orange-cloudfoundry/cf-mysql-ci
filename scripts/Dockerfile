@@ -90,3 +90,10 @@ RUN \
 
 #install gorgeous gem
 RUN gem install gorgeous
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get install -y software-properties-common \
+    && apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -cs)-backports universe" \
+    && apt-get -qq update \
+    && apt-get -t $(lsb_release -cs)-backports install shellcheck
