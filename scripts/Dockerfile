@@ -1,6 +1,8 @@
 FROM ubuntu:trusty
 MAINTAINER https://github.com/cloudfoundry/cf-mysql-release
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # libmysqlclient-dev is used for pre-packaging cf-mysql-broker
 # libfontconfig1-dev etc. are required by phantomjs
 # nodejs, npm and libicu52 are for switchboard ui
@@ -23,6 +25,13 @@ RUN \
             mysql-client \
       && \
       apt-get clean
+
+RUN \
+    apt-get update \
+    && apt-get install -y software-properties-common \
+    && apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -cs)-backports universe" \
+    && apt-get -qq update \
+    && apt-get -t $(lsb_release -cs)-backports install shellcheck
 
 # Alias nodejs as node for switchboard ui
 RUN ln -s /usr/bin/nodejs /usr/bin/node
@@ -81,19 +90,5 @@ RUN \
   unzip /tmp/consul_0.5.2_linux_amd64.zip -d /usr/local/bin && \
   rm /tmp/consul_0.5.2_linux_amd64.zip
 
-RUN \
-      apt-get update && \
-      apt-get -y install --fix-missing \
-        bc \
-      && \
-      apt-get clean
-
 #install gorgeous gem
 RUN gem install gorgeous
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get install -y software-properties-common \
-    && apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -cs)-backports universe" \
-    && apt-get -qq update \
-    && apt-get -t $(lsb_release -cs)-backports install shellcheck
