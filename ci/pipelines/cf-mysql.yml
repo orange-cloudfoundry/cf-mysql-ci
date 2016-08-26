@@ -148,6 +148,20 @@ resources:
     secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
     versioned_file: compiled-releases/cf-mysql-ubuntu-trusty-develop.tgz
 
+- name: bosh2.0-cli
+  type: s3
+  source:
+    bucket: bosh-cli-artifacts
+    regexp: bosh-cli-([\d\.]+)-linux-amd64
+
+- name: bosh-2.0-bosh-lite-deployment
+  type: bosh-deployment
+  source:
+    username: {{bosh-lite-username}}
+    password: {{bosh-lite-password}}
+    deployment: cf-mysql
+    ignore_ssl: true
+
 ### JOBS
 jobs:
 - name: build-dockerfile
@@ -544,19 +558,33 @@ jobs:
         run:
           path: cf-mysql-ci/scripts/bosh/run_errand
   - &delete-deployment-bosh-lite
-    task: delete-deployment
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: bosh-lite-environment
-        - name: cf-mysql-ci
-      params:
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-        DEPLOYMENT_NAME: cf-warden-mysql
-      run:
-        path: cf-mysql-ci/scripts/bosh/delete_deployment
+    aggregate:
+    - task: delete-cf-mysql-deployment
+      config:
+        platform: *platform
+        image_resource: *image_resource
+        inputs:
+          - name: bosh-lite-environment
+          - name: cf-mysql-ci
+        params:
+          ENV_TARGET_FILE: bosh-lite-environment/name
+          ENV_METADATA: bosh-lite-environment/metadata
+          DEPLOYMENT_NAME: cf-mysql
+        run:
+          path: cf-mysql-ci/scripts/bosh/delete_deployment
+    - task: delete-cf-warden-mysql-deployment
+      config:
+        platform: *platform
+        image_resource: *image_resource
+        inputs:
+          - name: bosh-lite-environment
+          - name: cf-mysql-ci
+        params:
+          ENV_TARGET_FILE: bosh-lite-environment/name
+          ENV_METADATA: bosh-lite-environment/metadata
+          DEPLOYMENT_NAME: cf-warden-mysql
+        run:
+          path: cf-mysql-ci/scripts/bosh/delete_deployment
 
 - name: deploy-to-scaling
   plan:
@@ -1717,6 +1745,7 @@ jobs:
       - release-data-loss-environment
       - release-disable-paranoid-environment
       - release-verify-cluster-schemas-environment
+      - release-bosh-2.0-environment
       trigger: true
   - put: integration-environment
     params:
@@ -1874,6 +1903,151 @@ jobs:
         BRANCH_TO_MERGE: develop
         GIT_PRIVATE_KEY: {{git-writer-private-key}}
 
+### BOSH 2.0
+- name: claim-bosh-lite-bosh-2.0
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      passed: [test-sample-stubs, test-unit]
+      trigger: true
+    - put: bosh-lite-environment
+      params:
+        acquire: true
+
+- name: release-bosh-2.0-environment-manual
+  plan:
+  - try:
+      do:
+      - get: bosh-lite-environment
+        passed: [claim-bosh-lite-bosh-2.0]
+      - put: bosh-lite-environment
+        params:
+          release: bosh-lite-environment
+
+- name: delete-bosh-2.0-deployment
+  plan:
+  - aggregate:
+    - get: bosh-lite-environment
+      passed: [claim-bosh-lite-bosh-2.0]
+      trigger: true
+      version: every
+    - get: cf-mysql-release
+      passed: [claim-bosh-lite-bosh-2.0]
+    - get: cf-mysql-ci
+  - try: *broker-deregistrar-bosh-lite
+  - *delete-deployment-bosh-lite
+
+- name: deploy-to-bosh-2.0
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+    - get: cf-mysql-ci
+    - get: bosh-cli
+      resource: bosh2.0-cli
+    - get: bosh-lite-environment
+      passed: [delete-bosh-2.0-deployment]
+      trigger: true
+      version: every
+    - get: compiled-release-tarball
+      resource: cf-mysql-compiled-release
+      passed: [create-and-compile-release]
+    - get: bosh-lite-stemcell
+  - task: get-cf-manifest
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: bosh-lite-environment
+      - name: cf-mysql-ci
+      outputs:
+        - name: cf-manifest
+      params:
+        OUTPUT_FILE: cf-manifest/cf.yml
+        ENV_METADATA: bosh-lite-environment/metadata
+        ENV_TARGET_FILE: bosh-lite-environment/name
+      run:
+        path: bash
+        args:
+        - -c
+        - |
+          set -eux
+
+          : "${OUTPUT_FILE:?}"
+          : "${ENV_TARGET_FILE:?}"
+          : "${ENV_METADATA:?}"
+
+          source cf-mysql-ci/scripts/utils.sh
+
+          DIRECTOR_IP=$(cat "${ENV_TARGET_FILE}")
+
+          BOSH_USERNAME="$(jq_val "bosh_user" "${ENV_METADATA}")"
+          BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
+
+          CF_API_USER="$(jq_val "cf_api_user" "${ENV_METADATA}")"
+          CF_API_PASSWORD="$(jq_val "cf_api_password" "${ENV_METADATA}")"
+
+          bosh -n target "${DIRECTOR_IP}"
+          bosh -n login "${BOSH_USERNAME}" "${BOSH_PASSWORD}"
+
+          bosh -n download manifest cf-warden "${OUTPUT_FILE}"
+
+  - task: make-manifest
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-release
+      - name: bosh-cli
+      - name: cf-manifest
+      outputs:
+        - name: deployment-manifest
+      params:
+        OUTPUT_FILE: deployment-manifest/deployment.yml
+        CF_MANIFEST_FILE: cf-manifest/cf.yml
+      run:
+        path: bash
+        args:
+        - -c
+        - |
+          set -eu
+
+          mv bosh-cli/bosh-cli-* bosh-cli/bosh2
+          chmod +x bosh-cli/bosh2
+          export PATH=$PATH:$PWD/bosh-cli/
+
+          ./cf-mysql-release/scripts/generate-cf-vars-for-bosh-2.0 "${CF_MANIFEST_FILE}" > /tmp/vars-from-cf.yml
+
+          bosh2 build-manifest \
+            ./cf-mysql-release/manifest-generation/cf-mysql-template-v2.yml \
+            -l ./cf-mysql-release/manifest-generation/bosh2.0/bosh-lite/default-vars.yml \
+            -l /tmp/vars-from-cf.yml \
+            > "${OUTPUT_FILE}"
+
+
+  - put: bosh-2.0-bosh-lite-deployment
+    params:
+      manifest: deployment-manifest/deployment.yml
+      releases:
+      - compiled-release-tarball/*.tgz
+      stemcells:
+      - bosh-lite-stemcell/*.tgz
+      target_file: bosh-lite-environment/name
+
+- name: release-bosh-2.0-environment
+  plan:
+  - try:
+    do:
+    - aggregate:
+      - get: cf-mysql-release
+        passed: [deploy-to-bosh-2.0]
+      - get: bosh-lite-environment
+        passed: [deploy-to-bosh-2.0]
+        trigger: true
+        version: every
+    - put: bosh-lite-environment
+      params:
+        release: bosh-lite-environment
+
 groups:
 - name: cf-mysql
   jobs:
@@ -1943,6 +2117,11 @@ groups:
   - deploy-to-verify-cluster-schemas
   - verify-cluster-schemas-tests
   - release-verify-cluster-schemas-environment
+  - claim-bosh-lite-bosh-2.0
+  - release-bosh-2.0-environment-manual
+  - delete-bosh-2.0-deployment
+  - deploy-to-bosh-2.0
+  - release-bosh-2.0-environment
   - claim-integration-environment
   - release-integration-environment-manual
   - deploy-to-integration
@@ -2035,3 +2214,10 @@ groups:
   - deploy-to-verify-cluster-schemas
   - verify-cluster-schemas-tests
   - release-verify-cluster-schemas-environment
+- name: bosh2.0
+  jobs:
+  - claim-bosh-lite-bosh-2.0
+  - release-bosh-2.0-environment-manual
+  - delete-bosh-2.0-deployment
+  - deploy-to-bosh-2.0
+  - release-bosh-2.0-environment
