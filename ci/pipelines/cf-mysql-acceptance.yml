@@ -219,7 +219,7 @@ jobs:
       params:
         ENV_TARGET_FILE: aws-acceptance-environment/name
         ENV_METADATA: aws-acceptance-environment/metadata  
-        ERRAND: acceptance-tests
+        ERRAND: smoke-tests
         DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
