@@ -350,8 +350,9 @@ jobs:
       params:
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
+        TEST_TYPE: dashboard
       run:
-        path: cf-mysql-ci/scripts/dashboard/test-dashboard
+        path: cf-mysql-ci/scripts/acceptance-tests
 
 - name: cleanup-aws-deployment
   plan:
