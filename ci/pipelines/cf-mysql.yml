@@ -459,15 +459,40 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/acceptance-tests
 
+- name: acceptance-test-initial
+  plan:
+  - aggregate:
+      - get: aws-environment
+        passed: [dashboard-test-initial]
+        trigger: true
+        version: every
+      - get: cf-mysql-release
+        passed: [dashboard-test-initial]
+      - get: cf-mysql-ci
+  - task: acceptance-test
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+        - name: cf-mysql-release
+        - name: cf-mysql-ci
+        - name: aws-environment
+      params:
+        ENV_TARGET_FILE: aws-environment/name
+        ENV_METADATA: aws-environment/metadata
+        TEST_TYPE: acceptance
+      run:
+        path: cf-mysql-ci/scripts/acceptance-tests
+
 - name: cleanup-aws-deployment
   plan:
   - aggregate:
     - get: aws-environment
       trigger: true
       version: every
-      passed: [dashboard-test-initial]
+      passed: [acceptance-test-initial]
     - get: cf-mysql-release
-      passed: [dashboard-test-initial]
+      passed: [acceptance-test-initial]
     - get: cf-mysql-ci
   - try:
       task: run-broker-deregistrar
@@ -2063,6 +2088,7 @@ groups:
   - deploy-to-initial
   - run-smoke-tests-initial
   - dashboard-test-initial
+  - acceptance-test-initial
   - cleanup-aws-deployment
   - release-aws-environment
   - claim-bosh-lite-scaling
