@@ -16,8 +16,6 @@ run:
 
     mysqld_safe &
 
-    apt-get install libmariadbclient-dev
-
     pushd cf-mysql-release/src/cf-mysql-broker
       rm -rf vendor
       bundle install --deployment --without development
