@@ -481,6 +481,7 @@ jobs:
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
         TEST_TYPE: acceptance
+        PROXY_COUNT: 1
       run:
         path: cf-mysql-ci/scripts/acceptance-tests
 
