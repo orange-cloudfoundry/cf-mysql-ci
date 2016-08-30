@@ -25,4 +25,6 @@ rm -rf "${RELEASE_DIR}/bin/ginkgo"
 go install -v github.com/onsi/ginkgo/ginkgo
 
 echo -e "\nRunning ${TEST_TYPE} tests"
-"${RELEASE_DIR}/src/github.com/cloudfoundry-incubator/cf-mysql-acceptance-tests/bin/test-${TEST_TYPE}" "$@"
+pushd "${RELEASE_DIR}/src/github.com/cloudfoundry-incubator/cf-mysql-acceptance-tests/"
+  "./bin/test-${TEST_TYPE}" "$@"
+popd
