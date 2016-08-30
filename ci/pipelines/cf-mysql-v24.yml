@@ -290,7 +290,7 @@ jobs:
       releases: [compiled-release-tarball/*.tgz]
       stemcells: [aws-bosh-stemcell/*.tgz]
 
-- name: run-smoke-tests-initial
+- name: acceptance-test-initial
   plan:
   - aggregate:
     - get: aws-environment
@@ -314,7 +314,7 @@ jobs:
         DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
-  - task: run-smoke-tests
+  - task: run-acceptance-tests
     config:
       platform: *platform
       image_resource: *image_resource
@@ -333,11 +333,11 @@ jobs:
   plan:
   - aggregate:
       - get: aws-environment
-        passed: [run-smoke-tests-initial]
+        passed: [acceptance-test-initial]
         trigger: true
         version: every
       - get: cf-mysql-release
-        passed: [run-smoke-tests-initial]
+        passed: [acceptance-test-initial]
       - get: cf-mysql-ci
   - task: dashboard-test
     config:
@@ -1231,7 +1231,7 @@ groups:
   - release-aws-environment-manual
   - delete-aws-deployment
   - deploy-to-initial
-  - run-smoke-tests-initial
+  - acceptance-test-initial
   - dashboard-test-initial
   - cleanup-aws-deployment
   - release-aws-environment
