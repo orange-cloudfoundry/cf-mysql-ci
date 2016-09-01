@@ -11,7 +11,11 @@ RELEASE_TARBALL_DIR=${RELEASE_TARBALL_DIR:-release-tarball}
 RELEASE_FILENAME=${RELEASE_FILENAME:-tgz}
 RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/ | grep ${RELEASE_FILENAME})
 RELEASE_NAME=$(echo ${RELEASE_FILE} | sed 's/\(.*\)-[0-9].*/\1/')
-RELEASE_VERSION=$(echo ${RELEASE_FILE} | sed 's/.*-\([0-9].*\).tgz/\1/')
+if [ -f "${RELEASE_TARBALL_DIR}/version" ]; then
+  RELEASE_VERSION=$(cat "${RELEASE_TARBALL_DIR}/version")
+else
+  RELEASE_VERSION=$(echo ${RELEASE_FILE} | sed 's/.*-\([0-9].*\).tgz/\1/')
+fi
 
 # egrep for pivnet-resource stemcells that will have the etag after the version
 STEMCELL_VERSION=$(cat *stemcell/version | egrep -o '^[1-9.]+')
