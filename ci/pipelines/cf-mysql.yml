@@ -1968,7 +1968,9 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [create-and-compile-release]
+      passed:
+      - delete-bosh-2.0-deployment
+      - create-and-compile-release
     - get: cf-mysql-ci
     - get: bosh-cli
       resource: bosh2.0-cli
