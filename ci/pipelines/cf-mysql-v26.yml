@@ -117,9 +117,35 @@ jobs:
     - get: weekly-trigger
       trigger: true
     - get: cf-mysql-ci
-  - task: test-unit
-    file: cf-mysql-ci/ci/tasks/test-unit.yml
-    attempts: 5
+  - aggregate:
+     - task: test-unit
+       file: cf-mysql-ci/ci/tasks/test-unit.yml
+       attempts: 5
+     - task: test-broker
+       file: cf-mysql-ci/ci/tasks/test-broker.yml
+     - task: test-broker-dependencies
+       config:
+         platform: linux
+         image_resource:
+           type: docker-image
+           source:
+             repository: ruby
+             tag: '2.3.1'
+         inputs:
+         - name: cf-mysql-release
+         run:
+           path: bash
+           args:
+           - -c
+           - |
+             set -eux
+
+             gem install bundler-audit
+             bundle-audit update
+
+             cd cf-mysql-release/src/cf-mysql-broker
+
+             bundle-audit
 
 - name: test-sample-stubs
   plan:
