@@ -15,6 +15,7 @@ run:
     set -eux
 
     mysqld_safe &
+    MYSQLD_PID=$!
 
     pushd cf-mysql-release/src/cf-mysql-broker
       rm -rf vendor
@@ -25,3 +26,5 @@ run:
       mysql -uroot -e "set global innodb_stats_persistent=OFF"
       bundle exec rspec spec
     popd
+
+    kill "${MYSQLD_PID}"
