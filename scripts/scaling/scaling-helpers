@@ -5,7 +5,7 @@ set -eux
 function close-ssh-tunnels() {
   echo "Closing SSH tunnels ..."
   OLD_TUNNELS=`ps aux | grep "ssh" | \
-    grep "\-L 43306 \| \-L 43307 \| \-L 43308" | \
+    grep "\-L 43306\|\-L 43307\|\-L 43308" | \
     awk '{print $2}'`
   [[ -z "${OLD_TUNNELS}" ]] || kill ${OLD_TUNNELS}
 }
