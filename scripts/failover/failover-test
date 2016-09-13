@@ -16,7 +16,7 @@ source "${CI_DIR}/scripts/utils.sh"
 function close-ssh-tunnels() {
   echo "Closing SSH tunnels ..."
   OLD_TUNNELS=`ps aux | grep "ssh" | \
-    grep "\-L ${BROKER_0_LOCAL_PORT} \| \-L ${BROKER_1_LOCAL_PORT} \| \-L ${MYSQL_NODE_0_LOCAL_PORT}" | \
+    grep "\-L ${BROKER_0_LOCAL_PORT}\|\-L ${BROKER_1_LOCAL_PORT}\|\-L ${MYSQL_NODE_0_LOCAL_PORT}" | \
     awk '{print $2}'`
   [[ -z "${OLD_TUNNELS}" ]] || kill ${OLD_TUNNELS}
 }
