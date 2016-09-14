@@ -27,4 +27,4 @@ run:
       bundle exec rspec spec
     popd
 
-    kill "${MYSQLD_PID}"
+    kill -9 "${MYSQLD_PID}"
