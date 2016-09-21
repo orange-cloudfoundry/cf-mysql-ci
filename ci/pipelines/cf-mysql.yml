@@ -22,11 +22,6 @@ resources:
   source:
     name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
 
-- name: integration-env-bosh-stemcell
-  type: bosh-io-stemcell
-  source:
-    name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
-
 - name: bosh-lite-stemcell
   type: bosh-io-stemcell
   source:
@@ -364,6 +359,7 @@ jobs:
         - delete-aws-deployment
         - create-and-compile-release
     - get: aws-bosh-stemcell
+      passed: [create-and-compile-release]
     - get: aws-environment
       trigger: true
       version: every
@@ -1051,6 +1047,7 @@ jobs:
     - get: cf-mysql-release
       resource: cf-mysql-previous-release
     - get: aws-bosh-stemcell
+      passed: [create-and-compile-release]
   - aggregate:
     - *create-release
     - task: make-manifest
@@ -1798,7 +1795,10 @@ jobs:
       passed:
       - claim-integration-environment
       - create-and-compile-release
-    - get: integration-env-bosh-stemcell
+    - get: aws-bosh-stemcell
+      passed:
+      - deploy-to-initial
+      - deploy-previous-to-upgrade
     - get: integration-environment
       passed: [claim-integration-environment]
       trigger: true
@@ -1829,7 +1829,7 @@ jobs:
       target_file: integration-environment/name
       manifest: deployment-manifest/deployment.yml
       releases: [compiled-release-tarball/*.tgz]
-      stemcells: [integration-env-bosh-stemcell/*.tgz]
+      stemcells: [aws-bosh-stemcell/*.tgz]
 
 - name: run-smoke-tests-integration
   plan:
