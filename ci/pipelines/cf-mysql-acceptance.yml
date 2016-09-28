@@ -20,7 +20,7 @@ resources:
   type: git
   source:
     uri: git@github.com:cloudfoundry/cf-mysql-release
-    branch: releases/v26
+    branch: releases-candidate
     private_key: {{git-writer-private-key}}
 
 - name: aws-acceptance-environment
