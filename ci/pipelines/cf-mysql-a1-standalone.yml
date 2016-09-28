@@ -1,0 +1,163 @@
+---
+resources:
+- name: aws-bosh-stemcell
+  type: bosh-io-stemcell
+  source:
+    name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
+
+- name: cf-mysql-ci
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry-incubator/cf-mysql-ci.git
+
+- name: deployments-configuration
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/a1-env
+    private_key: {{git-private-key}}
+
+- name: cf-mysql-release
+  type: bosh-io-release
+  source:
+    repository: cloudfoundry/cf-mysql-release
+
+- name: cf-mysql-release-repo
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/cf-mysql-release.git
+    branch: master
+    private_key: {{git-writer-private-key}}
+
+- name: cf-release
+  type: bosh-io-release
+  source:
+    repository: cloudfoundry/cf-release
+
+- name: a1-deployment
+  type: bosh-deployment
+  source:
+    username: {{integration_env_bosh_username}}
+    password: {{integration_env_bosh_password}}
+    deployment: a1-mysql
+
+- name: a1-environment
+  type: pool
+  source:
+    uri: git@github.com:pivotal-cf-experimental/core-services-oss-env-resource-pool
+    branch: master
+    pool: aws-integration
+    private_key: {{git-writer-private-key}}
+
+- name: compiled-packages-lock
+  type: pool
+  source:
+    uri: git@github.com:pivotal-cf-experimental/core-services-oss-env-resource-pool
+    branch: master
+    pool: compiled-packages
+    private_key: {{git-writer-private-key}}
+
+jobs:
+- name: claim-a1-environment
+  plan:
+  - put: a1-environment
+    params:
+      acquire: true
+
+- name: release-a1-environment-manual
+  plan:
+  - try:
+      do:
+      - get: a1-environment
+        passed: [claim-a1-environment]
+      - put: a1-environment
+        params:
+          release: a1-environment
+
+- name: deploy-to-a1
+  serial: true
+  plan:
+  - aggregate:
+    - get: deployments-configuration
+    - get: cf-mysql-ci
+    - get: cf-mysql-release
+    - get: cf-mysql-release-repo
+    - get: cf-release
+    - get: aws-bosh-stemcell
+    - get: a1-environment
+      passed: [claim-a1-environment]
+      trigger: true
+      version: every
+  - aggregate:
+    - task: make-manifest
+      input_mapping:
+        cf-mysql-release: cf-mysql-release-repo
+      config:
+        platform: &platform linux
+        image_resource: &image_resource
+          type: docker-image
+          source:
+            repository: cloudfoundry/cf-mysql-ci
+        inputs:
+        - name: deployments-configuration
+        - name: cf-mysql-ci
+        - name: cf-mysql-release
+        - name: a1-environment
+        outputs:
+          - name: deployment-manifest
+        params:
+          ENV_TARGET_FILE: a1-environment/name
+          ENV_METADATA: a1-environment/metadata
+          DEPLOYMENTS_DIR: deployments-configuration
+          CF_DEPLOYMENT_NAME: cf-a1
+          CAT_MANIFEST: false
+          JOB_OVERRIDES_FILE: deployments/a1-mysql-stubs/job-overrides-consul.yml
+          INSTANCE_COUNT_OVERRIDES_FILE: deployments/a1-mysql-stubs/instance-count-overrides.yml
+          IAAS_SETTINGS_FILE: deployments/a1-mysql-stubs/iaas-settings.yml
+          PROPERTY_OVERRIDES_FILE: deployments/a1-mysql-stubs/property-overrides.yml
+        run:
+          path: cf-mysql-ci/scripts/bosh/make_manifest
+    - do:
+      - put: compiled-packages-lock
+        params:
+          acquire: true
+      - task: compile-release
+        input_mapping:
+          release-tarball: cf-mysql-release
+        config:
+          platform: linux
+          image_resource: *image_resource
+          inputs:
+          - name: cf-mysql-ci
+          - name: release-tarball
+          - name: aws-bosh-stemcell
+          outputs:
+          - name: compiled-release-tarball
+          params:
+            BOSH_USERNAME: {{bosh_compilation_username}}
+            BOSH_PASSWORD: {{bosh_compilation_password}}
+            BOSH_DIRECTOR: {{bosh_compilation_director}}
+          run:
+            path: cf-mysql-ci/scripts/compile_release
+        ensure:
+          put: compiled-packages-lock
+          params:
+            release: compiled-packages-lock
+  - put: a1-deployment
+    params:
+      target_file: a1-environment/name
+      manifest: deployment-manifest/deployment.yml
+      releases:
+        - compiled-release-tarball/*.tgz
+        - cf-release/*.tgz
+      stemcells: [aws-bosh-stemcell/*.tgz]
+
+- name: release-a1-environment
+  plan:
+  - aggregate:
+    - get: a1-environment
+      passed: [deploy-to-a1]
+      trigger: true
+      version: every
+  - put: a1-environment
+    params:
+      release: a1-environment
