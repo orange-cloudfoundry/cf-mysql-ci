@@ -1184,6 +1184,7 @@ jobs:
       passed: [deploy-current-to-upgrade]
       trigger: true
       version: every
+  - *broker-registrar-bosh-lite
   - *smoke-tests-bosh-lite
 
 - name: dashboard-test-bosh-lite
