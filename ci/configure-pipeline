@@ -22,12 +22,6 @@ set_pipeline_name() {
   PIPELINE_PATH=${MY_DIR}/pipelines/${PIPELINE_NAME}.yml
 }
 
-get_jobs() {
-  gorgeous -F yaml -T json "${PIPELINE_PATH}" \
-  | jq -c "[.jobs[].name]" \
-  | tr -d '"'
-}
-
 fly_pipeline() {
   fly -t concourse set-pipeline \
         -p "${PIPELINE_NAME}" \
