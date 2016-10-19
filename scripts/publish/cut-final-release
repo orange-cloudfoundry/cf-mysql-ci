@@ -17,25 +17,27 @@ RELEASE_NOTES_DIRECTORY="${RELEASE_NOTES_DIRECTORY:?}"
 RELEASE_NOTES_REGEX="${WORKSPACE_DIR}/${RELEASE_NOTES_DIRECTORY}/RELEASE_NOTES_v*"
 
 function get_expected_release_version() {
+  # shellcheck disable=SC2086
+  # we need to enable globbing of this regex
   RELEASE_NOTES_FILENAME="$(basename ${RELEASE_NOTES_REGEX})"
   echo "${RELEASE_NOTES_FILENAME#RELEASE_NOTES_v}" #remove leading file prefix
 }
 
 function get_actual_release_version() {
   # get the previous release version and add 1
-  pushd ${RELEASE_DIR} > /dev/null
-    PREVIOUS_VERSION=$(ls releases/cf-mysql-*.yml | \
+  pushd "${RELEASE_DIR}"> /dev/null
+    PREVIOUS_VERSION=$(find releases/ -maxdepth 1 -name "cf-mysql-*.yml" | \
       cut -d '-' -f3 | \
       cut -d '.' -f1 | \
       sort -n | \
       tail -1)
-    echo "$((${PREVIOUS_VERSION} + 1))"
+    echo "$((PREVIOUS_VERSION + 1))"
   popd > /dev/null
 }
 
 function write_upload_keys() {
   # write AWS keys used to upload blobs to public blob store
-  pushd ${RELEASE_DIR}
+  pushd "${RELEASE_DIR}"
     cat << EOF > config/private.yml
 ---
 blobstore:
@@ -47,7 +49,7 @@ EOF
   popd
 }
 
-pushd ${RELEASE_DIR}
+pushd "${RELEASE_DIR}"
 
   git config --global user.email "core-services-bot@pivotal.io"
   git config --global user.name "Final Release Builder"
@@ -69,21 +71,24 @@ pushd ${RELEASE_DIR}
 
   gobosh -n create-release --tarball --final
 
-  mkdir -p ${OUTPUT_RELEASE_ARTIFACTS}
-  cp releases/cf-mysql/cf-mysql-${ACTUAL_VERSION}.tgz ${OUTPUT_RELEASE_ARTIFACTS}
+  mkdir -p "${OUTPUT_RELEASE_ARTIFACTS}"
+  cp "releases/cf-mysql/cf-mysql-${ACTUAL_VERSION}.tgz" "${OUTPUT_RELEASE_ARTIFACTS}"
 
   git add .
   git commit -m "Final release version ${VERSION_TAG}"
 
-  echo ${VERSION_TAG} > $OUTPUT_RELEASE_TAG
+  echo "${VERSION_TAG}" > "$OUTPUT_RELEASE_TAG"
 
   # Simply copy release notes to static filename for now,
   # leaves us the option to do modification later
-  cp ${RELEASE_NOTES_REGEX} ${OUTPUT_RELEASE_NOTES}
 
-  git rev-parse HEAD > ${OUTPUT_RELEASE_COMMIT}
+  # shellcheck disable=SC2086
+  # we need to enable globbing of this regex
+  cp ${RELEASE_NOTES_REGEX} "${OUTPUT_RELEASE_NOTES}"
+
+  git rev-parse HEAD > "${OUTPUT_RELEASE_COMMIT}"
 popd
 
-cp -r ${RELEASE_DIR} "${OUTPUT_REPO_DIRECTORY}/"
+cp -r "${RELEASE_DIR}" "${OUTPUT_REPO_DIRECTORY}/"
 
 echo "Successfully created cf-mysql final release ${VERSION_TAG}"
