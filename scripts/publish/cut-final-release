@@ -26,7 +26,7 @@ function get_expected_release_version() {
 function get_actual_release_version() {
   # get the previous release version and add 1
   pushd "${RELEASE_DIR}"> /dev/null
-    PREVIOUS_VERSION=$(find releases/ -maxdepth 1 -name "cf-mysql-*.yml" | \
+    PREVIOUS_VERSION=$(find releases/ -maxdepth 2 -name "cf-mysql-*.yml" -type f -printf "%f\n" | \
       cut -d '-' -f3 | \
       cut -d '.' -f1 | \
       sort -n | \

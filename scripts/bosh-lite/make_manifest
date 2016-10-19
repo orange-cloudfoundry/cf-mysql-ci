@@ -38,7 +38,7 @@ pushd "${WORKSPACE_DIR}"
 popd
 
 get_previous_version() {
-  echo "$(find ${RELEASE_DIR}/releases/cf-mysql-* -type f -printf "%f\n" | \
+  echo "$(find ${RELEASE_DIR}/releases -maxdepth 2 -name "cf-mysql-*.yml" -type f -printf "%f\n" | \
     cut -d '-' -f3              | \
     cut -d '.' -f1              | \
     sort -n                     | \
