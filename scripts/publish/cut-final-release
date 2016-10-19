@@ -39,7 +39,8 @@ function write_upload_keys() {
     cat << EOF > config/private.yml
 ---
 blobstore:
-  s3:
+  provider: s3
+  options:
     access_key_id: $RELEASE_ACCESS_KEY
     secret_access_key: $RELEASE_SECRET_KEY
 EOF
@@ -66,7 +67,7 @@ pushd ${RELEASE_DIR}
 
   write_upload_keys
 
-  bosh -n create release --with-tarball --final
+  gobosh -n create-release --tarball --final
 
   mkdir -p ${OUTPUT_RELEASE_ARTIFACTS}
   cp releases/cf-mysql/cf-mysql-${ACTUAL_VERSION}.tgz ${OUTPUT_RELEASE_ARTIFACTS}
