@@ -156,25 +156,6 @@ jobs:
     params:
       build: cf-mysql-dockerfile/scripts/
 
-- name: check-submodules
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      trigger: true
-    - get: cf-mysql-ci
-  - task: check-git-submodules
-    config:
-      platform: &platform linux
-      image_resource: &image_resource
-        type: docker-image
-        source:
-          repository: cloudfoundry/cf-mysql-ci
-      inputs:
-      - name: cf-mysql-release
-      - name: cf-mysql-ci
-      run:
-        path: cf-mysql-ci/scripts/sanity/check-git-submodules
-
 - name: test-unit
   plan:
   - aggregate:
@@ -189,7 +170,7 @@ jobs:
       file: cf-mysql-ci/ci/tasks/test-broker.yml
     - task: test-broker-dependencies
       config:
-        platform: linux
+        platform: &platform linux
         image_resource:
           type: docker-image
           source:
@@ -210,16 +191,13 @@ jobs:
             cd cf-mysql-release/src/cf-mysql-broker
 
             bundle-audit
-
-- name: test-sample-stubs
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      trigger: true
   - task: test-sample-stubs
     config:
-      platform: *platform
-      image_resource: *image_resource
+      platform: &platform linux
+      image_resource: &image_resource
+        type: docker-image
+        source:
+          repository: cloudfoundry/cf-mysql-ci
       inputs:
       - name: cf-mysql-release
       run:
@@ -233,7 +211,6 @@ jobs:
       trigger: true
       passed:
         - test-unit
-        - test-sample-stubs
     - get: cf-mysql-ci
     - get: aws-bosh-stemcell
   - &create-release
@@ -282,7 +259,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit, check-submodules]
+      passed: [test-unit]
       trigger: true
     - put: aws-environment
       params:
@@ -527,7 +504,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -733,7 +710,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -864,7 +841,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -995,7 +972,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -1222,7 +1199,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       resource: bosh-lite-no-cf-environment
@@ -1376,7 +1353,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -1499,7 +1476,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -1640,7 +1617,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -1925,7 +1902,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -2071,10 +2048,8 @@ jobs:
 groups:
 - name: cf-mysql
   jobs:
-  - check-submodules
   - build-dockerfile
   - test-unit
-  - test-sample-stubs
   - create-and-compile-release
   - claim-aws-environment
   - release-aws-environment-manual
