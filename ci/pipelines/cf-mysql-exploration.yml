@@ -255,26 +255,22 @@ jobs:
     params:
       file: compiled-release-tarball/*.tgz
 
-- name: claim-aws-environment
+- name: deploy-to-initial
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-unit]
+      passed: [create-and-compile-release]
       trigger: true
     - put: aws-environment
       params:
         acquire: true
-
-- name: delete-aws-deployment
-  plan:
-  - aggregate:
-    - get: aws-environment
-      passed: [claim-aws-environment]
-      trigger: true
-      version: every
-    - get: cf-mysql-release
-      passed: [claim-aws-environment]
     - get: cf-mysql-ci
+    - get: deployments-configuration
+    - get: aws-bosh-stemcell
+      passed: [create-and-compile-release]
+    - get: compiled-release-tarball
+      resource: cf-mysql-compiled-release
+      passed: [create-and-compile-release]
   - try: 
       task: run-broker-deregistrar
       config:
@@ -288,7 +284,7 @@ jobs:
           ENV_METADATA: aws-environment/metadata
           ERRAND: broker-deregistrar
           SKIP_IF_NO_DEPLOYMENT: true
-          DEPLOYMENT_NAME: cf-mysql  
+          DEPLOYMENT_NAME: cf-mysql
         run:
           path: cf-mysql-ci/scripts/bosh/run_errand
   - task: delete-aws-deployment
@@ -304,25 +300,6 @@ jobs:
         DEPLOYMENT_NAME: cf-mysql  
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
-
-- name: deploy-to-initial
-  plan:
-  - aggregate:
-    - get: deployments-configuration
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed:
-        - delete-aws-deployment
-        - create-and-compile-release
-    - get: aws-bosh-stemcell
-      passed: [create-and-compile-release]
-    - get: aws-environment
-      trigger: true
-      version: every
-      passed: [delete-aws-deployment]
-    - get: compiled-release-tarball
-      resource: cf-mysql-compiled-release
-      passed: [create-and-compile-release]
   - task: make-manifest
     config:
       platform: *platform
@@ -1940,8 +1917,6 @@ groups:
   - build-dockerfile
   - test-unit
   - create-and-compile-release
-  - claim-aws-environment
-  - delete-aws-deployment
   - deploy-to-initial
   - run-smoke-tests-initial
   - dashboard-test-initial
