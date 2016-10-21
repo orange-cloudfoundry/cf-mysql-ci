@@ -265,16 +265,6 @@ jobs:
       params:
         acquire: true
 
-- name: release-aws-environment-manual
-  plan:
-  - try:
-      do:
-      - get: aws-environment
-        passed: [claim-aws-environment]
-      - put: aws-environment
-        params:
-          release: aws-environment
-
 - name: delete-aws-deployment
   plan:
   - aggregate:
@@ -510,16 +500,6 @@ jobs:
       params:
         acquire: true
 
-- name: release-scaling-environment-manual
-  plan:
-  - try:
-      do:
-      - get: bosh-lite-environment
-        passed: [claim-bosh-lite-scaling]
-      - put: bosh-lite-environment
-        params:
-          release: bosh-lite-environment
-
 - name: delete-scaling-deployment
   plan:
   - aggregate:
@@ -716,16 +696,6 @@ jobs:
       params:
         acquire: true
 
-- name: release-arb-to-full-scaling-environment-manual
-  plan:
-  - try:
-      do:
-      - get: bosh-lite-environment
-        passed: [claim-bosh-lite-arb-to-full-scaling]
-      - put: bosh-lite-environment
-        params:
-          release: bosh-lite-environment
-
 - name: delete-arb-to-full-scaling-deployment
   plan:
   - aggregate:
@@ -847,15 +817,6 @@ jobs:
       params:
         acquire: true
 
-- name: release-failover-environment-manual
-  plan:
-  - try:
-      do:
-      - get: bosh-lite-environment
-        passed: [claim-bosh-lite-failover]
-      - put: bosh-lite-environment
-        params:
-          release: bosh-lite-environment
 
 - name: delete-failover-deployment
   plan:
@@ -977,16 +938,6 @@ jobs:
     - put: bosh-lite-environment
       params:
         acquire: true
-
-- name: release-upgrade-environment-manual
-  plan:
-  - try:
-      do:
-      - get: bosh-lite-environment
-        passed: [claim-bosh-lite-upgrade]
-      - put: bosh-lite-environment
-        params:
-          release: bosh-lite-environment
 
 - name: delete-upgrade-deployment
   plan:
@@ -1206,18 +1157,6 @@ jobs:
       params:
         acquire: true
 
-- name: release-standalone-environment-manual
-  plan:
-  - try:
-      do:
-      - get: bosh-lite-environment
-        resource: bosh-lite-no-cf-environment
-        passed: [claim-bosh-lite-standalone]
-      - put: bosh-lite-environment
-        resource: bosh-lite-no-cf-environment
-        params:
-          release: bosh-lite-environment
-
 - name: delete-standalone-deployment
   plan:
   - aggregate:
@@ -1359,16 +1298,6 @@ jobs:
       params:
         acquire: true
 
-- name: release-data-loss-environment-manual
-  plan:
-  - try:
-      do:
-      - get: bosh-lite-environment
-        passed: [claim-bosh-lite-data-loss]
-      - put: bosh-lite-environment
-        params:
-          release: bosh-lite-environment
-
 - name: delete-data-loss-deployment
   plan:
   - aggregate:
@@ -1481,16 +1410,6 @@ jobs:
     - put: bosh-lite-environment
       params:
         acquire: true
-
-- name: release-disable-paranoid-environment-manual
-  plan:
-  - try:
-      do:
-      - get: bosh-lite-environment
-        passed: [claim-bosh-lite-disable-paranoid]
-      - put: bosh-lite-environment
-        params:
-          release: bosh-lite-environment
 
 - name: delete-disable-paranoid-deployment
   plan:
@@ -1623,16 +1542,6 @@ jobs:
       params:
         acquire: true
 
-- name: release-verify-cluster-schemas-environment-manual
-  plan:
-  - try:
-      do:
-      - get: bosh-lite-environment
-        passed: [claim-bosh-lite-verify-cluster-schemas]
-      - put: bosh-lite-environment
-        params:
-          release: bosh-lite-environment
-
 - name: delete-verify-cluster-schemas-deployment
   plan:
   - aggregate:
@@ -1741,16 +1650,6 @@ jobs:
   - put: integration-environment
     params:
       acquire: true
-
-- name: release-integration-environment-manual
-  plan:
-  - try:
-      do:
-      - get: integration-environment
-        passed: [claim-integration-environment]
-      - put: integration-environment
-        params:
-          release: integration-environment
 
 - name: deploy-to-integration
   serial: true
@@ -1908,16 +1807,6 @@ jobs:
       params:
         acquire: true
 
-- name: release-bosh-2.0-environment-manual
-  plan:
-  - try:
-      do:
-      - get: bosh-lite-environment
-        passed: [claim-bosh-lite-bosh-2.0]
-      - put: bosh-lite-environment
-        params:
-          release: bosh-lite-environment
-
 - name: delete-bosh-2.0-deployment
   plan:
   - aggregate:
@@ -2052,7 +1941,6 @@ groups:
   - test-unit
   - create-and-compile-release
   - claim-aws-environment
-  - release-aws-environment-manual
   - delete-aws-deployment
   - deploy-to-initial
   - run-smoke-tests-initial
@@ -2061,7 +1949,6 @@ groups:
   - cleanup-aws-deployment
   - release-aws-environment
   - claim-bosh-lite-scaling
-  - release-scaling-environment-manual
   - delete-scaling-deployment
   - deploy-to-scaling
   - scaling-broker-registrar
@@ -2069,7 +1956,6 @@ groups:
   - scaling-tests
   - release-scaling-environment
   - claim-bosh-lite-failover
-  - release-failover-environment-manual
   - delete-failover-deployment
   - deploy-to-failover
   - failover-broker-registrar
@@ -2077,7 +1963,6 @@ groups:
   - failover-tests
   - release-failover-environment
   - claim-bosh-lite-upgrade
-  - release-upgrade-environment-manual
   - delete-upgrade-deployment
   - deploy-previous-to-upgrade
   - broker-registrar-previous-on-upgrade
@@ -2088,7 +1973,6 @@ groups:
   - dashboard-test-bosh-lite
   - release-upgrade-environment
   - claim-bosh-lite-standalone
-  - release-standalone-environment-manual
   - delete-standalone-deployment
   - deploy-to-standalone
   - persistence-test-data-write-before-bootstrap
@@ -2096,124 +1980,118 @@ groups:
   - persistence-test-data-read-after-bootstrap
   - release-standalone-environment
   - claim-bosh-lite-data-loss
-  - release-data-loss-environment-manual
   - delete-data-loss-deployment
   - deploy-to-data-loss
   - data-loss-tests
   - release-data-loss-environment
   - claim-bosh-lite-disable-paranoid
-  - release-disable-paranoid-environment-manual
   - delete-disable-paranoid-deployment
   - deploy-to-disable-paranoid
   - disable-paranoid-tests
   - release-disable-paranoid-environment
   - claim-bosh-lite-verify-cluster-schemas
-  - release-verify-cluster-schemas-environment-manual
   - delete-verify-cluster-schemas-deployment
   - deploy-to-verify-cluster-schemas
   - verify-cluster-schemas-tests
   - release-verify-cluster-schemas-environment
   - claim-bosh-lite-bosh-2.0
-  - release-bosh-2.0-environment-manual
   - delete-bosh-2.0-deployment
   - deploy-to-bosh-2.0
   - release-bosh-2.0-environment
   - claim-integration-environment
-  - release-integration-environment-manual
   - deploy-to-integration
   - run-smoke-tests-integration
   - release-integration-environment
   - upload-rc-artifacts
   - promote-to-rc
   - claim-bosh-lite-arb-to-full-scaling
-  - release-arb-to-full-scaling-environment-manual
   - delete-arb-to-full-scaling-deployment
   - deploy-to-arb-to-full-scaling
   - arb-to-full-scaling-broker-registrar
   - arb-to-full-scaling-smoke-tests
   - arb-to-full-scaling-tests
   - release-arb-to-full-scaling-environment
-- name: failover
-  jobs:
-  - claim-bosh-lite-failover
-  - release-failover-environment-manual
-  - delete-failover-deployment
-  - deploy-to-failover
-  - failover-broker-registrar
-  - failover-smoke-tests
-  - failover-tests
-  - release-failover-environment
-- name: standalone
-  jobs:
-  - claim-bosh-lite-standalone
-  - release-standalone-environment-manual
-  - delete-standalone-deployment
-  - deploy-to-standalone
-  - release-standalone-environment
-  - persistence-test-data-write-before-bootstrap
-  - test-bootstrap
-  - persistence-test-data-read-after-bootstrap
-- name: upgrade
-  jobs:
-  - claim-bosh-lite-upgrade
-  - release-upgrade-environment-manual
-  - delete-upgrade-deployment
-  - deploy-previous-to-upgrade
-  - broker-registrar-previous-on-upgrade
-  - persistence-test-data-write-before-upgrade
-  - deploy-current-to-upgrade
-  - persistence-test-data-read-after-upgrade
-  - smoke-tests-current-on-upgrade
-  - dashboard-test-bosh-lite
-  - release-upgrade-environment
-- name: scaling
-  jobs:
-  - claim-bosh-lite-scaling
-  - release-scaling-environment-manual
-  - delete-scaling-deployment
-  - deploy-to-scaling
-  - scaling-broker-registrar
-  - scaling-smoke-tests
-  - scaling-tests
-  - release-scaling-environment
-- name: arb-to-full
-  jobs:
-  - claim-bosh-lite-arb-to-full-scaling
-  - release-arb-to-full-scaling-environment-manual
-  - delete-arb-to-full-scaling-deployment
-  - deploy-to-arb-to-full-scaling
-  - arb-to-full-scaling-broker-registrar
-  - arb-to-full-scaling-smoke-tests
-  - arb-to-full-scaling-tests
-  - release-arb-to-full-scaling-environment
-- name: data-loss
-  jobs:
-  - claim-bosh-lite-data-loss
-  - release-data-loss-environment-manual
-  - delete-data-loss-deployment
-  - deploy-to-data-loss
-  - data-loss-tests
-  - release-data-loss-environment
-- name: disable-paranoid
-  jobs:
-  - claim-bosh-lite-disable-paranoid
-  - release-disable-paranoid-environment-manual
-  - delete-disable-paranoid-deployment
-  - deploy-to-disable-paranoid
-  - disable-paranoid-tests
-  - release-disable-paranoid-environment
-- name: verify-schemas
-  jobs:
-  - claim-bosh-lite-verify-cluster-schemas
-  - release-verify-cluster-schemas-environment-manual
-  - delete-verify-cluster-schemas-deployment
-  - deploy-to-verify-cluster-schemas
-  - verify-cluster-schemas-tests
-  - release-verify-cluster-schemas-environment
-- name: bosh2.0
-  jobs:
-  - claim-bosh-lite-bosh-2.0
-  - release-bosh-2.0-environment-manual
-  - delete-bosh-2.0-deployment
-  - deploy-to-bosh-2.0
-  - release-bosh-2.0-environment
+#- name: failover
+#  jobs:
+#  - claim-bosh-lite-failover
+#  - release-failover-environment-manual
+#  - delete-failover-deployment
+#  - deploy-to-failover
+#  - failover-broker-registrar
+#  - failover-smoke-tests
+#  - failover-tests
+#  - release-failover-environment
+#- name: standalone
+#  jobs:
+#  - claim-bosh-lite-standalone
+#  - release-standalone-environment-manual
+#  - delete-standalone-deployment
+#  - deploy-to-standalone
+#  - release-standalone-environment
+#  - persistence-test-data-write-before-bootstrap
+#  - test-bootstrap
+#  - persistence-test-data-read-after-bootstrap
+#- name: upgrade
+#  jobs:
+#  - claim-bosh-lite-upgrade
+#  - release-upgrade-environment-manual
+#  - delete-upgrade-deployment
+#  - deploy-previous-to-upgrade
+#  - broker-registrar-previous-on-upgrade
+#  - persistence-test-data-write-before-upgrade
+#  - deploy-current-to-upgrade
+#  - persistence-test-data-read-after-upgrade
+#  - smoke-tests-current-on-upgrade
+#  - dashboard-test-bosh-lite
+#  - release-upgrade-environment
+#- name: scaling
+#  jobs:
+#  - claim-bosh-lite-scaling
+#  - release-scaling-environment-manual
+#  - delete-scaling-deployment
+#  - deploy-to-scaling
+#  - scaling-broker-registrar
+#  - scaling-smoke-tests
+#  - scaling-tests
+#  - release-scaling-environment
+#- name: arb-to-full
+#  jobs:
+#  - claim-bosh-lite-arb-to-full-scaling
+#  - release-arb-to-full-scaling-environment-manual
+#  - delete-arb-to-full-scaling-deployment
+#  - deploy-to-arb-to-full-scaling
+#  - arb-to-full-scaling-broker-registrar
+#  - arb-to-full-scaling-smoke-tests
+#  - arb-to-full-scaling-tests
+#  - release-arb-to-full-scaling-environment
+#- name: data-loss
+#  jobs:
+#  - claim-bosh-lite-data-loss
+#  - release-data-loss-environment-manual
+#  - delete-data-loss-deployment
+#  - deploy-to-data-loss
+#  - data-loss-tests
+#  - release-data-loss-environment
+#- name: disable-paranoid
+#  jobs:
+#  - claim-bosh-lite-disable-paranoid
+#  - release-disable-paranoid-environment-manual
+#  - delete-disable-paranoid-deployment
+#  - deploy-to-disable-paranoid
+#  - disable-paranoid-tests
+#  - release-disable-paranoid-environment
+#- name: verify-schemas
+#  jobs:
+#  - claim-bosh-lite-verify-cluster-schemas
+#  - release-verify-cluster-schemas-environment-manual
+#  - delete-verify-cluster-schemas-deployment
+#  - deploy-to-verify-cluster-schemas
+#  - verify-cluster-schemas-tests
+#  - release-verify-cluster-schemas-environment
+#- name: bosh2.0
+#  jobs:
+#  - claim-bosh-lite-bosh-2.0
+#  - release-bosh-2.0-environment-manual
+#  - delete-bosh-2.0-deployment
+#  - deploy-to-bosh-2.0
+#  - release-bosh-2.0-environment
