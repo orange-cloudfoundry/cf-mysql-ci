@@ -255,7 +255,7 @@ jobs:
     params:
       file: compiled-release-tarball/*.tgz
 
-- name: deploy-to-initial
+- name: deploy-to-full-bosh
   plan:
   - aggregate:
     - get: cf-mysql-release
@@ -338,15 +338,15 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
 
-- name: test-initial
+- name: test-full-bosh
   plan:
   - aggregate:
     - get: aws-environment
-      passed: [deploy-to-initial]
+      passed: [deploy-to-full-bosh]
       trigger: true
       version: every
     - get: cf-mysql-release
-      passed: [deploy-to-initial]
+      passed: [deploy-to-full-bosh]
     - get: cf-mysql-ci
   - task: run-smoke-tests
     config:
@@ -508,7 +508,7 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
 
-- name: scaling-tests
+- name: test-scaling
   plan:
   - aggregate:
     - get: cf-mysql-ci
@@ -588,7 +588,7 @@ jobs:
   - *deploy-to-bosh-lite
   - *broker-registrar-bosh-lite
 
-- name: arb-to-full-scaling-tests
+- name: test-arb-to-full-scaling
   plan:
   - aggregate:
     - get: cf-mysql-ci
@@ -654,7 +654,7 @@ jobs:
   - *deploy-to-bosh-lite
   - *broker-registrar-bosh-lite
 
-- name: failover-tests
+- name: test-failover
   plan:
   - aggregate:
     - get: cf-mysql-ci
@@ -731,7 +731,6 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-ci
-#    which cf-mysql-release is this getting?!?
     - get: cf-mysql-release
       passed: [deploy-previous-to-upgrade]
     - get: bosh-lite-environment
@@ -814,9 +813,8 @@ jobs:
     params:
       release: bosh-lite-environment
 
-### STANDALONE DEPLOY
-
-- name: deploy-to-standalone
+### STANDALONE FOR BOOTSTRAP
+- name: deploy-to-standalone-for-bootstrap
   plan:
   - aggregate:
     - get: cf-mysql-release
@@ -851,15 +849,15 @@ jobs:
         path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
-- name: test-bootstrap
+- name: test-bootstrap-on-standalone
   plan:
   - aggregate:
     - get: cf-mysql-ci
     - get: cf-mysql-release
-      passed: [deploy-to-standalone]
+      passed: [deploy-to-standalone-for-bootstrap]
     - get: bosh-lite-environment
       resource: bosh-lite-no-cf-environment
-      passed: [deploy-to-standalone]
+      passed: [deploy-to-standalone-for-bootstrap]
       trigger: true
       version: every
   - *persistence-test-data-write
@@ -897,7 +895,7 @@ jobs:
     params:
       release: bosh-lite-environment
 
-### DATA-LOSS
+### DATA LOSS
 - name: deploy-to-data-loss
   plan:
   - aggregate:
@@ -933,7 +931,7 @@ jobs:
         path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
-- name: data-loss-tests
+- name: test-data-loss
   plan:
   - aggregate:
     - get: cf-mysql-ci
@@ -977,8 +975,8 @@ jobs:
     params:
       release: bosh-lite-environment
 
-### DISABLE-PARANOID
-- name: deploy-to-disable-paranoid
+### DISABLE AUTO SST
+- name: deploy-to-disable-auto-sst
   plan:
   - aggregate:
     - get: cf-mysql-release
@@ -1013,14 +1011,14 @@ jobs:
         path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
-- name: disable-paranoid-tests
+- name: test-disable-auto-sst
   plan:
   - aggregate:
     - get: cf-mysql-ci
     - get: cf-mysql-release
-      passed: [deploy-to-disable-paranoid]
+      passed: [deploy-to-disable-auto-sst]
     - get: bosh-lite-environment
-      passed: [deploy-to-disable-paranoid]
+      passed: [deploy-to-disable-auto-sst]
       trigger: true
       version: every
   - aggregate:
@@ -1111,7 +1109,7 @@ jobs:
         path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
-- name: verify-cluster-schemas-tests
+- name: test-verify-cluster-schemas
   plan:
   - aggregate:
     - get: cf-mysql-ci
@@ -1140,7 +1138,7 @@ jobs:
     params:
       release: bosh-lite-environment
 
-### INTEGRATION DEPLOY
+### INTEGRATION
 - name: deploy-to-integration
   serial: true
   plan:
@@ -1148,21 +1146,21 @@ jobs:
     - get: cf-mysql-release
       passed:
       # all bosh-lite pipelines
-      - test-initial
-      - scaling-tests
-      - failover-tests
-      - verify-cluster-schemas-tests
-      - disable-paranoid-tests
-      - data-loss-tests
-      - test-bootstrap
-      - arb-to-full-scaling-tests
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - test-verify-cluster-schemas
+      - test-disable-auto-sst
+      - test-data-loss
+      - test-bootstrap-on-standalone
+      - test-arb-to-full-scaling
       - test-persistence-after-upgrade
       - deploy-to-bosh-2.0
       trigger: true
     - get: deployments-configuration
     - get: cf-mysql-ci
     - get: aws-bosh-stemcell
-      passed: [deploy-to-initial]
+      passed: [deploy-to-full-bosh]
     - put: integration-environment
       params:
         acquire: true
