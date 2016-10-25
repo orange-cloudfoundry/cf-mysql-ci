@@ -37,6 +37,7 @@ resources:
   type: git
   source:
     uri: https://github.com/cloudfoundry-incubator/cf-mysql-ci.git
+    branch: collapse_jobs_#132787793
 
 - name: cf-mysql-release
   type: git
