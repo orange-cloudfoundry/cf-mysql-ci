@@ -1,4 +1,12 @@
 ---
+### RESOURCE TYPES
+resource_types:
+- name: slack-notification
+  type: docker-image
+  source:
+    repository: cfcommunity/slack-notification-resource
+    tag: latest
+
 ### RESOURCES
 resources:
 - name: cf-mysql-ci-image
@@ -147,8 +155,40 @@ resources:
     deployment: cf-mysql
     ignore_ssl: true
 
+- name: slack-alert
+  type: slack-notification
+  source:
+    url: {{core-services-ci-slack-webhook}}
+
 ### JOBS
 jobs:
+- name: test-failure
+  plan:
+  - do:
+    - task: fail
+      config:
+        platform: linux
+        image_resource:
+          type: docker-image
+          source:
+            repository: cloudfoundry/cf-mysql-ci
+        run:
+          path: bash
+          args:
+          - -c
+          - exit 1
+    on_failure:
+      aggregate:
+      - put: slack-alert
+        params:
+          channel: '#core-services-ci'
+          always_notify: true
+          silent: true
+          username: core-services-ci-bot
+          text: |
+                The build had a failure. Check it out at:
+                https://core-services.ci.cf-app.com/teams/main/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+
 - name: build-dockerfile
   plan:
   - get: cf-mysql-dockerfile
