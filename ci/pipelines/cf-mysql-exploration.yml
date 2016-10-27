@@ -7,6 +7,12 @@ resource_types:
     repository: cfcommunity/slack-notification-resource
     tag: latest
 
+- name: http-api
+  type: docker-image
+  source:
+    repository: aequitas/http-api-resource
+    tag: latest
+
 ### RESOURCES
 resources:
 - name: cf-mysql-ci-image
@@ -160,6 +166,19 @@ resources:
   source:
     url: {{core-services-ci-slack-webhook}}
 
+- name: record-failure
+  type: http-api
+  source:
+    uri: https://core-services-ci-metrics.cfapps.io/api/v1/failures
+    method: POST
+    json:
+      failure:
+        pipeline: "{BUILD_PIPELINE_NAME}"
+        job: "{BUILD_JOB_NAME}"
+        build_id: "{BUILD_ID}"
+        build: "{BUILD_NAME}"
+        url: "{ATC_EXTERNAL_URL}"
+
 ### JOBS
 jobs:
 - name: test-failure
@@ -188,6 +207,7 @@ jobs:
           text: |
                 The build had a failure. Check it out at:
                 https://core-services.ci.cf-app.com/teams/main/pipelines/$BUILD_PIPELINE_NAME/jobs/$BUILD_JOB_NAME/builds/$BUILD_NAME
+      - put: record-failure
 
 - name: build-dockerfile
   plan:
