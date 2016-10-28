@@ -52,12 +52,6 @@ resources:
     branch: v29
     private_key: {{git-writer-private-key}}
 
-- name: cf-mysql-release-master
-  type: git
-  source:
-    uri: https://github.com/cloudfoundry/cf-mysql-release.git
-    branch: master
-
 - name: aws-deployment
   type: bosh-deployment
   source:
@@ -121,11 +115,6 @@ resources:
     branch: master
     pool: compiled-packages
     private_key: {{git-writer-private-key}}
-
-- name: cf-mysql-latest-release-tarball
-  type: bosh-io-release
-  source:
-    repository: cloudfoundry/cf-mysql-release
 
 - name: cf-mysql-rc-artifacts
   type: s3
