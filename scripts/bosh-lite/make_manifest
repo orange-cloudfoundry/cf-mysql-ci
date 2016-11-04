@@ -16,7 +16,6 @@ trap '{ rm -rf ${tmpdir}; }' EXIT
 : "${ENV_TARGET_FILE:?}"
 : "${ENV_METADATA:?}"
 : "${MINIMAL_MODE:=false}"
-: "${USE_PREVIOUS_RELEASE:=false}"
 : "${STANDALONE_MODE:=false}"
 : "${NO_ARBITRATOR:=false}"
 : "${FULL_PLUS_ARBITRATOR:=false}"
@@ -37,14 +36,6 @@ pushd "${WORKSPACE_DIR}"
   CF_API_PASSWORD="$(jq_val "cf_api_password" "${ENV_METADATA}")"
 popd
 
-get_previous_version() {
-  echo "$(find ${RELEASE_DIR}/releases -maxdepth 2 -name "cf-mysql-*.yml" -type f -printf "%f\n" | \
-    cut -d '-' -f3              | \
-    cut -d '.' -f1              | \
-    sort -n                     | \
-    tail -1)"
-}
-
 CF_MANIFEST="${tmpdir}/cf-warden.yml"
 if [ "${STANDALONE_MODE}" = false ] ; then
   bosh -n target "${DIRECTOR_IP}"
@@ -61,7 +52,6 @@ fi
 PROPERTY_OVERRIDES="${RELEASE_DIR}/manifest-generation/bosh-lite-stubs/property-overrides.yml"
 IAAS_SETTINGS="${RELEASE_DIR}/manifest-generation/bosh-lite-stubs/iaas-settings.yml"
 INSTANCE_COUNT_OVERRIDE="${RELEASE_DIR}/manifest-generation/examples/instance-count-overrides.yml"
-RELEASE_VERSIONS="${RELEASE_DIR}/manifest-generation/examples/release-versions.yml"
 
 if [ "${STANDALONE_MODE}" = "true" ]; then
   PROPERTY_OVERRIDES="${RELEASE_DIR}/manifest-generation/bosh-lite-stubs/property-overrides-standalone.yml"
@@ -93,21 +83,9 @@ EOF
 
 PROPERTY_OVERRIDES="$PROPERTY_OVERRIDES ${CF_CREDENTIALS_STUB}"
 
-if [ "${USE_PREVIOUS_RELEASE}" = "true" ]; then
-  MYSQL_VERSION="$(get_previous_version)"
-  RELEASE_VERSIONS="${tmpdir}/cf-mysql-versions-stub.yml"
-  cat > "${RELEASE_VERSIONS}" <<EOF
----
-release_versions:
-- name: cf-mysql
-  version: ${MYSQL_VERSION}
-EOF
-fi
-
 "${RELEASE_DIR}/scripts/generate-deployment-manifest" \
   -c "${CF_MANIFEST}" \
   -p "${PROPERTY_OVERRIDES}" \
   -i "${IAAS_SETTINGS}" \
   -n "${INSTANCE_COUNT_OVERRIDE}" \
-  -v "${RELEASE_VERSIONS}" \
   > "${OUTPUT_FILE}"
