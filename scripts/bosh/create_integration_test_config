@@ -45,10 +45,14 @@ fi
 
 if [ "${USE_SMALL_PLANS}" = true ]; then
   SMALL_PLAN_SIZE=10
+  SMALL_PLAN_NAME=10mb
   LARGE_PLAN_SIZE=20
+  LARGE_PLAN_NAME=20mb
 else
   SMALL_PLAN_SIZE=100
+  SMALL_PLAN_NAME=100mb
   LARGE_PLAN_SIZE=1000
+  LARGE_PLAN_NAME=1gb
 fi
 
 if [ "${PROXY_COUNT}" == 0 ]; then
@@ -69,12 +73,12 @@ cat > ${CONFIG_LOCATION} <<EOF
   "service_name": "p-mysql",
   "plans" : [
     {
-      "plan_name": "100mb",
+      "plan_name": "${SMALL_PLAN_NAME}",
       "max_user_connections": 20,
       "max_storage_mb": ${SMALL_PLAN_SIZE}
     },
     {
-      "plan_name": "1gb",
+      "plan_name": "${LARGE_PLAN_NAME}",
       "max_user_connections": 40,
       "max_storage_mb": ${LARGE_PLAN_SIZE}
     }
