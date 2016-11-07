@@ -1065,6 +1065,8 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
+  - *broker-deregistrar-bosh-lite
+  - *broker-registrar-bosh-lite
 
 - name: persistence-test-data-read-after-upgrade
   plan:
