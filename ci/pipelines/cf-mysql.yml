@@ -338,7 +338,7 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
 
-- name: deploy-to-initial
+- name: deploy-full-bosh
   plan:
   - aggregate:
     - get: deployments-configuration
@@ -384,11 +384,11 @@ jobs:
   plan:
   - aggregate:
     - get: aws-environment
-      passed: [deploy-to-initial]
+      passed: [deploy-full-bosh]
       trigger: true
       version: every
     - get: cf-mysql-release
-      passed: [deploy-to-initial]
+      passed: [deploy-full-bosh]
     - get: cf-mysql-ci
   - task: run-broker-registrar
     config:
@@ -1495,8 +1495,8 @@ jobs:
     params:
       release: bosh-lite-environment
 
-### DISABLE-PARANOID
-- name: claim-bosh-lite-disable-paranoid
+### DISABLE-SST
+- name: claim-bosh-lite-disable-sst
   plan:
   - aggregate:
     - get: cf-mysql-release
@@ -1506,40 +1506,40 @@ jobs:
       params:
         acquire: true
 
-- name: release-disable-paranoid-environment-manual
+- name: release-disable-sst-environment-manual
   plan:
   - try:
       do:
       - get: bosh-lite-environment
-        passed: [claim-bosh-lite-disable-paranoid]
+        passed: [claim-bosh-lite-disable-sst]
       - put: bosh-lite-environment
         params:
           release: bosh-lite-environment
 
-- name: delete-disable-paranoid-deployment
+- name: delete-disable-sst-deployment
   plan:
   - aggregate:
     - get: bosh-lite-environment
-      passed: [claim-bosh-lite-disable-paranoid]
+      passed: [claim-bosh-lite-disable-sst]
       trigger: true
       version: every
     - get: cf-mysql-release
-      passed: [claim-bosh-lite-disable-paranoid]
+      passed: [claim-bosh-lite-disable-sst]
     - get: cf-mysql-ci
   - try: *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
 
-- name: deploy-to-disable-paranoid
+- name: deploy-to-disable-sst
   plan:
   - aggregate:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed:
-      - delete-disable-paranoid-deployment
+      - delete-disable-sst-deployment
       - create-and-compile-release
     - get: bosh-lite-stemcell
     - get: bosh-lite-environment
-      passed: [delete-disable-paranoid-deployment]
+      passed: [delete-disable-sst-deployment]
       trigger: true
       version: every
     - get: compiled-release-tarball
@@ -1564,14 +1564,14 @@ jobs:
         path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
-- name: disable-paranoid-tests
+- name: disable-sst-tests
   plan:
   - aggregate:
     - get: cf-mysql-ci
     - get: cf-mysql-release
-      passed: [deploy-to-disable-paranoid]
+      passed: [deploy-to-disable-sst]
     - get: bosh-lite-environment
-      passed: [deploy-to-disable-paranoid]
+      passed: [deploy-to-disable-sst]
       trigger: true
       version: every
   - aggregate:
@@ -1607,7 +1607,7 @@ jobs:
           DISABLE_PARANOIA: true
         run:
           path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-  - task: disable-paranoid-to-fix-cluster
+  - task: disable-sst-to-fix-cluster
     config:
       platform: *platform
       image_resource: *image_resource
@@ -1621,15 +1621,15 @@ jobs:
         BOSH_SSH_KEY: {{bosh-lite-private-key}}
         DEPLOYMENT_MANIFEST: deployment-manifest/deployment.yml
       run:
-        path: cf-mysql-ci/scripts/data-loss/disable-paranoid-test
+        path: cf-mysql-ci/scripts/data-loss/disable-sst-test
 
-- name: release-disable-paranoid-environment
+- name: release-disable-sst-environment
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [disable-paranoid-tests]
+      passed: [disable-sst-tests]
     - get: bosh-lite-environment
-      passed: [disable-paranoid-tests]
+      passed: [disable-sst-tests]
       trigger: true
       version: every
   - put: bosh-lite-environment
@@ -1758,7 +1758,7 @@ jobs:
       - release-standalone-environment
       - release-arb-to-full-scaling-environment
       - release-data-loss-environment
-      - release-disable-paranoid-environment
+      - release-disable-sst-environment
       - release-verify-cluster-schemas-environment
       - release-bosh-2.0-environment
       trigger: true
@@ -1788,7 +1788,7 @@ jobs:
       - create-and-compile-release
     - get: aws-bosh-stemcell
       passed:
-      - deploy-to-initial
+      - deploy-full-bosh
       - deploy-previous-to-upgrade
     - get: integration-environment
       passed: [claim-integration-environment]
@@ -2080,7 +2080,7 @@ groups:
   - claim-aws-environment
   - release-aws-environment-manual
   - delete-aws-deployment
-  - deploy-to-initial
+  - deploy-full-bosh
   - run-smoke-tests-initial
   - dashboard-test-initial
   - acceptance-test-initial
@@ -2127,12 +2127,12 @@ groups:
   - deploy-to-data-loss
   - data-loss-tests
   - release-data-loss-environment
-  - claim-bosh-lite-disable-paranoid
-  - release-disable-paranoid-environment-manual
-  - delete-disable-paranoid-deployment
-  - deploy-to-disable-paranoid
-  - disable-paranoid-tests
-  - release-disable-paranoid-environment
+  - claim-bosh-lite-disable-sst
+  - release-disable-sst-environment-manual
+  - delete-disable-sst-deployment
+  - deploy-to-disable-sst
+  - disable-sst-tests
+  - release-disable-sst-environment
   - claim-bosh-lite-verify-cluster-schemas
   - release-verify-cluster-schemas-environment-manual
   - delete-verify-cluster-schemas-deployment
@@ -2220,14 +2220,14 @@ groups:
   - deploy-to-data-loss
   - data-loss-tests
   - release-data-loss-environment
-- name: disable-paranoid
+- name: disable-sst
   jobs:
-  - claim-bosh-lite-disable-paranoid
-  - release-disable-paranoid-environment-manual
-  - delete-disable-paranoid-deployment
-  - deploy-to-disable-paranoid
-  - disable-paranoid-tests
-  - release-disable-paranoid-environment
+  - claim-bosh-lite-disable-sst
+  - release-disable-sst-environment-manual
+  - delete-disable-sst-deployment
+  - deploy-to-disable-sst
+  - disable-sst-tests
+  - release-disable-sst-environment
 - name: verify-schemas
   jobs:
   - claim-bosh-lite-verify-cluster-schemas
