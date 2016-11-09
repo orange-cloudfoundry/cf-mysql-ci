@@ -1578,7 +1578,7 @@ jobs:
         BOSH_SSH_KEY: {{bosh-lite-private-key}}
         DEPLOYMENT_MANIFEST: deployment-manifest/deployment.yml
       run:
-        path: cf-mysql-ci/scripts/data-loss/disable-paranoid-test
+        path: cf-mysql-ci/scripts/data-loss/disable-sst-test
 
 - name: release-disable-paranoid-environment
   plan:
