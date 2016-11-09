@@ -37,7 +37,7 @@ releases:
 stemcells:
 - alias: default
   os: ubuntu-trusty
-  version: ${STEMCELL_VERSION}
+  version: "${STEMCELL_VERSION}"
 
 jobs: []
 
