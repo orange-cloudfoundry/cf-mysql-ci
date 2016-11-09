@@ -20,7 +20,7 @@ else
 fi
 
 # egrep for pivnet-resource stemcells that will have the etag after the version
-STEMCELL_VERSION=$(cat *stemcell/version | egrep -o '^[1-9.]+')
+STEMCELL_VERSION=$(cat *stemcell/version | egrep -o '^[0-9.]+')
 
 pushd "${WORKSPACE_DIR}"
   cat << EOF > deployment.yml
