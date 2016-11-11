@@ -29,13 +29,6 @@ resources:
     branch: releases/v24
     private_key: {{git-writer-private-key}}
 
-- name: cf-mysql-previous-release
-  type: git
-  source:
-    uri: git@github.com:cloudfoundry/cf-mysql-release.git
-    branch: v24.5
-    private_key: {{git-writer-private-key}}
-
 - name: aws-deployment
   type: bosh-deployment
   source:
@@ -138,15 +131,6 @@ jobs:
             cd cf-mysql-release/src/cf-mysql-broker
 
             bundle-audit
-
-- name: test-sample-stubs
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      trigger: true
-    - get: weekly-trigger
-      trigger: true
-    - get: cf-mysql-ci
   - task: test-sample-stubs
     file: cf-mysql-ci/ci/tasks/test-sample-stubs.yml
 
@@ -158,12 +142,10 @@ jobs:
       trigger: true
       passed:
         - test-unit
-        - test-sample-stubs
     - get: weekly-trigger
       trigger: true
       passed:
         - test-unit
-        - test-sample-stubs
     - get: cf-mysql-ci
     - get: aws-bosh-stemcell
   - &create-release
@@ -212,39 +194,24 @@ jobs:
       file: compiled-release-tarball/*.tgz
 
 ### AWS
-- name: claim-aws-environment
+- name: deploy-to-full-bosh
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [create-and-compile-release]
       trigger: true
     - get: weekly-trigger
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - put: aws-environment
       params:
         acquire: true
-
-- name: release-aws-environment-manual
-  plan:
-  - try:
-      do:
-      - get: aws-environment
-        passed: [claim-aws-environment]
-      - put: aws-environment
-        params:
-          release: aws-environment
-
-- name: delete-aws-deployment
-  plan:
-  - aggregate:
-    - get: aws-environment
-      passed: [claim-aws-environment]
-      trigger: true
-      version: every
-    - get: cf-mysql-release
-      passed: [claim-aws-environment]
     - get: cf-mysql-ci
+    - get: deployments-configuration
+    - get: aws-bosh-stemcell
+    - get: compiled-release-tarball
+      resource: cf-mysql-compiled-release
+      passed: [create-and-compile-release]
   - try:
       task: run-broker-deregistrar
       config:
@@ -274,24 +241,6 @@ jobs:
         DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
-
-- name: deploy-to-initial
-  plan:
-  - aggregate:
-    - get: deployments-configuration
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed:
-        - delete-aws-deployment
-        - create-and-compile-release
-    - get: aws-bosh-stemcell
-    - get: aws-environment
-      passed: [delete-aws-deployment]
-      trigger: true
-      version: every
-    - get: compiled-release-tarball
-      resource: cf-mysql-compiled-release
-      passed: [create-and-compile-release]
   - task: make-manifest
     config:
       platform: *platform
@@ -317,15 +266,15 @@ jobs:
       releases: [compiled-release-tarball/*.tgz]
       stemcells: [aws-bosh-stemcell/*.tgz]
 
-- name: acceptance-test-initial
+- name: test-full-bosh
   plan:
   - aggregate:
     - get: aws-environment
-      passed: [deploy-to-initial]
+      passed: [deploy-to-full-bosh]
       trigger: true
       version: every
     - get: cf-mysql-release
-      passed: [deploy-to-initial]
+      passed: [deploy-to-full-bosh]
     - get: cf-mysql-ci
   - task: run-broker-registrar
     config:
@@ -355,17 +304,6 @@ jobs:
         DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
-
-- name: dashboard-test-initial
-  plan:
-  - aggregate:
-      - get: aws-environment
-        passed: [acceptance-test-initial]
-        trigger: true
-        version: every
-      - get: cf-mysql-release
-        passed: [acceptance-test-initial]
-      - get: cf-mysql-ci
   - task: dashboard-test
     config:
       platform: *platform
@@ -380,15 +318,6 @@ jobs:
         TEST_TYPE: dashboard
       run:
         path: cf-mysql-ci/scripts/acceptance-tests
-
-- name: cleanup-aws-deployment
-  plan:
-  - aggregate:
-    - get: aws-environment
-      trigger: true
-      version: every
-      passed: [dashboard-test-initial]
-    - get: cf-mysql-ci
   - try:
       task: run-broker-deregistrar
       config:
@@ -418,54 +347,30 @@ jobs:
         DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
-
-- name: release-aws-environment
-  plan:
-  - get: cf-mysql-release
-    passed: [dashboard-test-initial]
-  - get: aws-environment
-    passed: [cleanup-aws-deployment]
-    trigger: true
-    version: every
   - put: aws-environment
     params:
       release: aws-environment
 
 ### SCALING
-- name: claim-bosh-lite-scaling
+- name: deploy-to-scaling
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [create-and-compile-release]
       trigger: true
     - get: weekly-trigger
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
-
-- name: release-scaling-environment-manual
-  plan:
-  - try:
-      do:
-      - get: bosh-lite-environment
-        passed: [claim-bosh-lite-scaling]
-      - put: bosh-lite-environment
-        params:
-          release: bosh-lite-environment
-
-- name: delete-scaling-deployment
-  plan:
-  - aggregate:
-    - get: bosh-lite-environment
-      passed: [claim-bosh-lite-scaling]
-      trigger: true
-      version: every
-    - get: cf-mysql-release
-      passed: [claim-bosh-lite-scaling]
     - get: cf-mysql-ci
-  - try: &broker-deregistrar-bosh-lite
+    - get: bosh-lite-stemcell
+    - get: compiled-release-tarball
+      resource: cf-mysql-compiled-release
+      passed: [create-and-compile-release]
+  - &broker-deregistrar-bosh-lite
+    try:
       task: run-broker-deregistrar
       config:
         platform: *platform
@@ -508,23 +413,6 @@ jobs:
           DEPLOYMENT_NAME: cf-warden-mysql
         run:
           path: cf-mysql-ci/scripts/bosh/delete_deployment
-
-- name: deploy-to-scaling
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed:
-      - delete-scaling-deployment
-      - create-and-compile-release
-    - get: bosh-lite-stemcell
-    - get: cf-mysql-ci
-    - get: bosh-lite-environment
-      passed: [delete-scaling-deployment]
-      trigger: true
-      version: every
-    - get: compiled-release-tarball
-      resource: cf-mysql-compiled-release
-      passed: [create-and-compile-release]
   - task: make-manifest
     config:
       platform: *platform
@@ -549,17 +437,6 @@ jobs:
       manifest: deployment-manifest/deployment.yml
       releases: [compiled-release-tarball/*.tgz]
       stemcells: [bosh-lite-stemcell/*.tgz]
-
-- name: scaling-broker-registrar
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [deploy-to-scaling]
-    - get: bosh-lite-environment
-      passed: [deploy-to-scaling]
-      trigger: true
-      version: every
   - &broker-registrar-bosh-lite
     task: run-broker-registrar
     config:
@@ -576,14 +453,14 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
 
-- name: scaling-smoke-tests
+- name: test-scaling
   plan:
   - aggregate:
     - get: cf-mysql-ci
     - get: cf-mysql-release
-      passed: [scaling-broker-registrar]
+      passed: [deploy-to-scaling]
     - get: bosh-lite-environment
-      passed: [scaling-broker-registrar]
+      passed: [deploy-to-scaling]
       trigger: true
       version: every
   - &smoke-tests-bosh-lite
@@ -601,17 +478,6 @@ jobs:
         DEPLOYMENT_NAME: cf-warden-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
-
-- name: scaling-tests
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [scaling-smoke-tests]
-    - get: bosh-lite-environment
-      passed: [scaling-smoke-tests]
-      trigger: true
-      version: every
   - task: run-scaling-tests
     config:
       platform: *platform
@@ -626,73 +492,30 @@ jobs:
         BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
       run:
         path: cf-mysql-ci/scripts/scaling/scaling-test
-
-- name: release-scaling-environment
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [scaling-tests]
-    - get: bosh-lite-environment
-      passed: [scaling-tests]
-      trigger: true
-      version: every
   - put: bosh-lite-environment
     params:
       release: bosh-lite-environment
 
 ### FAILOVER
-- name: claim-bosh-lite-failover
+- name: deploy-to-failover
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [create-and-compile-release]
       trigger: true
     - get: weekly-trigger
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
-
-- name: release-failover-environment-manual
-  plan:
-  - try:
-      do:
-      - get: bosh-lite-environment
-        passed: [claim-bosh-lite-failover]
-      - put: bosh-lite-environment
-        params:
-          release: bosh-lite-environment
-
-- name: delete-failover-deployment
-  plan:
-  - aggregate:
-    - get: bosh-lite-environment
-      passed: [claim-bosh-lite-failover]
-      trigger: true
-      version: every
-    - get: cf-mysql-release
-      passed: [claim-bosh-lite-failover]
     - get: cf-mysql-ci
-  - try: *broker-deregistrar-bosh-lite
-  - *delete-deployment-bosh-lite
-
-- name: deploy-to-failover
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed:
-      - delete-failover-deployment
-      - create-and-compile-release
     - get: bosh-lite-stemcell
-    - get: bosh-lite-environment
-      passed: [delete-failover-deployment]
-      trigger: true
-      version: every
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+  - *broker-deregistrar-bosh-lite
+  - *delete-deployment-bosh-lite
   - task: make-manifest
     config:
       platform: *platform
@@ -710,41 +533,19 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
-
-- name: failover-broker-registrar
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [deploy-to-failover]
-    - get: bosh-lite-environment
-      passed: [deploy-to-failover]
-      trigger: true
-      version: every
   - *broker-registrar-bosh-lite
 
-- name: failover-smoke-tests
+- name: test-failover
   plan:
   - aggregate:
     - get: cf-mysql-ci
     - get: cf-mysql-release
-      passed: [failover-broker-registrar]
+      passed: [deploy-to-failover]
     - get: bosh-lite-environment
-      passed: [failover-broker-registrar]
+      passed: [deploy-to-failover]
       trigger: true
       version: every
   - *smoke-tests-bosh-lite
-
-- name: failover-tests
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [failover-smoke-tests]
-    - get: bosh-lite-environment
-      passed: [failover-smoke-tests]
-      trigger: true
-      version: every
   - task: run-failover-tests
     config:
       platform: *platform
@@ -759,73 +560,30 @@ jobs:
         BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
       run:
         path: cf-mysql-ci/scripts/failover/failover-test
-
-- name: release-failover-environment
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [failover-tests]
-    - get: bosh-lite-environment
-      passed: [failover-tests]
-      trigger: true
-      version: every
   - put: bosh-lite-environment
     params:
       release: bosh-lite-environment
 
 ### DATA-LOSS
-- name: claim-bosh-lite-data-loss
+- name: deploy-to-data-loss
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [create-and-compile-release]
       trigger: true
     - get: weekly-trigger
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
-
-- name: release-data-loss-environment-manual
-  plan:
-  - try:
-      do:
-      - get: bosh-lite-environment
-        passed: [claim-bosh-lite-data-loss]
-      - put: bosh-lite-environment
-        params:
-          release: bosh-lite-environment
-
-- name: delete-data-loss-deployment
-  plan:
-  - aggregate:
-    - get: bosh-lite-environment
-      passed: [claim-bosh-lite-data-loss]
-      trigger: true
-      version: every
-    - get: cf-mysql-release
-      passed: [claim-bosh-lite-data-loss]
     - get: cf-mysql-ci
-  - try: *broker-deregistrar-bosh-lite
-  - *delete-deployment-bosh-lite
-
-- name: deploy-to-data-loss
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed:
-      - delete-data-loss-deployment
-      - create-and-compile-release
     - get: bosh-lite-stemcell
-    - get: bosh-lite-environment
-      passed: [delete-data-loss-deployment]
-      trigger: true
-      version: every
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+  - *broker-deregistrar-bosh-lite
+  - *delete-deployment-bosh-lite
   - task: make-manifest
     config:
       platform: *platform
@@ -845,7 +603,7 @@ jobs:
         path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
-- name: data-loss-tests
+- name: test-data-loss
   plan:
   - aggregate:
     - get: cf-mysql-ci
@@ -894,73 +652,30 @@ jobs:
         ERRAND: rejoin-unsafe
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
-
-- name: release-data-loss-environment
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [data-loss-tests]
-    - get: bosh-lite-environment
-      passed: [data-loss-tests]
-      trigger: true
-      version: every
   - put: bosh-lite-environment
     params:
       release: bosh-lite-environment
 
-### DISABLE-PARANOID
-- name: claim-bosh-lite-disable-paranoid
+### DISABLE-AUTO-SST
+- name: deploy-to-disable-auto-sst
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [create-and-compile-release]
       trigger: true
     - get: weekly-trigger
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
-
-- name: release-disable-paranoid-environment-manual
-  plan:
-  - try:
-      do:
-      - get: bosh-lite-environment
-        passed: [claim-bosh-lite-disable-paranoid]
-      - put: bosh-lite-environment
-        params:
-          release: bosh-lite-environment
-
-- name: delete-disable-paranoid-deployment
-  plan:
-  - aggregate:
-    - get: bosh-lite-environment
-      passed: [claim-bosh-lite-disable-paranoid]
-      trigger: true
-      version: every
-    - get: cf-mysql-release
-      passed: [claim-bosh-lite-disable-paranoid]
     - get: cf-mysql-ci
-  - try: *broker-deregistrar-bosh-lite
-  - *delete-deployment-bosh-lite
-
-- name: deploy-to-disable-paranoid
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed:
-      - delete-disable-paranoid-deployment
-      - create-and-compile-release
     - get: bosh-lite-stemcell
-    - get: bosh-lite-environment
-      passed: [delete-disable-paranoid-deployment]
-      trigger: true
-      version: every
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+  - *broker-deregistrar-bosh-lite
+  - *delete-deployment-bosh-lite
   - task: make-manifest
     config:
       platform: *platform
@@ -980,14 +695,14 @@ jobs:
         path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
-- name: disable-paranoid-tests
+- name: test-disable-auto-sst
   plan:
   - aggregate:
     - get: cf-mysql-ci
     - get: cf-mysql-release
-      passed: [deploy-to-disable-paranoid]
+      passed: [deploy-to-disable-auto-sst]
     - get: bosh-lite-environment
-      passed: [deploy-to-disable-paranoid]
+      passed: [deploy-to-disable-auto-sst]
       trigger: true
       version: every
   - aggregate:
@@ -1032,7 +747,7 @@ jobs:
         args:
         - "-c"
         - "sleep 200"
-  - task: disable-paranoid-to-fix-cluster
+  - task: disable-auto-sst-to-fix-cluster
     config:
       platform: *platform
       image_resource: *image_resource
@@ -1047,73 +762,30 @@ jobs:
         DEPLOYMENT_MANIFEST: deployment-manifest/deployment.yml
       run:
         path: cf-mysql-ci/scripts/data-loss/disable-sst-test
-
-- name: release-disable-paranoid-environment
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [disable-paranoid-tests]
-    - get: bosh-lite-environment
-      passed: [disable-paranoid-tests]
-      trigger: true
-      version: every
   - put: bosh-lite-environment
     params:
       release: bosh-lite-environment
 
 ### VERIFY CLUSTER SCHEMAS
-- name: claim-bosh-lite-verify-cluster-schemas
+- name: deploy-to-verify-cluster-schemas
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [create-and-compile-release]
       trigger: true
     - get: weekly-trigger
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
-
-- name: release-verify-cluster-schemas-environment-manual
-  plan:
-  - try:
-      do:
-      - get: bosh-lite-environment
-        passed: [claim-bosh-lite-verify-cluster-schemas]
-      - put: bosh-lite-environment
-        params:
-          release: bosh-lite-environment
-
-- name: delete-verify-cluster-schemas-deployment
-  plan:
-  - aggregate:
-    - get: bosh-lite-environment
-      passed: [claim-bosh-lite-verify-cluster-schemas]
-      trigger: true
-      version: every
-    - get: cf-mysql-release
-      passed: [claim-bosh-lite-verify-cluster-schemas]
     - get: cf-mysql-ci
-  - try: *broker-deregistrar-bosh-lite
-  - *delete-deployment-bosh-lite
-
-- name: deploy-to-verify-cluster-schemas
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed:
-      - delete-verify-cluster-schemas-deployment
-      - create-and-compile-release
     - get: bosh-lite-stemcell
-    - get: bosh-lite-environment
-      passed: [delete-verify-cluster-schemas-deployment]
-      trigger: true
-      version: every
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+  - *broker-deregistrar-bosh-lite
+  - *delete-deployment-bosh-lite
   - task: make-manifest
     config:
       platform: *platform
@@ -1133,7 +805,7 @@ jobs:
         path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
 
-- name: verify-cluster-schemas-tests
+- name: test-verify-cluster-schemas
   plan:
   - aggregate:
     - get: cf-mysql-ci
@@ -1158,16 +830,6 @@ jobs:
         DEPLOYMENT_NAME: cf-warden-mysql
       run:
         path: cf-mysql-ci/scripts/verify-cluster-schemas/force-divergent-schemas-test
-
-- name: release-verify-cluster-schemas-environment
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [verify-cluster-schemas-tests]
-    - get: bosh-lite-environment
-      passed: [verify-cluster-schemas-tests]
-      trigger: true
-      version: every
   - put: bosh-lite-environment
     params:
       release: bosh-lite-environment
@@ -1179,12 +841,12 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed:
-      - release-aws-environment
-      - release-failover-environment
-      - release-scaling-environment
-      - release-data-loss-environment
-      - release-disable-paranoid-environment
-      - release-verify-cluster-schemas-environment
+      - test-full-bosh
+      - test-failover
+      - test-data-loss
+      - test-scaling
+      - test-disable-auto-sst
+      - test-verify-cluster-schemas
       trigger: true
   - task: rc-tag-file
     config:
@@ -1222,12 +884,12 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed:
-      - release-aws-environment
-      - release-failover-environment
-      - release-scaling-environment
-      - release-data-loss-environment
-      - release-disable-paranoid-environment
-      - release-verify-cluster-schemas-environment
+      - test-full-bosh
+      - test-failover
+      - test-data-loss
+      - test-scaling
+      - test-disable-auto-sst
+      - test-verify-cluster-schemas
       trigger: true
     - get: cf-mysql-ci
   - task: create-rc-release-artifacts
@@ -1247,98 +909,3 @@ jobs:
   - put: pcf-mysql-rc-artifacts
     params:
       file: release-tarball/cf-mysql*.tgz
-
-groups:
-- name: cf-mysql-v24
-  jobs:
-  - test-unit
-  - test-sample-stubs
-  - create-and-compile-release
-  - claim-aws-environment
-  - release-aws-environment-manual
-  - delete-aws-deployment
-  - deploy-to-initial
-  - acceptance-test-initial
-  - dashboard-test-initial
-  - cleanup-aws-deployment
-  - release-aws-environment
-  - claim-bosh-lite-scaling
-  - release-scaling-environment-manual
-  - delete-scaling-deployment
-  - deploy-to-scaling
-  - scaling-broker-registrar
-  - scaling-smoke-tests
-  - scaling-tests
-  - release-scaling-environment
-  - claim-bosh-lite-failover
-  - release-failover-environment-manual
-  - delete-failover-deployment
-  - deploy-to-failover
-  - failover-broker-registrar
-  - failover-smoke-tests
-  - failover-tests
-  - release-failover-environment
-  - claim-bosh-lite-data-loss
-  - release-data-loss-environment-manual
-  - delete-data-loss-deployment
-  - deploy-to-data-loss
-  - data-loss-tests
-  - release-data-loss-environment
-  - claim-bosh-lite-disable-paranoid
-  - release-disable-paranoid-environment-manual
-  - delete-disable-paranoid-deployment
-  - deploy-to-disable-paranoid
-  - disable-paranoid-tests
-  - release-disable-paranoid-environment
-  - claim-bosh-lite-verify-cluster-schemas
-  - release-verify-cluster-schemas-environment-manual
-  - delete-verify-cluster-schemas-deployment
-  - deploy-to-verify-cluster-schemas
-  - verify-cluster-schemas-tests
-  - release-verify-cluster-schemas-environment
-  - promote-to-rc
-  - upload-rc-artifacts
-- name: failover
-  jobs:
-  - claim-bosh-lite-failover
-  - release-failover-environment-manual
-  - delete-failover-deployment
-  - deploy-to-failover
-  - failover-broker-registrar
-  - failover-smoke-tests
-  - failover-tests
-  - release-failover-environment
-- name: scaling
-  jobs:
-  - claim-bosh-lite-scaling
-  - release-scaling-environment-manual
-  - delete-scaling-deployment
-  - deploy-to-scaling
-  - scaling-broker-registrar
-  - scaling-smoke-tests
-  - scaling-tests
-  - release-scaling-environment
-- name: data-loss
-  jobs:
-  - claim-bosh-lite-data-loss
-  - release-data-loss-environment-manual
-  - delete-data-loss-deployment
-  - deploy-to-data-loss
-  - data-loss-tests
-  - release-data-loss-environment
-- name: disable-paranoid
-  jobs:
-  - claim-bosh-lite-disable-paranoid
-  - release-disable-paranoid-environment-manual
-  - delete-disable-paranoid-deployment
-  - deploy-to-disable-paranoid
-  - disable-paranoid-tests
-  - release-disable-paranoid-environment
-- name: verify-schemas
-  jobs:
-  - claim-bosh-lite-verify-cluster-schemas
-  - release-verify-cluster-schemas-environment-manual
-  - delete-verify-cluster-schemas-deployment
-  - deploy-to-verify-cluster-schemas
-  - verify-cluster-schemas-tests
-  - release-verify-cluster-schemas-environment
