@@ -192,17 +192,17 @@ jobs:
             cd cf-mysql-release/src/cf-mysql-broker
 
             bundle-audit
-  - task: test-sample-stubs
-    config:
-      platform: &platform linux
-      image_resource: &image_resource
-        type: docker-image
-        source:
-          repository: cloudfoundry/cf-mysql-ci
-      inputs:
-      - name: cf-mysql-release
-      run:
-        path: cf-mysql-release/scripts/test-sample-stubs
+    - task: test-sample-stubs
+      config:
+        platform: &platform linux
+        image_resource: &image_resource
+          type: docker-image
+          source:
+            repository: cloudfoundry/cf-mysql-ci
+        inputs:
+        - name: cf-mysql-release
+        run:
+          path: cf-mysql-release/scripts/test-sample-stubs
 
 - name: create-and-compile-release
   serial: true
