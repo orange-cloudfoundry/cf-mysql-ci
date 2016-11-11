@@ -55,7 +55,7 @@ RUN /opt/rubies/ruby-${DOCKER_RUBY_VERSION}/bin/gem install bosh_cli --no-rdoc -
 
 # Install gobosh cli
 RUN \
-  wget -q https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-0.0.79-linux-amd64 -O /usr/local/bin/gobosh && \
+  wget -q https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-0.0.104-linux-amd64 -O /usr/local/bin/gobosh && \
   chmod +x /usr/local/bin/gobosh
 
 # Phantomjs is used by switchboard ui tests and dashboard acceptance tests
