@@ -94,14 +94,6 @@ jobs:
       - name: cf-mysql-release
       run:
         path: cf-mysql-release/scripts/test-unit
-
-- name: test-sample-stubs
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      trigger: true
-    - get: weekly-trigger
-      trigger: true
   - task: test-sample-stubs
     config:
       platform: *platform
@@ -111,41 +103,21 @@ jobs:
       run:
         path: cf-mysql-release/scripts/test-sample-stubs
 
-- name: claim-aws-environment
+- name: deploy-to-full-bosh
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - get: weekly-trigger
-      passed: [test-sample-stubs, test-unit]
+      passed: [test-unit]
       trigger: true
     - put: aws-environment
       params:
         acquire: true
-
-- name: release-aws-environment-manual
-  plan:
-  - try:
-      do:
-      - get: aws-environment
-        passed: [claim-aws-environment]
-      - put: aws-environment
-        params:
-          release: aws-environment
-
-- name: delete-aws-deployment
-  plan:
-  - aggregate:
-    - get: aws-environment
-      passed: [claim-aws-environment]
-      trigger: true
-      version: every
-    - get: weekly-trigger
-      passed: [claim-aws-environment]
-    - get: cf-mysql-release
-      passed: [claim-aws-environment]
     - get: cf-mysql-ci
+    - get: deployments-configuration
+    - get: aws-bosh-stemcell
   - try:
       task: run-broker-deregistrar
       config:
@@ -175,21 +147,6 @@ jobs:
         DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
-
-- name: deploy-to-initial
-  plan:
-  - aggregate:
-    - get: deployments-configuration
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [delete-aws-deployment]
-    - get: aws-bosh-stemcell
-    - get: weekly-trigger
-      passed: [delete-aws-deployment]
-    - get: aws-environment
-      passed: [delete-aws-deployment]
-      trigger: true
-      version: every
   - aggregate:
     - &create-release
       task: create-release
@@ -231,17 +188,15 @@ jobs:
       releases: [release-tarball/*.tgz]
       stemcells: [aws-bosh-stemcell/*.tgz]
 
-- name: acceptance-test-initial
+- name: test-full-bosh
   plan:
   - aggregate:
     - get: aws-environment
-      passed: [deploy-to-initial]
+      passed: [deploy-to-full-bosh]
       trigger: true
       version: every
-    - get: weekly-trigger
-      passed: [deploy-to-initial]
     - get: cf-mysql-release
-      passed: [deploy-to-initial]
+      passed: [deploy-to-full-bosh]
     - get: cf-mysql-ci
   - task: run-broker-registrar
     config:
@@ -271,19 +226,6 @@ jobs:
         DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
-
-- name: dashboard-test-initial
-  plan:
-  - aggregate:
-      - get: aws-environment
-        passed: [acceptance-test-initial]
-        trigger: true
-        version: every
-      - get: weekly-trigger
-        passed: [acceptance-test-initial]
-      - get: cf-mysql-release
-        passed: [acceptance-test-initial]
-      - get: cf-mysql-ci
   - task: dashboard-test
     config:
       platform: *platform
@@ -298,15 +240,6 @@ jobs:
         TEST_TYPE: dashboard
       run:
         path: cf-mysql-ci/scripts/acceptance-tests
-
-- name: cleanup-aws-deployment
-  plan:
-  - aggregate:
-    - get: aws-environment
-      trigger: true
-      version: every
-      passed: [dashboard-test-initial]
-    - get: cf-mysql-ci
   - try:
       task: run-broker-deregistrar
       config:
@@ -336,54 +269,27 @@ jobs:
         DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
-
-- name: release-aws-environment
-  plan:
-  - get: cf-mysql-release
-    passed: [dashboard-test-initial]
-  - get: aws-environment
-    passed: [cleanup-aws-deployment]
-    trigger: true
-    version: every
   - put: aws-environment
     params:
       release: aws-environment
 
 ### SCALING
-- name: claim-bosh-lite-scaling
+- name: deploy-to-scaling
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [dashboard-test-initial]
+      passed: [test-unit]
       trigger: true
     - get: weekly-trigger
-      passed: [dashboard-test-initial]
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
-
-- name: release-scaling-environment-manual
-  plan:
-  - try:
-      do:
-      - get: bosh-lite-environment
-        passed: [claim-bosh-lite-scaling]
-      - put: bosh-lite-environment
-        params:
-          release: bosh-lite-environment
-
-- name: delete-scaling-deployment
-  plan:
-  - aggregate:
-    - get: bosh-lite-environment
-      passed: [claim-bosh-lite-scaling]
-      trigger: true
-      version: every
-    - get: cf-mysql-release
-      passed: [claim-bosh-lite-scaling]
     - get: cf-mysql-ci
-  - try: &broker-deregistrar-bosh-lite
+    - get: bosh-lite-stemcell
+  - &broker-deregistrar-bosh-lite
+    try:
       task: run-broker-deregistrar
       config:
         platform: *platform
@@ -426,18 +332,6 @@ jobs:
           DEPLOYMENT_NAME: cf-warden-mysql
         run:
           path: cf-mysql-ci/scripts/bosh/delete_deployment
-
-- name: deploy-to-scaling
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [delete-scaling-deployment]
-    - get: bosh-lite-stemcell
-    - get: cf-mysql-ci
-    - get: bosh-lite-environment
-      passed: [delete-scaling-deployment]
-      trigger: true
-      version: every
   - aggregate:
     - *create-release
     - task: make-manifest
@@ -465,17 +359,6 @@ jobs:
       manifest: deployment-manifest/deployment.yml
       releases: [release-tarball/*.tgz]
       stemcells: [bosh-lite-stemcell/*.tgz]
-
-- name: scaling-broker-registrar
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [deploy-to-scaling]
-    - get: bosh-lite-environment
-      passed: [deploy-to-scaling]
-      trigger: true
-      version: every
   - &broker-registrar-bosh-lite
     task: run-broker-registrar
     config:
@@ -492,14 +375,14 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
 
-- name: scaling-smoke-tests
+- name: test-scaling
   plan:
   - aggregate:
     - get: cf-mysql-ci
     - get: cf-mysql-release
-      passed: [scaling-broker-registrar]
+      passed: [deploy-to-scaling]
     - get: bosh-lite-environment
-      passed: [scaling-broker-registrar]
+      passed: [deploy-to-scaling]
       trigger: true
       version: every
   - &smoke-tests-bosh-lite
@@ -517,17 +400,6 @@ jobs:
         DEPLOYMENT_NAME: cf-warden-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
-
-- name: scaling-tests
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [scaling-smoke-tests]
-    - get: bosh-lite-environment
-      passed: [scaling-smoke-tests]
-      trigger: true
-      version: every
   - task: run-scaling-tests
     config:
       platform: *platform
@@ -542,68 +414,27 @@ jobs:
         BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
       run:
         path: cf-mysql-ci/scripts/scaling/scaling-test
-
-- name: release-scaling-environment
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [scaling-tests]
-    - get: bosh-lite-environment
-      passed: [scaling-tests]
-      trigger: true
-      version: every
   - put: bosh-lite-environment
     params:
       release: bosh-lite-environment
 
 ### FAILOVER
-- name: claim-bosh-lite-failover
+- name: deploy-to-failover
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [dashboard-test-initial]
+      passed: [test-unit]
       trigger: true
     - get: weekly-trigger
-      passed: [dashboard-test-initial]
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
-
-- name: release-failover-environment-manual
-  plan:
-  - try:
-      do:
-      - get: bosh-lite-environment
-        passed: [claim-bosh-lite-failover]
-      - put: bosh-lite-environment
-        params:
-          release: bosh-lite-environment
-
-- name: delete-failover-deployment
-  plan:
-  - aggregate:
-    - get: bosh-lite-environment
-      passed: [claim-bosh-lite-failover]
-      trigger: true
-      version: every
-    - get: cf-mysql-release
-      passed: [claim-bosh-lite-failover]
     - get: cf-mysql-ci
-  - try: *broker-deregistrar-bosh-lite
-  - *delete-deployment-bosh-lite
-
-- name: deploy-to-failover
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [delete-failover-deployment]
     - get: bosh-lite-stemcell
-    - get: bosh-lite-environment
-      passed: [delete-failover-deployment]
-      trigger: true
-      version: every
+  - *broker-deregistrar-bosh-lite
+  - *delete-deployment-bosh-lite
   - aggregate:
     - *create-release
     - task: make-manifest
@@ -623,41 +454,19 @@ jobs:
         run:
           path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - *deploy-to-bosh-lite
-
-- name: failover-broker-registrar
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [deploy-to-failover]
-    - get: bosh-lite-environment
-      passed: [deploy-to-failover]
-      trigger: true
-      version: every
   - *broker-registrar-bosh-lite
 
-- name: failover-smoke-tests
+- name: test-failover
   plan:
   - aggregate:
     - get: cf-mysql-ci
     - get: cf-mysql-release
-      passed: [failover-broker-registrar]
+      passed: [deploy-to-failover]
     - get: bosh-lite-environment
-      passed: [failover-broker-registrar]
+      passed: [deploy-to-failover]
       trigger: true
       version: every
   - *smoke-tests-bosh-lite
-
-- name: failover-tests
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [failover-smoke-tests]
-    - get: bosh-lite-environment
-      passed: [failover-smoke-tests]
-      trigger: true
-      version: every
   - task: run-failover-tests
     config:
       platform: *platform
@@ -672,28 +481,19 @@ jobs:
         BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
       run:
         path: cf-mysql-ci/scripts/failover/failover-test
-
-- name: release-failover-environment
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [failover-tests]
-    - get: bosh-lite-environment
-      passed: [failover-tests]
-      trigger: true
-      version: every
   - put: bosh-lite-environment
     params:
       release: bosh-lite-environment
 
-### INTEGRATION DEPLOY
+### PROMOTE TO RC
 - name: promote-to-rc
   plan:
   - aggregate:
     - get: cf-mysql-release
       passed:
-      - release-failover-environment
-      - release-scaling-environment
+      - test-full-bosh
+      - test-failover
+      - test-scaling
       trigger: true
     - get: cf-mysql-ci
   - task: rc-tag-file
@@ -732,8 +532,9 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed:
-      - release-failover-environment
-      - release-scaling-environment
+      - test-full-bosh
+      - test-failover
+      - test-scaling
       trigger: true
     - get: cf-mysql-ci
   - task: create-rc-release-artifacts
@@ -753,55 +554,3 @@ jobs:
   - put: pcf-mysql-rc-artifacts
     params:
       file: release-tarball/cf-mysql*.tgz
-
-groups:
-- name: cf-mysql-v22
-  jobs:
-  - test-unit
-  - test-sample-stubs
-  - claim-aws-environment
-  - release-aws-environment-manual
-  - delete-aws-deployment
-  - deploy-to-initial
-  - acceptance-test-initial
-  - dashboard-test-initial
-  - cleanup-aws-deployment
-  - release-aws-environment
-  - claim-bosh-lite-scaling
-  - release-scaling-environment-manual
-  - delete-scaling-deployment
-  - deploy-to-scaling
-  - scaling-broker-registrar
-  - scaling-smoke-tests
-  - scaling-tests
-  - release-scaling-environment
-  - claim-bosh-lite-failover
-  - release-failover-environment-manual
-  - delete-failover-deployment
-  - deploy-to-failover
-  - failover-broker-registrar
-  - failover-smoke-tests
-  - failover-tests
-  - release-failover-environment
-  - promote-to-rc
-  - upload-rc-artifacts
-- name: failover
-  jobs:
-  - claim-bosh-lite-failover
-  - release-failover-environment-manual
-  - delete-failover-deployment
-  - deploy-to-failover
-  - failover-broker-registrar
-  - failover-smoke-tests
-  - failover-tests
-  - release-failover-environment
-- name: scaling
-  jobs:
-  - claim-bosh-lite-scaling
-  - release-scaling-environment-manual
-  - delete-scaling-deployment
-  - deploy-to-scaling
-  - scaling-broker-registrar
-  - scaling-smoke-tests
-  - scaling-tests
-  - release-scaling-environment
