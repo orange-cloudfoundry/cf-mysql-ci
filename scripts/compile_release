@@ -27,7 +27,7 @@ pushd "${WORKSPACE_DIR}"
 ---
 name: ${DEPLOYMENT_NAME}
 
-director_uuid: 28dc9bd9-c145-4048-b4b1-7e3582a51e9f
+director_uuid: 8797c2a6-c620-4192-a1b8-fc71dec6e995
 
 releases:
 - name: ${RELEASE_NAME}
