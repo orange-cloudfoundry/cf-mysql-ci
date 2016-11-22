@@ -7,13 +7,6 @@ resources:
     branch: develop
     private_key: {{git-writer-private-key}}
 
-- name: cf-mysql-release-candidate
-  type: git
-  source:
-    uri: git@github.com:cloudfoundry/cf-mysql-release.git
-    branch: release-candidate
-    private_key: {{git-writer-private-key}}
-
 - name: cf-mysql-master
   type: git
   source:
