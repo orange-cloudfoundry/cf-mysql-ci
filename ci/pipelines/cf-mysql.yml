@@ -1364,7 +1364,7 @@ jobs:
 
           ./cf-mysql-release/scripts/generate-cf-vars-for-bosh-2.0 "${CF_MANIFEST_FILE}" > /tmp/vars-from-cf.yml
 
-          bosh2 build-manifest \
+          bosh2 interpolate \
             ./cf-mysql-release/manifest-generation/cf-mysql-template-v2.yml \
             -l ./cf-mysql-release/manifest-generation/bosh2.0/bosh-lite/default-vars.yml \
             -l /tmp/vars-from-cf.yml \
