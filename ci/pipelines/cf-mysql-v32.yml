@@ -1,22 +1,6 @@
 ---
 ### RESOURCES
 resources:
-- name: cf-mysql-ci-image
-  type: docker-image
-  source:
-    username: {{pivotal-docker-username}}
-    email: {{pivotal-docker-email}}
-    password: {{pivotal-docker-password}}
-    repository: cloudfoundry/cf-mysql-ci
-
-- name: cf-mysql-dockerfile
-  type: git
-  source:
-    uri: https://github.com/cloudfoundry-incubator/cf-mysql-ci.git
-    branch: master
-    paths:
-    - scripts/Dockerfile
-
 - name: aws-bosh-stemcell
   type: bosh-io-stemcell
   source:
@@ -43,14 +27,15 @@ resources:
   type: git
   source:
     uri: git@github.com:cloudfoundry/cf-mysql-release.git
-    branch: develop
+    branch: releases/v32
     private_key: {{git-writer-private-key}}
 
-- name: cf-mysql-master
+- name: cf-mysql-current-v32
   type: git
   source:
     uri: git@github.com:cloudfoundry/cf-mysql-release.git
-    branch: master
+    branch: releases/v32
+    tag_filter: v32*
     private_key: {{git-writer-private-key}}
 
 - name: aws-deployment
@@ -69,28 +54,12 @@ resources:
     deployment: cf-warden-mysql
     ignore_ssl: true
 
-- name: integration-deployment
-  type: bosh-deployment
-  source:
-    username: {{integration_env_bosh_username}}
-    password: {{integration_env_bosh_password}}
-    deployment: cf-a1-mysql
-    ignore_ssl: true
-
 - name: aws-environment
   type: pool
   source:
     uri: &pool-uri git@github.com:pivotal-cf-experimental/core-services-oss-env-resource-pool
     branch: master
     pool: aws
-    private_key: {{git-writer-private-key}}
-
-- name: integration-environment
-  type: pool
-  source:
-    uri: *pool-uri
-    branch: master
-    pool: aws-integration
     private_key: {{git-writer-private-key}}
 
 - name: bosh-lite-environment
@@ -109,30 +78,6 @@ resources:
     pool: bosh-lites-no-cf
     private_key: {{git-writer-private-key}}
 
-- name: compiled-packages-lock
-  type: pool
-  source:
-    uri: *pool-uri
-    branch: master
-    pool: compiled-packages
-    private_key: {{git-writer-private-key}}
-
-- name: cf-mysql-rc-artifacts
-  type: s3
-  source:
-    bucket: cf-mysql-releases
-    regexp: release-candidate/cf-mysql-(.*)\+.*.tgz
-    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
-    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
-
-- name: cf-mysql-compiled-release
-  type: s3
-  source:
-    bucket: cf-mysql-releases
-    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
-    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
-    versioned_file: compiled-releases/cf-mysql-ubuntu-trusty-develop.tgz
-
 - name: bosh2.0-cli
   type: s3
   source:
@@ -147,22 +92,47 @@ resources:
     deployment: cf-mysql
     ignore_ssl: true
 
+- name: compiled-packages-lock
+  type: pool
+  source:
+    uri: *pool-uri
+    branch: master
+    pool: compiled-packages
+    private_key: {{git-writer-private-key}}
+
+- name: weekly-trigger
+  type: time
+  source:
+    days:
+    - Monday
+    interval: 24h
+
+- name: pcf-mysql-final-artifacts
+  type: s3
+  source:
+    bucket: pcf-mysql-releases
+    access_key_id: {{pcf-mysql-ci-aws-access-key-id}}
+    secret_access_key: {{pcf-mysql-ci-aws-secret-access-key}}
+    regexp: final/cf-mysql-([\d+\.]+)\.tgz
+
+- name: cf-mysql-compiled-release
+  type: s3
+  source:
+    bucket: cf-mysql-releases
+    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
+    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
+    versioned_file: compiled-releases/cf-mysql-ubuntu-trusty-v32.tgz
+
 ### JOBS
 jobs:
-- name: build-dockerfile
-  plan:
-  - get: cf-mysql-dockerfile
-    trigger: true
-  - put: cf-mysql-ci-image
-    params:
-      build: cf-mysql-dockerfile/scripts/
-
 - name: test-unit
   plan:
   - aggregate:
-    - get: cf-mysql-ci
     - get: cf-mysql-release
       trigger: true
+    - get: weekly-trigger
+      trigger: true
+    - get: cf-mysql-ci
   - aggregate:
     - task: test-unit
       file: cf-mysql-ci/ci/tasks/test-unit.yml
@@ -212,6 +182,10 @@ jobs:
       trigger: true
       passed:
         - test-unit
+    - get: weekly-trigger
+      trigger: true
+      passed:
+        - test-unit
     - get: cf-mysql-ci
     - get: aws-bosh-stemcell
   - &create-release
@@ -226,7 +200,7 @@ jobs:
       - name: release-tarball
       params:
         RELEASE_NAME: cf-mysql
-        TAG_MATCH: v32
+        TAG_MATCH: v32*
       run:
         path: cf-mysql-ci/scripts/create_release
   - put: compiled-packages-lock
@@ -262,6 +236,9 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
+      trigger: true
+    - get: weekly-trigger
+      passed: [test-unit]
       trigger: true
     - put: aws-environment
       params:
@@ -419,6 +396,9 @@ jobs:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
       trigger: true
+    - get: weekly-trigger
+      passed: [test-unit]
+      trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
@@ -560,6 +540,9 @@ jobs:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
       trigger: true
+    - get: weekly-trigger
+      passed: [test-unit]
+      trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
@@ -625,6 +608,9 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
+      trigger: true
+    - get: weekly-trigger
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -694,7 +680,10 @@ jobs:
       trigger: true
       passed: [create-and-compile-release]
     - get: cf-mysql-release
-      resource: cf-mysql-master
+      resource: cf-mysql-current-v32
+      trigger: true
+    - get: weekly-trigger
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -822,6 +811,9 @@ jobs:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
       trigger: true
+    - get: weekly-trigger
+      passed: [test-unit]
+      trigger: true
     - put: bosh-lite-environment
       resource: bosh-lite-no-cf-environment
       params:
@@ -904,6 +896,9 @@ jobs:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
       trigger: true
+    - get: weekly-trigger
+      passed: [test-unit]
+      trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
@@ -983,6 +978,9 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
+      trigger: true
+    - get: weekly-trigger
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -1082,6 +1080,9 @@ jobs:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
       trigger: true
+    - get: weekly-trigger
+      passed: [test-unit]
+      trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
@@ -1140,156 +1141,15 @@ jobs:
     params:
       release: bosh-lite-environment
 
-### INTEGRATION
-- name: deploy-to-integration
-  serial: true
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed:
-      # all bosh-lite pipelines
-      - test-full-bosh
-      - test-scaling
-      - test-failover
-      - test-verify-cluster-schemas
-      - test-disable-auto-sst
-      - test-data-loss
-      - test-bootstrap-on-standalone
-      - test-arb-to-full-scaling
-      - test-persistence-after-upgrade
-      - deploy-to-bosh-2.0
-      trigger: true
-    - get: deployments-configuration
-    - get: cf-mysql-ci
-    - get: aws-bosh-stemcell
-      passed: [deploy-to-full-bosh]
-    - put: integration-environment
-      params:
-        acquire: true
-    - get: compiled-release-tarball
-      resource: cf-mysql-compiled-release
-      passed: [create-and-compile-release]
-  - task: make-manifest
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: deployments-configuration
-      - name: cf-mysql-ci
-      - name: cf-mysql-release
-      - name: integration-environment
-      outputs:
-        - name: deployment-manifest
-      params:
-        ENV_TARGET_FILE: integration-environment/name
-        ENV_METADATA: integration-environment/metadata
-        DEPLOYMENTS_DIR: deployments-configuration
-        USE_EXISTING_CF_MANIFEST: true
-      run:
-        path: cf-mysql-ci/scripts/bosh/make_manifest
-  - put: integration-deployment
-    params:
-      target_file: integration-environment/name
-      manifest: deployment-manifest/deployment.yml
-      releases: [compiled-release-tarball/*.tgz]
-      stemcells: [aws-bosh-stemcell/*.tgz]
-
-- name: test-integration
-  plan:
-  - aggregate:
-    - get: integration-environment
-      passed: [deploy-to-integration]
-      trigger: true
-      version: every
-    - get: cf-mysql-release
-      passed: [deploy-to-integration]
-    - get: cf-mysql-ci
-  - task: run-broker-registrar
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: cf-mysql-ci
-        - name: integration-environment
-      params:
-        ENV_TARGET_FILE: integration-environment/name
-        ENV_METADATA: integration-environment/metadata
-        ERRAND: broker-registrar
-        DEPLOYMENT_NAME: cf-a1-mysql
-      run:
-        path: cf-mysql-ci/scripts/bosh/run_errand
-  - task: run-smoke-tests
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: cf-mysql-ci
-        - name: integration-environment
-      params:
-        ENV_TARGET_FILE: integration-environment/name
-        ENV_METADATA: integration-environment/metadata
-        ERRAND: smoke-tests
-        DEPLOYMENT_NAME: cf-a1-mysql
-      run:
-        path: cf-mysql-ci/scripts/bosh/run_errand
-  - put: integration-environment
-    params:
-      release: integration-environment
-
-- name: upload-rc-artifacts
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [test-integration]
-      trigger: true
-    - get: cf-mysql-ci
-  - task: create-rc-release-artifacts
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
-      outputs:
-        - name: release-tarball
-      params:
-        RELEASE_NAME: cf-mysql
-        TAG_MATCH: v32
-      run:
-        path: cf-mysql-ci/scripts/create_release
-  - put: cf-mysql-rc-artifacts
-    params:
-      file: release-tarball/cf-mysql*.tgz
-
-- name: promote-to-rc
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [test-integration]
-      trigger: true
-      params:
-        fetch: [release-candidate]
-    - get: cf-mysql-ci
-  - task: merge-and-push-to-release-candidate
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
-      run:
-        path: cf-mysql-ci/scripts/publish/merge-and-push
-      params:
-        SOURCE_BRANCH: release-candidate
-        BRANCH_TO_MERGE: develop
-        GIT_PRIVATE_KEY: {{git-writer-private-key}}
-
 ### BOSH 2.0
 - name: deploy-to-bosh-2.0
   plan:
   - aggregate:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
+      trigger: true
+    - get: weekly-trigger
+      passed: [test-unit]
       trigger: true
     - put: bosh-lite-environment
       params:
@@ -1382,3 +1242,91 @@ jobs:
   - put: bosh-lite-environment
     params:
       release: bosh-lite-environment
+
+### Promote
+- name: upload-rc-artifacts
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      passed:
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - test-verify-cluster-schemas
+      - test-disable-auto-sst
+      - test-data-loss
+      - test-bootstrap-on-standalone
+      - test-arb-to-full-scaling
+      - test-persistence-after-upgrade
+      - deploy-to-bosh-2.0
+      trigger: true
+    - get: cf-mysql-ci
+  - task: create-rc-release-artifacts
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+        - name: cf-mysql-ci
+        - name: cf-mysql-release
+      outputs:
+        - name: release-tarball
+      params:
+        RELEASE_NAME: cf-mysql
+        TAG_MATCH: v32*
+        FINAL: true
+      run:
+        path: cf-mysql-ci/scripts/create_release
+  - put: pcf-mysql-final-artifacts
+    params:
+      file: release-tarball/cf-mysql*.tgz
+
+- name: promote-to-rc
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      passed:
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - test-verify-cluster-schemas
+      - test-disable-auto-sst
+      - test-data-loss
+      - test-bootstrap-on-standalone
+      - test-arb-to-full-scaling
+      - test-persistence-after-upgrade
+      - deploy-to-bosh-2.0
+      trigger: true
+      params:
+        fetch: [release-candidate]
+    - get: cf-mysql-ci
+  - task: rc-tag-file
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      run:
+        path: /bin/bash
+        args:
+          - '-c'
+          - mkdir -p rc-tag-dir && echo -n "release-candidate-v32" > rc-tag-dir/rc-tag-file
+      outputs:
+        - name: rc-tag-dir
+  - try:
+      task: delete-tag
+      config:
+        platform: *platform
+        image_resource: *image_resource
+        inputs:
+          - name: cf-mysql-ci
+          - name: cf-mysql-release
+          - name: rc-tag-dir
+        params:
+          GIT_AUTHOR_NAME: {{oss-git-writer-name}}
+          GIT_AUTHOR_EMAIL: {{oss-git-writer-email}}
+          GIT_PRIVATE_KEY: {{git-writer-private-key}}
+        run:
+          path: cf-mysql-ci/scripts/publish/delete-tag
+  - put: cf-mysql-release
+    params:
+      repository: cf-mysql-release
+      tag: rc-tag-dir/rc-tag-file
+      only_tag: true
