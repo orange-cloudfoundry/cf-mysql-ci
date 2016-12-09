@@ -1,4 +1,9 @@
 ---
+#
+# Whenver the cf-mysql-release repo is updated, run a series of integration tests and upload the artifact
+# as a release candidate. Merges the develop branch into the release-candidate branch.
+#
+
 ### RESOURCES
 resources:
 - name: cf-mysql-ci-image
