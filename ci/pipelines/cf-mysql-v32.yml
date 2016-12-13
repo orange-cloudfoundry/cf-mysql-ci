@@ -107,13 +107,13 @@ resources:
     - Monday
     interval: 24h
 
-- name: pcf-mysql-final-artifacts
+- name: pcf-mysql-rc-artifacts
   type: s3
   source:
     bucket: pcf-mysql-releases
     access_key_id: {{pcf-mysql-ci-aws-access-key-id}}
     secret_access_key: {{pcf-mysql-ci-aws-secret-access-key}}
-    regexp: final/cf-mysql-([\d+\.]+)\.tgz
+    regexp: releases-32/tested/cf-mysql-(\d+\.\d+)\+.*.tgz
 
 - name: cf-mysql-compiled-release
   type: s3
@@ -1273,10 +1273,9 @@ jobs:
       params:
         RELEASE_NAME: cf-mysql
         TAG_MATCH: v32*
-        FINAL: true
       run:
         path: cf-mysql-ci/scripts/create_release
-  - put: pcf-mysql-final-artifacts
+  - put: pcf-mysql-rc-artifacts
     params:
       file: release-tarball/cf-mysql*.tgz
 
