@@ -64,7 +64,7 @@ RUN wget https://github.com/Pyppe/phantomjs2.0-ubuntu14.04x64/raw/master/bin/pha
           mv phantomjs /usr/bin/phantomjs
 
 # Install cf cli
-RUN curl http://go-cli.s3-website-us-east-1.amazonaws.com/releases/v6.22.2/cf-linux-amd64.tgz | tar xvz -C /bin
+RUN curl 'https://s3-us-west-1.amazonaws.com/cf-cli-releases/releases/v6.22.2/cf-cli_6.22.2_linux_x86-64.tgz'| tar xvz -C /bin
 
 # Install go
 RUN curl https://storage.googleapis.com/golang/go1.7.4.linux-amd64.tar.gz | tar xvz -C /usr/local/
