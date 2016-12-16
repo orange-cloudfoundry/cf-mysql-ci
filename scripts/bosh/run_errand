@@ -19,12 +19,10 @@ bosh_user="$(jq_val "bosh_user" "${ENV_METADATA}")"
 bosh_password="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
 if [[ ${USE_GOBOSH} == "true" ]]; then
-  gobosh \
+  BOSH_USER="${bosh_user}" BOSH_PASSWORD="${bosh_password}" gobosh \
     -n \
     -e "${bosh_target}" \
-    login \
-    "${bosh_user}" \
-    "${bosh_password}"
+    login
 else
   bosh -n target "${bosh_target}"
   bosh -n login "${bosh_user}" "${bosh_password}"
