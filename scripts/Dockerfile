@@ -23,6 +23,7 @@ RUN \
             libfontconfig1-dev libfreetype6 libssl-dev libpng-dev libjpeg-dev \
             jq \
             mysql-client \
+            python-dev \
       && \
       apt-get clean
 
