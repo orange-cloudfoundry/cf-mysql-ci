@@ -55,7 +55,7 @@ RUN /opt/rubies/ruby-${DOCKER_RUBY_VERSION}/bin/gem install bosh_cli --no-rdoc -
 
 # Install gobosh cli
 RUN \
-  wget -q https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-0.0.104-linux-amd64 -O /usr/local/bin/gobosh && \
+  wget -q https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-0.0.137-linux-amd64 -O /usr/local/bin/gobosh && \
   chmod +x /usr/local/bin/gobosh
 
 # Phantomjs is used by switchboard ui tests and dashboard acceptance tests
@@ -64,10 +64,10 @@ RUN wget https://github.com/Pyppe/phantomjs2.0-ubuntu14.04x64/raw/master/bin/pha
           mv phantomjs /usr/bin/phantomjs
 
 # Install cf cli
-RUN curl http://go-cli.s3-website-us-east-1.amazonaws.com/releases/v6.10.0/cf-linux-amd64.tgz | tar xvz -C /bin
+RUN curl http://go-cli.s3-website-us-east-1.amazonaws.com/releases/v6.22.2/cf-linux-amd64.tgz | tar xvz -C /bin
 
 # Install go
-RUN curl https://storage.googleapis.com/golang/go1.7.linux-amd64.tar.gz | tar xvz -C /usr/local/
+RUN curl https://storage.googleapis.com/golang/go1.7.4.linux-amd64.tar.gz | tar xvz -C /usr/local/
 
 # Add golang environment variables
 ENV GOPATH /usr/local/go
