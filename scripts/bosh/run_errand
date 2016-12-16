@@ -3,31 +3,40 @@
 set -eux
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-CI_DIR="$( cd ${MY_DIR}/../../ && pwd )"
-WORKSPACE_DIR="$( cd ${CI_DIR}/../ && pwd )"
+CI_DIR="$( cd "${MY_DIR}/../../" && pwd )"
 
-source ${CI_DIR}/scripts/utils.sh
+source "${CI_DIR}/scripts/utils.sh"
 
 : "${ENV_TARGET_FILE:?}"
 : "${ENV_METADATA:?}"
 : "${ERRAND:?}"
 : "${DEPLOYMENT_NAME:?}"
 : "${SKIP_IF_NO_DEPLOYMENT:=false}"
+: "${USE_GOBOSH:=false}"
 
-BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
-BOSH_USER="$(jq_val "bosh_user" "${ENV_METADATA}")"
-BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
+bosh_target="$(cat "${ENV_TARGET_FILE}")"
+bosh_user="$(jq_val "bosh_user" "${ENV_METADATA}")"
+bosh_password="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
-bosh -n target "${BOSH_TARGET}"
-bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
+if [[ ${USE_GOBOSH} == "true" ]]; then
+  gobosh \
+    -n \
+    -e "${bosh_target}" \
+    login \
+    "${bosh_user}" \
+    "${bosh_password}"
+else
+  bosh -n target "${bosh_target}"
+  bosh -n login "${bosh_user}" "${bosh_password}"
+fi
 
 set +e
-check_if_deployment_exists ${DEPLOYMENT_NAME}
-DEPLOYMENT_GREP_RESULT=$?
+check_if_deployment_exists "${DEPLOYMENT_NAME}"
+deployment_grep_result=$?
 set -e
 
 # A value of 0 indicates deployment exists
-if [ ${DEPLOYMENT_GREP_RESULT} -ne 0 ]; then
+if [ ${deployment_grep_result} -ne 0 ]; then
   if [ "${SKIP_IF_NO_DEPLOYMENT}" = "true" ]; then
     echo "deployment ${DEPLOYMENT_NAME} does not exist, skipping errand"
     exit 0
@@ -37,7 +46,17 @@ if [ ${DEPLOYMENT_GREP_RESULT} -ne 0 ]; then
   fi
 fi
 
-MANIFEST_FILE=/tmp/errand-manifest.yml
-bosh download manifest ${DEPLOYMENT_NAME} ${MANIFEST_FILE}
-bosh deployment ${MANIFEST_FILE}
-bosh run errand ${ERRAND}
+
+manifest_file=/tmp/errand-manifest.yml
+
+if [[ ${USE_GOBOSH} == "true" ]]; then
+  gobosh \
+    -n \
+    -e "${bosh_target}" \
+    run-errand \
+    "${ERRAND}"
+else
+  bosh download manifest "${DEPLOYMENT_NAME}" "${manifest_file}"
+  bosh deployment "${manifest_file}"
+  bosh run errand "${ERRAND}"
+fi
