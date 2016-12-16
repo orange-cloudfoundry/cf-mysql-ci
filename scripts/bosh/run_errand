@@ -2,10 +2,12 @@
 
 set -eux
 
-MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-CI_DIR="$( cd "${MY_DIR}/../../" && pwd )"
+my_dir="$( CD "$( DIRNAME "${bash_source[0]}" )" && PWD )"
+CI_DIR="$( CD "${MY_DIR}/../../" && pwd )"
+workspace_dir="$( cd "${ci_dir}/../" && pwd )"
+bosh_lite_repo_dir="${workspace_dir}/bosh-lite-repo"
 
-source "${CI_DIR}/scripts/utils.sh"
+source "${ci_dir}/scripts/utils.sh"
 
 : "${ENV_TARGET_FILE:?}"
 : "${ENV_METADATA:?}"
@@ -20,6 +22,7 @@ bosh_password="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
 if [[ ${USE_GOBOSH} == "true" ]]; then
   BOSH_USER="${bosh_user}" BOSH_PASSWORD="${bosh_password}" gobosh \
+    --ca-cert "${bosh-lite-repo}/ca/certs/ca.crt" \
     -n \
     -e "${bosh_target}" \
     login
@@ -49,6 +52,7 @@ manifest_file=/tmp/errand-manifest.yml
 
 if [[ ${USE_GOBOSH} == "true" ]]; then
   gobosh \
+    --ca-cert "${bosh-lite-repo}/ca/certs/ca.crt" \
     -n \
     -e "${bosh_target}" \
     run-errand \
