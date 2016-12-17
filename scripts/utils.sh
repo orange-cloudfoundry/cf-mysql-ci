@@ -17,3 +17,9 @@ jq_val() {
     fi
     echo "${RESULT}"
 }
+
+sslip_from_ip () {
+    ip=$1
+    ip_with_dashes=$(echo "${ip}" | sed 's/\./-/g')
+    echo "https://${ip_with_dashes}.sslip.io"
+}
