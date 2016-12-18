@@ -14,7 +14,7 @@ source "${ci_dir}/scripts/utils.sh"
 : "${DEPLOYMENT_NAME:?}"
 
 BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
-BOSH_ENVIRONMENT="$(ssl_from_ip "${BOSH_ENVIRONMENT}")"
+BOSH_ENVIRONMENT="$(sslip_from_ip "${BOSH_ENVIRONMENT}")"
 ENV_SHORT_NAME="$(jq_val "env" "${ENV_METADATA}")"
 
 BOSH_USER="$(jq_val "bosh_user" "${ENV_METADATA}")"
