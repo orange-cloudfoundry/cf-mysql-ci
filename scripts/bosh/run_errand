@@ -15,12 +15,21 @@ source "${ci_dir}/scripts/utils.sh"
 
 BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
 BOSH_ENVIRONMENT="$(sslip_from_ip "${BOSH_ENVIRONMENT}")"
+export BOSH_ENVIRONMENT
+
 ENV_SHORT_NAME="$(jq_val "env" "${ENV_METADATA}")"
 
 BOSH_USER="$(jq_val "bosh_user" "${ENV_METADATA}")"
+export BOSH_USER
+
 BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
+export BOSH_PASSWORD
+
 BOSH_CA_CERT=${BOSH_CA_CERT_PATH?-"${WORKSPACE_DIR}/${ENV_REPO}/${ENV_SHORT_NAME}/certs/rootCA.pem"}
+export BOSH_CA_CERT
+
 BOSH_DEPLOYMENT="${DEPLOYMENT_NAME}"
+export BOSH_DEPLOYMENT
 
 gobosh \
     -n \
