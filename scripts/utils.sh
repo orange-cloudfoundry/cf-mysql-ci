@@ -18,8 +18,16 @@ jq_val() {
     echo "${RESULT}"
 }
 
+# sslip_from_ip returns the IPv4 address as an sslip hostname
+# e.g. 10.244.3.4 is returned as https://10-244-3-4.sslip.io
+# Any input that is not a valid IPv4 address will be returned immediately.
 sslip_from_ip () {
-    ip=$1
-    ip_with_dashes=$(echo "${ip}" | sed 's/\./-/g')
-    echo "https://${ip_with_dashes}.sslip.io"
+    input=$1
+
+    if [[ "${input}" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+      ip_with_dashes=$(echo "${input}" | sed 's/\./-/g')
+      echo "https://${ip_with_dashes}.sslip.io"
+    else
+      echo "${input}"
+    fi
 }
