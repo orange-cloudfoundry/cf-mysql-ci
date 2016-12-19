@@ -284,6 +284,7 @@ jobs:
     - get: cf-mysql-release
       passed: [deploy-to-full-bosh]
     - get: cf-mysql-ci
+    - get: deployments-configuration
   - task: run-broker-registrar
     config:
       platform: *platform
