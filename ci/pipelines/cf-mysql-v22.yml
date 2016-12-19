@@ -67,6 +67,7 @@ resources:
     days:
     - Monday
     interval: 24h
+
 - name: pcf-mysql-rc-artifacts
   type: s3
   source:
@@ -74,6 +75,13 @@ resources:
     access_key_id: {{pcf-mysql-ci-aws-access-key-id}}
     secret_access_key: {{pcf-mysql-ci-aws-secret-access-key}}
     regexp: releases-22/tested/cf-mysql-([\d.]+)\+.*.tgz
+
+- name: bosh-lite-repo
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry/bosh-lite.git
+    branch: master
+
 ### JOBS
 jobs:
 - name: test-unit
@@ -126,7 +134,9 @@ jobs:
         inputs:
         - name: cf-mysql-ci
         - name: aws-environment
+        - name: deployments-configuration
         params:
+          ENV_REPO: deployments-configuration
           ENV_TARGET_FILE: aws-environment/name
           ENV_METADATA: aws-environment/metadata
           ERRAND: broker-deregistrar
@@ -198,6 +208,7 @@ jobs:
     - get: cf-mysql-release
       passed: [deploy-to-full-bosh]
     - get: cf-mysql-ci
+    - get: deployments-configuration
   - task: run-broker-registrar
     config:
       platform: *platform
@@ -205,7 +216,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: aws-environment
+        - name: deployments-configuration
       params:
+        ENV_REPO: deployments-configuration
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
         ERRAND: broker-registrar
@@ -219,7 +232,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: aws-environment
+        - name: deployments-configuration
       params:
+        ENV_REPO: deployments-configuration
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
         ERRAND: acceptance-tests
@@ -248,7 +263,9 @@ jobs:
         inputs:
         - name: cf-mysql-ci
         - name: aws-environment
+        - name: deployments-configuration
         params:
+          ENV_REPO: deployments-configuration
           ENV_TARGET_FILE: aws-environment/name
           ENV_METADATA: aws-environment/metadata
           ERRAND: broker-deregistrar
@@ -288,6 +305,7 @@ jobs:
         acquire: true
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
+    - get: bosh-lite-repo
   - &broker-deregistrar-bosh-lite
     try:
       task: run-broker-deregistrar
@@ -297,7 +315,9 @@ jobs:
         inputs:
           - name: bosh-lite-environment
           - name: cf-mysql-ci
+          - name: bosh-lite-repo
         params:
+          BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
           ERRAND: broker-deregistrar
@@ -351,7 +371,6 @@ jobs:
           ENV_METADATA: bosh-lite-environment/metadata
         run:
           path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-
   - &deploy-to-bosh-lite
     put: bosh-lite-deployment
     params:
@@ -367,7 +386,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
+        - name: bosh-lite-repo
       params:
+        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         ERRAND: broker-registrar
@@ -385,6 +406,7 @@ jobs:
       passed: [deploy-to-scaling]
       trigger: true
       version: every
+    - get: bosh-lite-repo
   - &smoke-tests-bosh-lite
     task: run-smoke-tests
     config:
@@ -393,7 +415,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
+        - name: bosh-lite-repo
       params:
+        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         ERRAND: acceptance-tests
@@ -433,6 +457,7 @@ jobs:
         acquire: true
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
+    - get: bosh-lite-repo
   - *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
   - aggregate:
@@ -466,6 +491,7 @@ jobs:
       passed: [deploy-to-failover]
       trigger: true
       version: every
+    - get: bosh-lite-repo
   - *smoke-tests-bosh-lite
   - task: run-failover-tests
     config:

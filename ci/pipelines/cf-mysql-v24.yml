@@ -92,6 +92,12 @@ resources:
     secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
     versioned_file: compiled-releases/cf-mysql-ubuntu-trusty-v24.tgz
 
+- name: bosh-lite-repo
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry/bosh-lite.git
+    branch: master
+
 ### JOBS
 jobs:
 - name: test-unit
@@ -220,7 +226,9 @@ jobs:
         inputs:
         - name: cf-mysql-ci
         - name: aws-environment
+        - name: deployments-configuration
         params:
+          ENV_REPO: deployments-configuration
           ENV_TARGET_FILE: aws-environment/name
           ENV_METADATA: aws-environment/metadata
           ERRAND: broker-deregistrar
@@ -283,7 +291,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: aws-environment
+        - name: deployments-configuration
       params:
+        ENV_REPO: deployments-configuration
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
         ERRAND: broker-registrar
@@ -297,7 +307,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: aws-environment
+        - name: deployments-configuration
       params:
+        ENV_REPO: deployments-configuration
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
         ERRAND: acceptance-tests
@@ -326,7 +338,9 @@ jobs:
         inputs:
         - name: cf-mysql-ci
         - name: aws-environment
+        - name: deployments-configuration
         params:
+          ENV_REPO: deployments-configuration
           ENV_TARGET_FILE: aws-environment/name
           ENV_METADATA: aws-environment/metadata
           ERRAND: broker-deregistrar
@@ -366,6 +380,7 @@ jobs:
         acquire: true
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
+    - get: bosh-lite-repo
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
@@ -378,7 +393,9 @@ jobs:
         inputs:
           - name: bosh-lite-environment
           - name: cf-mysql-ci
+          - name: bosh-lite-repo
         params:
+          BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
           ERRAND: broker-deregistrar
@@ -445,7 +462,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
+        - name: bosh-lite-repo
       params:
+        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         ERRAND: broker-registrar
@@ -463,6 +482,7 @@ jobs:
       passed: [deploy-to-scaling]
       trigger: true
       version: every
+    - get: bosh-lite-repo
   - &smoke-tests-bosh-lite
     task: run-smoke-tests
     config:
@@ -471,7 +491,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
+        - name: bosh-lite-repo
       params:
+        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         ERRAND: acceptance-tests
@@ -511,6 +533,7 @@ jobs:
         acquire: true
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
+    - get: bosh-lite-repo
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
@@ -545,6 +568,7 @@ jobs:
       passed: [deploy-to-failover]
       trigger: true
       version: every
+    - get: bosh-lite-repo
   - *smoke-tests-bosh-lite
   - task: run-failover-tests
     config:
@@ -579,6 +603,7 @@ jobs:
         acquire: true
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
+    - get: bosh-lite-repo
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
@@ -613,6 +638,7 @@ jobs:
       passed: [deploy-to-data-loss]
       trigger: true
       version: every
+    - get: bosh-lite-repo
   - task: run-data-loss-tests
     config:
       platform: *platform
@@ -644,7 +670,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
+        - name: bosh-lite-repo
       params:
+        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         BOSH_SSH_KEY: {{bosh-lite-private-key}}
@@ -671,6 +699,7 @@ jobs:
         acquire: true
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
+    - get: bosh-lite-repo
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
@@ -781,6 +810,7 @@ jobs:
         acquire: true
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
+    - get: bosh-lite-repo
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]

@@ -365,6 +365,7 @@ jobs:
     - get: cf-mysql-release
       passed: [deploy-to-full-bosh]
     - get: cf-mysql-ci
+    - get: deployments-configuration
   - task: run-smoke-tests
     config:
       platform: *platform
@@ -592,6 +593,7 @@ jobs:
         acquire: true
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
+    - get: bosh-lite-repo
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
@@ -627,6 +629,7 @@ jobs:
       passed: [deploy-to-arb-to-full-scaling]
       trigger: true
       version: every
+    - get: bosh-lite-repo
   - *smoke-tests-bosh-lite
   - task: run-arb-to-full-scaling-tests
     config:
@@ -658,6 +661,7 @@ jobs:
         acquire: true
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
+    - get: bosh-lite-repo
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
@@ -693,6 +697,7 @@ jobs:
       passed: [deploy-to-failover]
       trigger: true
       version: every
+    - get: bosh-lite-repo
   - *smoke-tests-bosh-lite
   - task: run-failover-tests
     config:
@@ -728,6 +733,7 @@ jobs:
         acquire: true
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
+    - get: bosh-lite-repo
     - get: aws-bosh-stemcell
   - try: *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
@@ -771,6 +777,7 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+    - get: bosh-lite-repo
   - &persistence-test-data-write
     task: persistence-test-data-write
     config:
@@ -939,6 +946,7 @@ jobs:
         acquire: true
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
+    - get: bosh-lite-repo
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
@@ -1022,6 +1030,7 @@ jobs:
         acquire: true
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
+    - get: bosh-lite-repo
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
@@ -1120,6 +1129,7 @@ jobs:
         acquire: true
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
+    - get: bosh-lite-repo
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]

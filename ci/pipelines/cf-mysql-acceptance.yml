@@ -84,6 +84,7 @@ jobs:
           - name: deployments-configuration
           - name: aws-acceptance-environment
         params:
+          ENV_REPO: deployments-configuration
           ENV_TARGET_FILE: aws-acceptance-environment/name
           ENV_METADATA: aws-acceptance-environment/metadata
           ERRAND: broker-deregistrar
@@ -208,6 +209,7 @@ jobs:
           - name: deployments-configuration
           - name: aws-acceptance-environment
         params:
+          ENV_REPO: deployments-configuration
           ENV_TARGET_FILE: aws-acceptance-environment/name
           ENV_METADATA: aws-acceptance-environment/metadata  
           ERRAND: broker-registrar
@@ -223,6 +225,7 @@ jobs:
           - name: deployments-configuration
           - name: aws-acceptance-environment
         params:
+          ENV_REPO: deployments-configuration
           ENV_TARGET_FILE: aws-acceptance-environment/name
           ENV_METADATA: aws-acceptance-environment/metadata  
           ERRAND: smoke-tests
