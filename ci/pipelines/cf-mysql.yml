@@ -152,6 +152,12 @@ resources:
     deployment: cf-mysql
     ignore_ssl: true
 
+- name: bosh-lite-repo
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry/bosh-lite.git
+    branch: master
+
 ### JOBS
 jobs:
 - name: build-dockerfile
@@ -286,7 +292,9 @@ jobs:
         inputs:
         - name: cf-mysql-ci
         - name: aws-environment
+        - name: deployments-configuration
         params:
+          ENV_REPO: deployments-configuration
           ENV_TARGET_FILE: aws-environment/name
           ENV_METADATA: aws-environment/metadata
           ERRAND: broker-deregistrar
@@ -337,7 +345,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: aws-environment
+        - name: deployments-configuration
       params:
+        ENV_REPO: deployments-configuration
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
         ERRAND: broker-registrar
@@ -362,7 +372,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: aws-environment
+        - name: deployments-configuration
       params:
+        ENV_REPO: deployments-configuration
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
         ERRAND: smoke-tests
@@ -392,7 +404,9 @@ jobs:
         inputs:
         - name: cf-mysql-ci
         - name: aws-environment
+        - name: deployments-configuration
         params:
+          ENV_REPO: deployments-configuration
           ENV_TARGET_FILE: aws-environment/name
           ENV_METADATA: aws-environment/metadata
           ERRAND: broker-deregistrar
@@ -429,6 +443,7 @@ jobs:
         acquire: true
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
+    - get: bosh-lite-repo
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
@@ -439,8 +454,10 @@ jobs:
         image_resource: *image_resource
         inputs:
           - name: bosh-lite-environment
+          - name: bosh-lite-repo
           - name: cf-mysql-ci
         params:
+          BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
           ERRAND: broker-deregistrar
@@ -507,7 +524,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
+        - name: bosh-lite-repo
       params:
+        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         ERRAND: broker-registrar
@@ -525,6 +544,7 @@ jobs:
       passed: [deploy-to-scaling]
       trigger: true
       version: every
+    - get: bosh-lite-repo
   - &smoke-tests-bosh-lite
     task: run-smoke-tests
     config:
@@ -533,7 +553,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
+        - name: bosh-lite-repo
       params:
+        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         ERRAND: smoke-tests
@@ -867,6 +889,7 @@ jobs:
       passed: [deploy-to-standalone-for-bootstrap]
       trigger: true
       version: every
+    - get: bosh-lite-repo
   - *persistence-test-data-write
   - task: break-mysql-cluster
     config:
@@ -887,8 +910,10 @@ jobs:
       image_resource: *image_resource
       inputs:
         - name: bosh-lite-environment
+        - name: bosh-lite-repo
         - name: cf-mysql-ci
       params:
+        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
         ENV_TARGET_FILE: bosh-lite-environment/name
         BOSH_USER: {{bosh-lite-username}}
         ENV_METADATA: bosh-lite-environment/metadata
@@ -948,6 +973,7 @@ jobs:
       passed: [deploy-to-data-loss]
       trigger: true
       version: every
+    - get: bosh-lite-repo
   - task: run-data-loss-tests
     config:
       platform: *platform
@@ -970,7 +996,9 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
+        - name: bosh-lite-repo
       params:
+        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         BOSH_SSH_KEY: {{bosh-lite-private-key}}
@@ -1199,53 +1227,11 @@ jobs:
       releases: [compiled-release-tarball/*.tgz]
       stemcells: [aws-bosh-stemcell/*.tgz]
 
-- name: test-integration
-  plan:
-  - aggregate:
-    - get: integration-environment
-      passed: [deploy-to-integration]
-      trigger: true
-      version: every
-    - get: cf-mysql-release
-      passed: [deploy-to-integration]
-    - get: cf-mysql-ci
-  - task: run-broker-registrar
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: cf-mysql-ci
-        - name: integration-environment
-      params:
-        ENV_TARGET_FILE: integration-environment/name
-        ENV_METADATA: integration-environment/metadata
-        ERRAND: broker-registrar
-        DEPLOYMENT_NAME: cf-a1-mysql
-      run:
-        path: cf-mysql-ci/scripts/bosh/run_errand
-  - task: run-smoke-tests
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: cf-mysql-ci
-        - name: integration-environment
-      params:
-        ENV_TARGET_FILE: integration-environment/name
-        ENV_METADATA: integration-environment/metadata
-        ERRAND: smoke-tests
-        DEPLOYMENT_NAME: cf-a1-mysql
-      run:
-        path: cf-mysql-ci/scripts/bosh/run_errand
-  - put: integration-environment
-    params:
-      release: integration-environment
-
 - name: upload-rc-artifacts
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-integration]
+      passed: [deploy-to-integration]
       trigger: true
     - get: cf-mysql-ci
   - task: create-rc-release-artifacts
@@ -1270,7 +1256,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [test-integration]
+      passed: [deploy-to-integration]
       trigger: true
       params:
         fetch: [release-candidate]
@@ -1306,6 +1292,7 @@ jobs:
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
     - get: bosh-lite-stemcell
+    - get: bosh-lite-repo
   - *delete-deployment-bosh-lite
   - task: make-manifest
     config:
@@ -1341,6 +1328,22 @@ jobs:
       stemcells:
       - bosh-lite-stemcell/*.tgz
       target_file: bosh-lite-environment/name
+  - task: run-smoke-tests
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+        - name: bosh-lite-repo
+        - name: cf-mysql-ci
+        - name: bosh-lite-environment
+      params:
+        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
+        ENV_TARGET_FILE: bosh-lite-environment/name
+        ENV_METADATA: bosh-lite-environment/metadata
+        ERRAND: smoke-tests
+        DEPLOYMENT_NAME: cf-mysql
+      run:
+        path: cf-mysql-ci/scripts/bosh/run_errand
   - put: bosh-lite-environment
     resource: bosh-lite-no-cf-environment
     params:
