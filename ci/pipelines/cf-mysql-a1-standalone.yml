@@ -110,10 +110,10 @@ jobs:
           DEPLOYMENTS_DIR: deployments-configuration
           CF_DEPLOYMENT_NAME: cf-a1
           CAT_MANIFEST: false
-          JOB_OVERRIDES_FILE: deployments/a1-mysql-stubs/job-overrides-consul.yml
-          INSTANCE_COUNT_OVERRIDES_FILE: deployments/a1-mysql-stubs/instance-count-overrides.yml
-          IAAS_SETTINGS_FILE: deployments/a1-mysql-stubs/iaas-settings.yml
-          PROPERTY_OVERRIDES_FILE: deployments/a1-mysql-stubs/property-overrides.yml
+          JOB_OVERRIDES_FILE: deployments/a1-mysql-standalone-stubs/job-overrides-consul.yml
+          INSTANCE_COUNT_OVERRIDES_FILE: deployments/a1-mysql-standalone-stubs/instance-count-overrides.yml
+          IAAS_SETTINGS_FILE: deployments/a1-mysql-standalone-stubs/iaas-settings.yml
+          PROPERTY_OVERRIDES_FILE: deployments/a1-mysql-standalone-stubs/property-overrides.yml
         run:
           path: cf-mysql-ci/scripts/bosh/make_manifest
     - do:
