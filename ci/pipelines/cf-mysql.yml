@@ -1236,10 +1236,9 @@ jobs:
       manifest: deployment-manifest/deployment.yml
       releases: [compiled-release-tarball/*.tgz]
       stemcells: [aws-bosh-stemcell/*.tgz]
-  - put: bosh-lite-environment
-    resource: bosh-lite-no-cf-environment
+  - put: integration-environment
     params:
-      release: bosh-lite-environment
+      release: integration-environment
 
 - name: upload-rc-artifacts
   plan:
