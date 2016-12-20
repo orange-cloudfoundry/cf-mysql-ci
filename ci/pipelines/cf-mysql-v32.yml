@@ -78,12 +78,6 @@ resources:
     pool: bosh-lites-no-cf
     private_key: {{git-writer-private-key}}
 
-- name: bosh2.0-cli
-  type: s3
-  source:
-    bucket: bosh-cli-artifacts
-    regexp: bosh-cli-([\d\.]+)-linux-amd64
-
 - name: bosh-2.0-bosh-lite-deployment
   type: bosh-deployment
   source:
@@ -1193,7 +1187,6 @@ jobs:
       params:
         acquire: true
     - get: cf-mysql-ci
-    - get: bosh2.0-cli
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
@@ -1245,7 +1238,6 @@ jobs:
       image_resource: *image_resource
       inputs:
       - name: cf-mysql-release
-      - name: bosh2.0-cli
       - name: cf-manifest
       outputs:
         - name: deployment-manifest
@@ -1259,13 +1251,9 @@ jobs:
         - |
           set -eu
 
-          mv bosh2.0-cli/bosh-cli-* bosh2.0-cli/bosh2
-          chmod +x bosh2.0-cli/bosh2
-          export PATH=$PATH:$PWD/bosh2.0-cli/
-
           ./cf-mysql-release/scripts/generate-cf-vars-for-bosh-2.0 "${CF_MANIFEST_FILE}" > /tmp/vars-from-cf.yml
 
-          bosh2 interpolate \
+          gobosh interpolate \
             ./cf-mysql-release/manifest-generation/cf-mysql-template-v2.yml \
             -l ./cf-mysql-release/manifest-generation/bosh2.0/bosh-lite/default-vars.yml \
             -l /tmp/vars-from-cf.yml \
