@@ -138,12 +138,6 @@ resources:
     secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
     versioned_file: compiled-releases/cf-mysql-ubuntu-trusty-develop.tgz
 
-- name: bosh2.0-cli
-  type: s3
-  source:
-    bucket: bosh-cli-artifacts
-    regexp: bosh-cli-([\d\.]+)-linux-amd64
-
 - name: bosh-2.0-bosh-lite-deployment
   type: bosh-deployment
   source:
@@ -1300,7 +1294,6 @@ jobs:
       params:
         acquire: true
     - get: cf-mysql-ci
-    - get: bosh2.0-cli
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
@@ -1313,7 +1306,6 @@ jobs:
       image_resource: *image_resource
       inputs:
       - name: cf-mysql-release
-      - name: bosh2.0-cli
       outputs:
         - name: deployment-manifest
       params:
@@ -1325,11 +1317,7 @@ jobs:
         - |
           set -eu
 
-          mv bosh2.0-cli/bosh-cli-* bosh2.0-cli/bosh2
-          chmod +x bosh2.0-cli/bosh2
-          export PATH=$PATH:$PWD/bosh2.0-cli/
-
-          bosh2 interpolate \
+          gobosh interpolate \
             ./cf-mysql-release/manifest-generation/cf-mysql-template-v2.yml \
             -l ./cf-mysql-release/manifest-generation/bosh2.0/bosh-lite/default-vars.yml \
             > "${OUTPUT_FILE}"
