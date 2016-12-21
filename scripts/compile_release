@@ -11,7 +11,7 @@ RELEASE_TARBALL_DIR=${RELEASE_TARBALL_DIR:-release-tarball}
 RELEASE_FILENAME=${RELEASE_FILENAME:-tgz}
 RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/ | grep ${RELEASE_FILENAME})
 if [ -f "${RELEASE_TARBALL_DIR}/version" ]; then
-  RELEASE_MANIFEST=$(tar -zxOf "${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}/${RELEASE_FILE}" release.MF)
+  RELEASE_MANIFEST=$(tar --wildcards -zxOf "${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}/${RELEASE_FILE}" *release.MF)
   RELEASE_NAME=$(echo "$RELEASE_MANIFEST" | grep "^name:" | sed 's/name: \(.*\)/\1/')
   RELEASE_VERSION=$(echo "$RELEASE_MANIFEST" | grep "^version:" | sed 's/version: \(.*\)/\1/' | tr -d '"' | tr -d "'")
 else
