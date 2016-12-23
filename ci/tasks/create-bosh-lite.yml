@@ -1,0 +1,25 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: cloudfoundry/cf-mysql-ci
+
+inputs:
+- name: bosh-deployment
+- name: cf-mysql-ci
+- name: deployments
+- name: stemcell
+
+outputs:
+- name: bosh-lite-info
+
+run:
+  path: cf-mysql-ci/scripts/bosh-lite-gcp/create-bosh-lite
+
+params:
+  OUTPUT_DIR: bosh-lite-info
+  BOSH_DEPLOYMENT_DIR: bosh-deployment
+  DEPLOYMENTS_DIR: deployments
+  STEMCELL_DIR: stemcell

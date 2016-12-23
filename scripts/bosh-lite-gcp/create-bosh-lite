@@ -1,0 +1,56 @@
+#!/bin/bash
+set -eu
+
+my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ci_dir="$( cd "${my_dir}/../../" && pwd )"
+workspace_dir="$( cd "${ci_dir}/../" && pwd )"
+
+OUTPUT_DIR="${workspace_dir}/${OUTPUT_DIR}"
+BOSH_DEPLOYMENT_DIR="${workspace_dir}/${BOSH_DEPLOYMENT_DIR}"
+DEPLOYMENTS_DIR="${workspace_dir}/${DEPLOYMENTS_DIR}"
+STEMCELL_DIR="${workspace_dir}/${STEMCELL_DIR}"
+
+: "${PROJECT_ID}"
+: "${ZONE}"
+: "${NETWORK}"
+: "${SUBNETWORK}"
+
+bosh_lite_dir="${DEPLOYMENTS_DIR}/bosh-lite-gcp"
+
+pushd "${bosh_lite_dir}"
+  terraform output lite-external-ip > "${OUTPUT_DIR}/external-ip"
+popd
+
+gobosh interpolate "${BOSH_DEPLOYMENT_DIR}/bosh.yml" \
+  -o "${BOSH_DEPLOYMENT_DIR}/gcp/cpi.yml" \
+  -o "${BOSH_DEPLOYMENT_DIR}/bosh-lite.yml" \
+  -o "${BOSH_DEPLOYMENT_DIR}/external-ip-not-recommended.yml" \
+  -o "${bosh_lite_dir}/instance.yml" \
+  -o "${bosh_lite_dir}/tags.yml" \
+  --vars-store "${OUTPUT_DIR}/credentials.yml" \
+  -v director_name=lite \
+  -v internal_cidr=10.0.2.0/24 \
+  -v internal_gw=10.0.2.1 \
+  -v internal_ip=10.0.2.10 \
+  -v external_ip="$(cat "${OUTPUT_DIR}/external-ip")" \
+  --var-file gcp_credential_dson="${bosh_lite_dir}/ci-service-account.json" \
+  -v project_id="${PROJECT_ID}" \
+  -v zone="${ZONE}" \
+  -v network="${NETWORK}" \
+  -v subnetwork="${SUBNETWORK}" > "${OUTPUT_DIR}/manifest.yml"
+
+gobosh create-env "${OUTPUT_DIR}/manifest.yml" \
+  --state "${OUTPUT_DIR}/bosh-state.json" \
+  --vars-store "${OUTPUT_DIR}/credentials.yml"
+
+gobosh -n interpolate "${OUTPUT_DIR}/credentials.yml" \
+  --path /director_ssl/ca > "${OUTPUT_DIR}/ca-cert"
+
+gobosh -n interpolate "${OUTPUT_DIR}/credentials.yml" \
+  --path /admin_password > "${OUTPUT_DIR}/admin-password"
+
+gobosh -n upload-stemcell "${STEMCELL_DIR}"/*.tgz \
+  -e "$(cat "${OUTPUT_DIR}/external-ip")" \
+  --user admin \
+  --password "$(cat "${OUTPUT_DIR}/admin-password")" \
+  --ca-cert "${OUTPUT_DIR}/ca-cert"
