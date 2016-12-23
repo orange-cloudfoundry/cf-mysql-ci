@@ -91,7 +91,7 @@ RUN wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py && \
           rm /tmp/get-pip.py && \
           pip install awscli
 
-# Instlal consul
+# Install consul
 RUN \
   wget -q https://releases.hashicorp.com/consul/0.5.2/consul_0.5.2_linux_amd64.zip -P /tmp/ && \
   unzip /tmp/consul_0.5.2_linux_amd64.zip -d /usr/local/bin && \
