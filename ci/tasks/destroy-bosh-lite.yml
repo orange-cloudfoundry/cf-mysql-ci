@@ -1,0 +1,17 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: cloudfoundry/cf-mysql-ci
+
+inputs:
+- name: bosh-lite-info
+- name: cf-mysql-ci
+
+run:
+  path: cf-mysql-ci/scripts/bosh-lite-gcp/destroy-bosh-lite
+
+params:
+  BOSH_LITE_INFO_DIR: bosh-lite-info
