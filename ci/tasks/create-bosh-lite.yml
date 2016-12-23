@@ -23,3 +23,7 @@ params:
   BOSH_DEPLOYMENT_DIR: bosh-deployment
   DEPLOYMENTS_DIR: deployments
   STEMCELL_DIR: stemcell
+  PROJECT_ID:
+  ZONE:
+  NETWORK:
+  SUBNETWORK:
