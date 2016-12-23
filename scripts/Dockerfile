@@ -91,6 +91,7 @@ RUN wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py && \
           rm /tmp/get-pip.py && \
           pip install awscli
 
+# Instlal consul
 RUN \
   wget -q https://releases.hashicorp.com/consul/0.5.2/consul_0.5.2_linux_amd64.zip -P /tmp/ && \
   unzip /tmp/consul_0.5.2_linux_amd64.zip -d /usr/local/bin && \
@@ -98,3 +99,11 @@ RUN \
 
 #install gorgeous gem
 RUN gem install gorgeous
+
+# Install terraform
+RUN wget 'https://releases.hashicorp.com/terraform/0.7.13/terraform_0.7.13_linux_amd64.zip' \
+  --quiet \
+  --output-document /tmp/terraform.zip && \
+  unzip /tmp/terraform.zip -d /usr/local/bin/ && \
+  chmod +x /usr/local/bin/terraform && \
+  rm /tmp/terraform.zip
