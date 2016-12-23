@@ -9,6 +9,6 @@ DEPLOYMENTS_DIR="${workspace_dir}/${DEPLOYMENTS_DIR}"
 
 bosh_lite_dir="${DEPLOYMENTS_DIR}/bosh-lite-gcp"
 
-pushd "${bosh_lite_dir}"
+pushd "${bosh_lite_dir}" > /dev/null
   terraform destroy -force
-popd
+popd > /dev/null

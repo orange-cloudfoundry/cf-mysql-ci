@@ -17,9 +17,9 @@ STEMCELL_DIR="${workspace_dir}/${STEMCELL_DIR}"
 
 bosh_lite_dir="${DEPLOYMENTS_DIR}/bosh-lite-gcp"
 
-pushd "${bosh_lite_dir}"
+pushd "${bosh_lite_dir}" > /dev/null
   terraform output lite-external-ip > "${OUTPUT_DIR}/external-ip"
-popd
+popd > /dev/null
 
 gobosh interpolate "${BOSH_DEPLOYMENT_DIR}/bosh.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/gcp/cpi.yml" \

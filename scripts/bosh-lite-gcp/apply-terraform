@@ -14,6 +14,6 @@ cp -r \
 
 bosh_lite_dir="${OUTPUT_DIR}/bosh-lite-gcp"
 
-pushd "${bosh_lite_dir}"
+pushd "${bosh_lite_dir}" > /dev/null
   terraform apply
-popd
+popd > /dev/null
