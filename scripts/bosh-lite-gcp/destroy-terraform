@@ -1,0 +1,14 @@
+#!/bin/bash
+set -eu
+
+my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ci_dir="$( cd "${my_dir}/../../" && pwd )"
+workspace_dir="$( cd "${ci_dir}/../" && pwd )"
+
+DEPLOYMENTS_DIR="${workspace_dir}/${DEPLOYMENTS_DIR}"
+
+bosh_lite_dir="${DEPLOYMENTS_DIR}/bosh-lite-gcp"
+
+pushd "${bosh_lite_dir}"
+  terraform destroy -force
+popd
