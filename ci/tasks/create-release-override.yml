@@ -14,9 +14,7 @@ outputs:
 - name: release-override
 
 params:
-  BOSH_USERNAME:
-  BOSH_PASSWORD:
-  BOSH_DIRECTOR:
+  OUTPUT_DIR: release-override
   RELEASE_TARBALL_DIR: release-tarball
 
 run:
