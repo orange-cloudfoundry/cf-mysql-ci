@@ -7,6 +7,14 @@ WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-compiled-release-tarball}"
 DEPLOYMENT_NAME=d-$(cat /proc/sys/kernel/random/uuid)
 
+RELEASE_TARBALL_DIR=${RELEASE_TARBALL_DIR:-release-tarball}
+export RELEASE_TARBALL_DIR
+
+release_filename=${release_filename:-tgz}
+
+RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/ | grep ${release_filename})
+export RELEASE_FILE
+
 source "${MY_DIR}/utils.sh"
 
 release_name=$(release_name)
