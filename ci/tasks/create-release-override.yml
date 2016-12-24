@@ -20,5 +20,5 @@ params:
   RELEASE_TARBALL_DIR: release-tarball
 
 run:
-  path: cf-mysql-ci/scripts/create-release-override
+  path: cf-mysql-ci/scripts/create_release_override
 
