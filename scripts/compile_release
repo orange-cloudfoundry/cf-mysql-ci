@@ -7,7 +7,10 @@ WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-compiled-release-tarball}"
 DEPLOYMENT_NAME=d-$(cat /proc/sys/kernel/random/uuid)
 
+source "${MY_DIR}/utils.sh"
+
 RELEASE_TARBALL_DIR=${RELEASE_TARBALL_DIR:-release-tarball}
+RELEASE_TARBALL_DIR="${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}"
 export RELEASE_TARBALL_DIR
 
 release_filename=${release_filename:-tgz}
@@ -15,7 +18,6 @@ release_filename=${release_filename:-tgz}
 RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/ | grep ${release_filename})
 export RELEASE_FILE
 
-source "${MY_DIR}/utils.sh"
 
 name=$(release_name)
 version=$(release_version)
@@ -33,7 +35,7 @@ director_uuid: 8797c2a6-c620-4192-a1b8-fc71dec6e995
 releases:
 - name: ${name}
   version: "${version}"
-  url: "file://${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}/${RELEASE_FILE}"
+  url: "file://${RELEASE_TARBALL_DIR}/${RELEASE_FILE}"
 
 stemcells:
 - alias: default
@@ -48,6 +50,7 @@ update:
   canary_watch_time: 1000-90000
   update_watch_time: 1000-90000
 EOF
+
   echo "Targeting ${BOSH_DIRECTOR}"
   set +x
     bosh -u ${BOSH_USERNAME} -p ${BOSH_PASSWORD} target ${BOSH_DIRECTOR}

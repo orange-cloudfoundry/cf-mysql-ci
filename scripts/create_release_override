@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
+
+source "${MY_DIR}/utils.sh"
+
+OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR}"
+
+RELEASE_TARBALL_DIR="${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}"
+export RELEASE_TARBALL_DIR
+
+release_filename=${release_filename:-tgz}
+
+RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/ | grep ${release_filename})
+export RELEASE_FILE
+
+name=$(release_name)
+version=$(release_version)
+
+url="file://${RELEASE_TARBALL_DIR}/${RELEASE_FILE}"
+
+cat << EOF > "${OUTPUT_DIR}/release_override.yml"
+---
+- type: replace
+  path: /releases/name=${name}/version
+  value: ${version}
+- type: replace
+  path: /releases/name=${name}/url
+  value: ${url}
+EOF
