@@ -1,0 +1,24 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: cloudfoundry/cf-mysql-ci
+
+inputs:
+- name: cf-mysql-ci
+- name: release-tarball
+- name: aws-bosh-stemcell
+
+outputs:
+- name: compiled-release-tarball
+
+params:
+  BOSH_USERNAME:
+  BOSH_PASSWORD:
+  BOSH_DIRECTOR:
+
+run:
+  path: cf-mysql-ci/scripts/compile_release
+
