@@ -41,7 +41,7 @@ release_version() {
       release_manifest=$(tar --wildcards -zxOf "${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}/${RELEASE_FILE}" *release.MF)
       release_version=$(echo "${release_manifest}" | grep "^version:" | sed 's/version: \(.*\)/\1/' | tr -d '"' | tr -d "'")
     else
-      release_version=$(echo ${release_file} | sed 's/.*-\([0-9].*\).tgz/\1/')
+      release_version=$(echo ${RELEASE_FILE} | sed 's/.*-\([0-9].*\).tgz/\1/')
     fi
     echo "${release_version}"
 }
