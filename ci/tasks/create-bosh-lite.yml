@@ -26,7 +26,7 @@ params:
   DEPLOYMENTS_DIR: deployments
   STEMCELL_DIR: stemcell
   BOSH_WARDEN_CPI_RELEASE_DIR: bosh-warden-cpi-compiled-release
-  GARDEN_LINUX_RELEASE_DIR: garden_linux-compiled-release
+  GARDEN_LINUX_RELEASE_DIR: garden-linux-compiled-release
   PROJECT_ID:
   ZONE:
   NETWORK:
