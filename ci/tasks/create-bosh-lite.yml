@@ -12,7 +12,7 @@ inputs:
 - name: deployments
 - name: stemcell
 - name: bosh-warden-cpi-compiled-release
-- name: garden_linux-compiled-release
+- name: garden-linux-compiled-release
 
 outputs:
 - name: bosh-lite-info
