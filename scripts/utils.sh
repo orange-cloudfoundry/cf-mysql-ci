@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -eu
+
 check_if_deployment_exists () {
     DEPLOYMENT_NAME=${1:?"Pass deployment name as first argument"}
     deployments_output=$( bosh deployments )
@@ -36,7 +38,7 @@ sslip_from_ip () {
 # tarball or the version file.
 release_version() {
     if [ -f "${RELEASE_TARBALL_DIR}/version" ]; then
-      release_manifest=$(tar --wildcards -zxOf "${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}/${release_file}" *release.MF)
+      release_manifest=$(tar --wildcards -zxOf "${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}/${RELEASE_FILE}" *release.MF)
       release_version=$(echo "${release_manifest}" | grep "^version:" | sed 's/version: \(.*\)/\1/' | tr -d '"' | tr -d "'")
     else
       release_version=$(echo ${release_file} | sed 's/.*-\([0-9].*\).tgz/\1/')
@@ -48,10 +50,10 @@ release_version() {
 # tarball or the version file.
 release_name() {
     if [ -f "${RELEASE_TARBALL_DIR}/version" ]; then
-      release_manifest=$(tar --wildcards -zxOf "${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}/${release_file}" *release.MF)
+      release_manifest=$(tar --wildcards -zxOf "${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}/${RELEASE_FILE}" *release.MF)
       release_name=$(echo "${release_manifest}" | grep "^name:" | sed 's/name: \(.*\)/\1/')
     else
-      release_name=$(echo ${release_file} | sed 's/\(.*\)-[0-9].*/\1/')
+      release_name=$(echo ${RELEASE_FILE} | sed 's/\(.*\)-[0-9].*/\1/')
     fi
     echo "${release_name}"
 }
