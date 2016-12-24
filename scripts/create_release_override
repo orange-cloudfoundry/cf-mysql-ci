@@ -1,28 +1,25 @@
 #!/bin/bash
 
-set -eux
+set -eu
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
+workspace_dir="$( cd "${MY_DIR}/../.." && pwd )"
 
 source "${MY_DIR}/utils.sh"
 
-OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR}"
+override_for_release () {
+  RELEASE_TARBALL_DIR="$1"
+  export RELEASE_TARBALL_DIR
 
-RELEASE_TARBALL_DIR="${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}"
-export RELEASE_TARBALL_DIR
+  RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/ | grep "tgz")
+  export RELEASE_FILE
 
-release_filename=${release_filename:-tgz}
+  name=$(release_name)
+  version=$(release_version)
 
-RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/ | grep ${release_filename})
-export RELEASE_FILE
+  url="file://${RELEASE_TARBALL_DIR}/${RELEASE_FILE}"
 
-name=$(release_name)
-version=$(release_version)
-
-url="file://${RELEASE_TARBALL_DIR}/${RELEASE_FILE}"
-
-cat << EOF > "${OUTPUT_DIR}/release_override.yml"
+  cat << EOF
 ---
 - type: replace
   path: /releases/name=${name}/version
@@ -31,3 +28,4 @@ cat << EOF > "${OUTPUT_DIR}/release_override.yml"
   path: /releases/name=${name}/url
   value: ${url}
 EOF
+}

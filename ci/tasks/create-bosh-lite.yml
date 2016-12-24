@@ -11,6 +11,8 @@ inputs:
 - name: cf-mysql-ci
 - name: deployments
 - name: stemcell
+- name: bosh-warden-cpi-compiled-release
+- name: garden_linux-compiled-release
 
 outputs:
 - name: bosh-lite-info
@@ -23,6 +25,8 @@ params:
   BOSH_DEPLOYMENT_DIR: bosh-deployment
   DEPLOYMENTS_DIR: deployments
   STEMCELL_DIR: stemcell
+  BOSH_WARDEN_CPI_RELEASE_DIR: bosh-warden-cpi-compiled-release
+  GARDEN_LINUX_RELEASE_DIR: garden_linux-compiled-release
   PROJECT_ID:
   ZONE:
   NETWORK:

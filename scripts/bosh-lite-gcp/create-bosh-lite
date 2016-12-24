@@ -2,18 +2,30 @@
 set -eu
 
 my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-ci_dir="$( cd "${my_dir}/../../" && pwd )"
-workspace_dir="$( cd "${ci_dir}/../" && pwd )"
+scripts_dir="$( cd "${my_dir}/../" && pwd )"
+workspace_dir="$( cd "${my_dir}/../../../" && pwd )"
 
 OUTPUT_DIR="${workspace_dir}/${OUTPUT_DIR}"
 BOSH_DEPLOYMENT_DIR="${workspace_dir}/${BOSH_DEPLOYMENT_DIR}"
 DEPLOYMENTS_DIR="${workspace_dir}/${DEPLOYMENTS_DIR}"
 STEMCELL_DIR="${workspace_dir}/${STEMCELL_DIR}"
+BOSH_WARDEN_CPI_RELEASE_DIR="${workspace_dir}/${BOSH_WARDEN_CPI_RELEASE_DIR}"
+GARDEN_LINUX_RELEASE_DIR="${workspace_dir}/${GARDEN_LINUX_RELEASE_DIR}"
 
 : "${PROJECT_ID}"
 : "${ZONE}"
 : "${NETWORK}"
 : "${SUBNETWORK}"
+
+source "${scripts_dir}/create_release_override"
+
+bosh_warden_cpi_release_override="${OUTPUT_DIR}/bosh-warden-cpi-release-override"
+$(override_for_release "${BOSH_WARDEN_CPI_RELEASE_DIR}") \
+  > "${bosh_warden_cpi_release_override}"
+
+garden_linux_release_override="${OUTPUT_DIR}/garden-linux-release-override"
+$(override_for_release "${GARDEN_LINUX_RELEASE_DIR}") \
+  > "${garden_linux_release_override}"
 
 bosh_lite_dir="${DEPLOYMENTS_DIR}/bosh-lite-gcp"
 
@@ -27,6 +39,8 @@ gobosh interpolate "${BOSH_DEPLOYMENT_DIR}/bosh.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/external-ip-not-recommended.yml" \
   -o "${bosh_lite_dir}/instance.yml" \
   -o "${bosh_lite_dir}/tags.yml" \
+  -o "${bosh_warden_cpi_release_override}" \
+  -o "${garden_linux_release_override}" \
   --vars-store "${OUTPUT_DIR}/credentials.yml" \
   -v director_name=lite \
   -v internal_cidr=10.0.2.0/24 \

@@ -18,7 +18,6 @@ release_filename=${release_filename:-tgz}
 RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/ | grep ${release_filename})
 export RELEASE_FILE
 
-
 name=$(release_name)
 version=$(release_version)
 
