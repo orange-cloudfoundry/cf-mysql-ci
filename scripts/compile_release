@@ -7,20 +7,13 @@ WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-compiled-release-tarball}"
 DEPLOYMENT_NAME=d-$(cat /proc/sys/kernel/random/uuid)
 
-RELEASE_TARBALL_DIR=${RELEASE_TARBALL_DIR:-release-tarball}
-RELEASE_FILENAME=${RELEASE_FILENAME:-tgz}
-RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/ | grep ${RELEASE_FILENAME})
-if [ -f "${RELEASE_TARBALL_DIR}/version" ]; then
-  RELEASE_MANIFEST=$(tar --wildcards -zxOf "${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}/${RELEASE_FILE}" *release.MF)
-  RELEASE_NAME=$(echo "$RELEASE_MANIFEST" | grep "^name:" | sed 's/name: \(.*\)/\1/')
-  RELEASE_VERSION=$(echo "$RELEASE_MANIFEST" | grep "^version:" | sed 's/version: \(.*\)/\1/' | tr -d '"' | tr -d "'")
-else
-  RELEASE_NAME=$(echo ${RELEASE_FILE} | sed 's/\(.*\)-[0-9].*/\1/')
-  RELEASE_VERSION=$(echo ${RELEASE_FILE} | sed 's/.*-\([0-9].*\).tgz/\1/')
-fi
+source "${MY_DIR}/utils.sh"
+
+release_name=$(release_name)
+release_version=$(release_version)
 
 # egrep for pivnet-resource stemcells that will have the etag after the version
-STEMCELL_VERSION=$(cat *stemcell/version | egrep -o '^[0-9.]+')
+stemcell_version=$(cat *stemcell/version | egrep -o '^[0-9.]+')
 
 pushd "${WORKSPACE_DIR}"
   cat << EOF > deployment.yml
@@ -30,14 +23,14 @@ name: ${DEPLOYMENT_NAME}
 director_uuid: 8797c2a6-c620-4192-a1b8-fc71dec6e995
 
 releases:
-- name: ${RELEASE_NAME}
-  version: "${RELEASE_VERSION}"
+- name: ${release_name}
+  version: "${release_version}"
   url: "file://${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}/${RELEASE_FILE}"
 
 stemcells:
 - alias: default
   os: ubuntu-trusty
-  version: "${STEMCELL_VERSION}"
+  version: "${stemcell_version}"
 
 jobs: []
 
@@ -57,7 +50,7 @@ EOF
   bosh upload stemcell *stemcell/*.tgz --skip-if-exists
   bosh -n deploy
 
-  bosh export release ${RELEASE_NAME}/${RELEASE_VERSION} ubuntu-trusty/${STEMCELL_VERSION}
+  bosh export release ${release_name}/${release_version} ubuntu-trusty/${stemcell_version}
 
   mv release*.tgz ${OUTPUT_DIR}/
 

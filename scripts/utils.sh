@@ -31,3 +31,33 @@ sslip_from_ip () {
       echo "${input}"
     fi
 }
+
+# release_version returns the version of a bosh release from its
+# tarball or the version file.
+release_version() {
+    RELEASE_TARBALL_DIR=${RELEASE_TARBALL_DIR:-release-tarball}
+    RELEASE_FILENAME=${RELEASE_FILENAME:-tgz}
+    release_file=$(ls ${RELEASE_TARBALL_DIR}/ | grep ${RELEASE_FILENAME})
+    if [ -f "${RELEASE_TARBALL_DIR}/version" ]; then
+      release_manifest=$(tar --wildcards -zxOf "${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}/${release_file}" *release.MF)
+      release_version=$(echo "${release_manifest}" | grep "^version:" | sed 's/version: \(.*\)/\1/' | tr -d '"' | tr -d "'")
+    else
+      release_version=$(echo ${release_file} | sed 's/.*-\([0-9].*\).tgz/\1/')
+    fi
+    echo "${release_version}"
+}
+
+# release_name_from_tarball returns the name of a bosh release from its
+# tarball or the version file.
+release_name() {
+    RELEASE_TARBALL_DIR=${RELEASE_TARBALL_DIR:-release-tarball}
+    RELEASE_FILENAME=${RELEASE_FILENAME:-tgz}
+    release_file=$(ls ${RELEASE_TARBALL_DIR}/ | grep ${RELEASE_FILENAME})
+    if [ -f "${RELEASE_TARBALL_DIR}/version" ]; then
+      release_manifest=$(tar --wildcards -zxOf "${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}/${release_file}" *release.MF)
+      release_name=$(echo "${release_manifest}" | grep "^name:" | sed 's/name: \(.*\)/\1/')
+    else
+      release_name=$(echo ${release_file} | sed 's/\(.*\)-[0-9].*/\1/')
+    fi
+    echo "${release_name}"
+}
