@@ -39,11 +39,11 @@ sslip_from_ip () {
 release_version() {
     if [ -f "${RELEASE_TARBALL_DIR}/version" ]; then
       release_manifest=$(tar --wildcards -zxOf "${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}/${RELEASE_FILE}" *release.MF)
-      release_version=$(echo "${release_manifest}" | grep "^version:" | sed 's/version: \(.*\)/\1/' | tr -d '"' | tr -d "'")
+      version=$(echo "${release_manifest}" | grep "^version:" | sed 's/version: \(.*\)/\1/' | tr -d '"' | tr -d "'")
     else
-      release_version=$(echo ${RELEASE_FILE} | sed 's/.*-\([0-9].*\).tgz/\1/')
+      version=$(echo ${RELEASE_FILE} | sed 's/.*-\([0-9].*\).tgz/\1/')
     fi
-    echo "${release_version}"
+    echo "${version}"
 }
 
 # release_name_from_tarball returns the name of a bosh release from its
@@ -51,9 +51,9 @@ release_version() {
 release_name() {
     if [ -f "${RELEASE_TARBALL_DIR}/version" ]; then
       release_manifest=$(tar --wildcards -zxOf "${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}/${RELEASE_FILE}" *release.MF)
-      release_name=$(echo "${release_manifest}" | grep "^name:" | sed 's/name: \(.*\)/\1/')
+      name=$(echo "${release_manifest}" | grep "^name:" | sed 's/name: \(.*\)/\1/')
     else
-      release_name=$(echo ${RELEASE_FILE} | sed 's/\(.*\)-[0-9].*/\1/')
+      name=$(echo ${RELEASE_FILE} | sed 's/\(.*\)-[0-9].*/\1/')
     fi
-    echo "${release_name}"
+    echo "${name}"
 }

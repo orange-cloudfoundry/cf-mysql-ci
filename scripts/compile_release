@@ -58,7 +58,7 @@ EOF
   bosh upload stemcell *stemcell/*.tgz --skip-if-exists
   bosh -n deploy
 
-  bosh export release ${release_name}/${release_version} ubuntu-trusty/${stemcell_version}
+  bosh export release ${name}/${version} ubuntu-trusty/${stemcell_version}
 
   mv release*.tgz ${OUTPUT_DIR}/
 
