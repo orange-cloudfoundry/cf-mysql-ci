@@ -78,14 +78,6 @@ resources:
     pool: bosh-lites-no-cf
     private_key: {{git-writer-private-key}}
 
-- name: bosh-2.0-bosh-lite-deployment
-  type: bosh-deployment
-  source:
-    username: {{bosh-lite-username}}
-    password: {{bosh-lite-password}}
-    deployment: cf-mysql
-    ignore_ssl: true
-
 - name: compiled-packages-lock
   type: pool
   source:
@@ -1173,103 +1165,6 @@ jobs:
     params:
       release: bosh-lite-environment
 
-### BOSH 2.0
-- name: deploy-to-bosh-2.0
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [create-and-compile-release]
-      trigger: true
-    - get: weekly-trigger
-      passed: [test-unit]
-      trigger: true
-    - put: bosh-lite-environment
-      params:
-        acquire: true
-    - get: cf-mysql-ci
-    - get: compiled-release-tarball
-      resource: cf-mysql-compiled-release
-      passed: [create-and-compile-release]
-    - get: bosh-lite-stemcell
-    - get: bosh-lite-repo
-  - try: *broker-deregistrar-bosh-lite
-  - *delete-deployment-bosh-lite
-  - task: get-cf-manifest
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: bosh-lite-environment
-      - name: cf-mysql-ci
-      outputs:
-        - name: cf-manifest
-      params:
-        OUTPUT_FILE: cf-manifest/cf.yml
-        ENV_METADATA: bosh-lite-environment/metadata
-        ENV_TARGET_FILE: bosh-lite-environment/name
-      run:
-        path: bash
-        args:
-        - -c
-        - |
-          set -eux
-
-          : "${OUTPUT_FILE:?}"
-          : "${ENV_TARGET_FILE:?}"
-          : "${ENV_METADATA:?}"
-
-          source cf-mysql-ci/scripts/utils.sh
-
-          DIRECTOR_IP=$(cat "${ENV_TARGET_FILE}")
-
-          BOSH_USERNAME="$(jq_val "bosh_user" "${ENV_METADATA}")"
-          BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
-
-          CF_API_USER="$(jq_val "cf_api_user" "${ENV_METADATA}")"
-          CF_API_PASSWORD="$(jq_val "cf_api_password" "${ENV_METADATA}")"
-
-          bosh -n target "${DIRECTOR_IP}"
-          bosh -n login "${BOSH_USERNAME}" "${BOSH_PASSWORD}"
-
-          bosh -n download manifest cf-warden "${OUTPUT_FILE}"
-  - task: make-manifest
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-release
-      - name: cf-manifest
-      outputs:
-        - name: deployment-manifest
-      params:
-        OUTPUT_FILE: deployment-manifest/deployment.yml
-        CF_MANIFEST_FILE: cf-manifest/cf.yml
-      run:
-        path: bash
-        args:
-        - -c
-        - |
-          set -eu
-
-          ./cf-mysql-release/scripts/generate-cf-vars-for-bosh-2.0 "${CF_MANIFEST_FILE}" > /tmp/vars-from-cf.yml
-
-          gobosh interpolate \
-            ./cf-mysql-release/manifest-generation/cf-mysql-template-v2.yml \
-            -l ./cf-mysql-release/manifest-generation/bosh2.0/bosh-lite/default-vars.yml \
-            -l /tmp/vars-from-cf.yml \
-            > "${OUTPUT_FILE}"
-  - put: bosh-2.0-bosh-lite-deployment
-    params:
-      manifest: deployment-manifest/deployment.yml
-      releases:
-      - compiled-release-tarball/*.tgz
-      stemcells:
-      - bosh-lite-stemcell/*.tgz
-      target_file: bosh-lite-environment/name
-  - put: bosh-lite-environment
-    params:
-      release: bosh-lite-environment
-
 ### Promote
 - name: upload-rc-artifacts
   plan:
@@ -1285,7 +1180,6 @@ jobs:
       - test-bootstrap-on-standalone
       - test-arb-to-full-scaling
       - test-persistence-after-upgrade
-      - deploy-to-bosh-2.0
       trigger: true
     - get: cf-mysql-ci
   - task: create-rc-release-artifacts
@@ -1320,7 +1214,6 @@ jobs:
       - test-bootstrap-on-standalone
       - test-arb-to-full-scaling
       - test-persistence-after-upgrade
-      - deploy-to-bosh-2.0
       trigger: true
       params:
         fetch: [release-candidate]
