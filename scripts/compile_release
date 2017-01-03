@@ -13,9 +13,9 @@ RELEASE_TARBALL_DIR=${RELEASE_TARBALL_DIR:-release-tarball}
 RELEASE_TARBALL_DIR="${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}"
 export RELEASE_TARBALL_DIR
 
-release_filename=${release_filename:-tgz}
+RELEASE_FILENAME=${RELEASE_FILENAME:-tgz}
 
-RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/ | grep ${release_filename})
+RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/ | grep ${RELEASE_FILENAME})
 export RELEASE_FILE
 
 name=$(release_name)
