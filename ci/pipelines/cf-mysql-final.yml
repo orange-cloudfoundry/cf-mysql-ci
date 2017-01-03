@@ -1,4 +1,11 @@
 ---
+#
+# Create a final release of cf-mysql release develop branch, pushing it to the master branch.
+# Triggered by uploading a new version of the release notes to s3.
+# Publish the release and provided release notes to github.
+# Upload the tar to s3 bucket.
+#
+
 resources:
 - name: cf-mysql-develop
   type: git

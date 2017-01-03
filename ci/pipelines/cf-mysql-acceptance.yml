@@ -1,4 +1,8 @@
 ---
+#
+# Deploy the cf-mysql release candidate to the "Primo" environment.
+# Triggered by updates to the release-candidate branch.
+#
 resources:
 - name: aws-bosh-stemcell
   type: bosh-io-stemcell

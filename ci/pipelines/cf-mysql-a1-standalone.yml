@@ -1,4 +1,8 @@
 ---
+#
+# Manually triggered deploy of the latest final cf-mysql release to the a1 "standalone" environment, used by
+# internal cf components.
+#
 resources:
 - name: aws-bosh-stemcell
   type: bosh-io-stemcell

@@ -1,4 +1,8 @@
 ---
+#
+# Equivalent of the cf-mysql pipeline, but tied to the v22 branch.
+#
+
 ### RESOURCES
 resources:
 - name: aws-bosh-stemcell
