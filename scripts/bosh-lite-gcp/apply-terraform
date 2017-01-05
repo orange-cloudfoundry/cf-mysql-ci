@@ -15,5 +15,6 @@ cp -r \
 bosh_lite_dir="${OUTPUT_DIR}/bosh-lite-gcp"
 
 pushd "${bosh_lite_dir}" > /dev/null
+  ./create_vars_for_new_ip
   terraform apply
 popd > /dev/null
