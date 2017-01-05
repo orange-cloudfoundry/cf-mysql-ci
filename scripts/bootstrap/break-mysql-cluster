@@ -38,7 +38,7 @@ stop_all_nodes() {
           -i "${BOSH_LITE_KEY_FILE}" \
           -o StrictHostKeyChecking=no \
           "ubuntu@${BOSH_TARGET}" \
-          "curl -vk -X POST username:password@${MYSQL_NODE}:9200/stop_mysql"
+          "curl -vk -X POST galera-healthcheck:password@${MYSQL_NODE}:9200/stop_mysql"
     done
   popd
 }
