@@ -37,6 +37,7 @@ gobosh interpolate "${BOSH_DEPLOYMENT_DIR}/bosh.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/gcp/cpi.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/bosh-lite.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/external-ip-not-recommended.yml" \
+  -o "${BOSH_DEPLOYMENT_DIR}/dynamic-network.yml" \
   -o "${bosh_lite_dir}/instance.yml" \
   -o "${bosh_lite_dir}/tags.yml" \
   -o "${bosh_warden_cpi_release_override}" \
@@ -45,7 +46,7 @@ gobosh interpolate "${BOSH_DEPLOYMENT_DIR}/bosh.yml" \
   -v director_name=lite \
   -v internal_cidr=10.0.2.0/24 \
   -v internal_gw=10.0.2.1 \
-  -v internal_ip=10.0.2.10 \
+  -v internal_ip=127.0.0.1 \
   -v external_ip="$(cat "${OUTPUT_DIR}/external-ip")" \
   --var-file gcp_credentials_json="${bosh_lite_dir}/ci-service-account.json" \
   -v project_id="${PROJECT_ID}" \
