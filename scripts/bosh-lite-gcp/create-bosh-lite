@@ -39,7 +39,6 @@ gobosh interpolate "${BOSH_DEPLOYMENT_DIR}/bosh.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/external-ip-not-recommended.yml" \
   -o "${bosh_lite_dir}/dynamic-network.yml" \
   -o "${bosh_lite_dir}/instance.yml" \
-  -o "${bosh_lite_dir}/tags.yml" \
   -o "${bosh_warden_cpi_release_override}" \
   -o "${garden_linux_release_override}" \
   --vars-store "${OUTPUT_DIR}/credentials.yml" \
