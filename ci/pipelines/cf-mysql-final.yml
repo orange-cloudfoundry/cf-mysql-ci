@@ -58,6 +58,15 @@ resources:
     repository: cf-mysql-release
     access_token: {{git-writer-github-access-token}}
 
+- name: version
+  type: semver
+  source:
+    driver: s3
+    bucket: cf-mysql-releases
+    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
+    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
+    key: version
+
 jobs:
   - name: final-release
     plan:
@@ -73,6 +82,9 @@ jobs:
         - get: cf-mysql-develop
         - get: release-notes
           trigger: true
+        - get: version
+          params:
+            bump: final
       - task: final-release
         config:
           platform: linux
@@ -128,6 +140,9 @@ jobs:
         - put: s3-resource-final-release
           params:
             file: output-release-dir/release-artifacts/*.tgz
+      - put: version
+        params:
+          file: version/version
 
   - name: merge-master-into-develop
     plan:
@@ -156,4 +171,22 @@ jobs:
           BRANCH_TO_MERGE: master
           GIT_PRIVATE_KEY: {{git-writer-private-key}}
 
-groups: [{name: cf-mysql-final, jobs: [final-release,merge-master-into-develop]}]
+  - name: bump-minor
+    plan:
+    - aggregate:
+      - get: version
+        params:
+          bump: minor
+    - put: version
+      params:
+        file: version/version
+
+  - name: bump-major
+    plan:
+    - aggregate:
+      - get: version
+        params:
+          bump: major
+    - put: version
+      params:
+        file: version/version
