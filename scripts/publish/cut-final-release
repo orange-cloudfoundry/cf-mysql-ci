@@ -16,25 +16,6 @@ OUTPUT_REPO_DIRECTORY="${WORKSPACE_DIR}/${OUTPUT_REPO_DIRECTORY:?}"
 RELEASE_NOTES_DIRECTORY="${RELEASE_NOTES_DIRECTORY:?}"
 RELEASE_NOTES_REGEX="${WORKSPACE_DIR}/${RELEASE_NOTES_DIRECTORY}/RELEASE_NOTES_v*"
 
-function get_expected_release_version() {
-  # shellcheck disable=SC2086
-  # we need to enable globbing of this regex
-  RELEASE_NOTES_FILENAME="$(basename ${RELEASE_NOTES_REGEX})"
-  echo "${RELEASE_NOTES_FILENAME#RELEASE_NOTES_v}" #remove leading file prefix
-}
-
-function get_actual_release_version() {
-  # get the previous release version and add 1
-  pushd "${RELEASE_DIR}"> /dev/null
-    PREVIOUS_VERSION=$(find releases/ -maxdepth 2 -name "cf-mysql-*.yml" -type f -printf "%f\n" | \
-      cut -d '-' -f3 | \
-      cut -d '.' -f1 | \
-      sort -n | \
-      tail -1)
-    echo "$((PREVIOUS_VERSION + 1))"
-  popd > /dev/null
-}
-
 function write_upload_keys() {
   # write AWS keys used to upload blobs to public blob store
   pushd "${RELEASE_DIR}"
@@ -58,21 +39,15 @@ pushd "${RELEASE_DIR}"
   git merge --no-edit --ff-only release-candidate # will always fast-forward
   git submodule foreach --recursive git submodule sync && git submodule update --init --recursive
 
-  EXPECTED_VERSION="$(get_expected_release_version)"
-  ACTUAL_VERSION="$(get_actual_release_version)"
-  VERSION_TAG="v${ACTUAL_VERSION}"
-
-  if [[ "${EXPECTED_VERSION}" != "${ACTUAL_VERSION}" ]]; then
-    echo "Expected version ${EXPECTED_VERSION} did not equal actual version ${ACTUAL_VERSION}"
-    exit 1
-  fi
+  VERSION=$(cat ${WORKSPACE_DIR}/version/version)
+  VERSION_TAG="v${VERSION}"
 
   write_upload_keys
 
   gobosh -n create-release --tarball --final
 
   mkdir -p "${OUTPUT_RELEASE_ARTIFACTS}"
-  cp "releases/cf-mysql/cf-mysql-${ACTUAL_VERSION}.tgz" "${OUTPUT_RELEASE_ARTIFACTS}"
+  cp "releases/cf-mysql/cf-mysql-${VERSION}.tgz" "${OUTPUT_RELEASE_ARTIFACTS}"
 
   git add .
   git commit -m "Final release version ${VERSION_TAG}"
