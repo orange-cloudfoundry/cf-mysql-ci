@@ -10,43 +10,11 @@ WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 default_release_name="${RELEASE_NAME}-release"
 RELEASE_DIR="${WORKSPACE_DIR}/${RELEASE_RELATIVE_DIR:-${default_release_name}}"
 OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-release-tarball}"
-TAG_MATCH=${TAG_MATCH:-}
 FINAL=${FINAL:-}
 
 pushd "${RELEASE_DIR}"
 
-    # If we don't specify the release version manually,
-    # Bosh will choose a version number based on what
-    # versions are already on the local machine.
-    # If the local machine has no existing versions
-    # (e.g. the machine is newly created from a Docker image),
-    # Bosh will start at Version 0. The problem is that
-    # the bosh director we are targeting may already have a
-    # Version 0 uploaded, so Bosh will not upload our changes.
-    # Manually adding a timestamp to the version number fixes this.
-    # We also include the latest OSS release tag in the version for clarity.
-    if [ -n "${TAG_MATCH}" ]; then
-      git_describe_output=$(git describe --long --tags --match "${TAG_MATCH}")
-    else
-      git_describe_output=$(git describe --long --tags)
-    fi
-    git_describe_output="${git_describe_output#v}" # remove leading 'v'
-
-    major=$(echo "${git_describe_output}" | cut -f1 -d-)
-    minor=$(echo "${git_describe_output}" | cut -f2 -d-)
-    sha=$(echo "${git_describe_output}" | cut -f3 -d-)
-
-    if [ -n "${FINAL}" ]; then
-      version=$major.$minor
-    else
-      # Handle alpha versions
-      if echo "${major}" | grep -q "alpha"; then
-        major=$(echo "${major}" | grep -o -E "[0-9.]+")
-        version=$major.0.0-alpha.$minor+$sha
-      else
-        version=$major.$minor+$sha
-      fi
-    fi
+    version=$(cat ${WORKSPACE_DIR}/version/version)
 
     tarball_path="${OUTPUT_DIR}/${RELEASE_NAME}-${version}.tgz"
 
