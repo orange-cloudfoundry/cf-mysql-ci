@@ -1501,6 +1501,7 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-ci
+    - get: cf-mysql-release
     - get: bosh-deployment
       resource: bosh-deployment-repo
     - get: deployments
