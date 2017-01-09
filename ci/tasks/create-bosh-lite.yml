@@ -9,6 +9,7 @@ image_resource:
 inputs:
 - name: bosh-deployment
 - name: cf-mysql-ci
+- name: cf-mysql-release
 - name: deployments
 - name: stemcell
 - name: bosh-warden-cpi-compiled-release

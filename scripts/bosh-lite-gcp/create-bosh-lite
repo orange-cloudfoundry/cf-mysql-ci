@@ -5,6 +5,7 @@ my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 scripts_dir="$( cd "${my_dir}/../" && pwd )"
 workspace_dir="$( cd "${my_dir}/../../../" && pwd )"
 
+cf_mysql_release_dir="${workspace_dir}/cf-mysql-release"
 OUTPUT_DIR="${workspace_dir}/${OUTPUT_DIR}"
 BOSH_DEPLOYMENT_DIR="${workspace_dir}/${BOSH_DEPLOYMENT_DIR}"
 DEPLOYMENTS_DIR="${workspace_dir}/${DEPLOYMENTS_DIR}"
@@ -64,6 +65,12 @@ gobosh -n interpolate "${OUTPUT_DIR}/credentials.yml" \
   --path /admin_password > "${OUTPUT_DIR}/admin-password"
 
 gobosh -n upload-stemcell "${STEMCELL_DIR}"/*.tgz \
+  -e "$(cat "${OUTPUT_DIR}/external-ip")" \
+  --user admin \
+  --password "$(cat "${OUTPUT_DIR}/admin-password")" \
+  --ca-cert "${OUTPUT_DIR}/ca-cert"
+
+gobosh -n update-cloud-config "${cf_mysql_release_dir}/manifest-generation/bosh2.0/bosh-lite/cloud-config.yml" \
   -e "$(cat "${OUTPUT_DIR}/external-ip")" \
   --user admin \
   --password "$(cat "${OUTPUT_DIR}/admin-password")" \
