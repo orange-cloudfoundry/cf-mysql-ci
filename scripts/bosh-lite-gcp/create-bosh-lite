@@ -51,6 +51,7 @@ gobosh interpolate "${BOSH_DEPLOYMENT_DIR}/bosh.yml" \
   -v project_id="${PROJECT_ID}" \
   -v zone="${ZONE}" \
   -v network="${NETWORK}" \
+  -v admin_password="${BOSH_PASSWORD}" \
   -v subnetwork="${SUBNETWORK}" > "${OUTPUT_DIR}/manifest.yml"
 
 gobosh create-env "${OUTPUT_DIR}/manifest.yml" \
