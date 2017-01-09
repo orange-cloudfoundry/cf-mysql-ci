@@ -73,3 +73,11 @@ gobosh -n update-cloud-config "${cf_mysql_release_dir}/manifest-generation/bosh2
   --user admin \
   --password "${BOSH_PASSWORD}" \
   --ca-cert "${OUTPUT_DIR}/ca-cert"
+
+cat << EOF > metadata.json
+{
+    "env": "not_used",
+    "bosh_user": "admin",
+    "bosh_password": "${BOSH_PASSWORD}"
+}
+EOF
