@@ -73,3 +73,5 @@ gobosh -n update-cloud-config "${cf_mysql_release_dir}/manifest-generation/bosh2
   --user admin \
   --password "${BOSH_PASSWORD}" \
   --ca-cert "${OUTPUT_DIR}/ca-cert"
+
+echo "https://$(cat${OUTPUT_DIR}/external-ip)" > "${OUTPUT_DIR}/director-url"
