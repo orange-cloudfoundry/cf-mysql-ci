@@ -74,4 +74,5 @@ gobosh -n update-cloud-config "${cf_mysql_release_dir}/manifest-generation/bosh2
   --password "${BOSH_PASSWORD}" \
   --ca-cert "${OUTPUT_DIR}/ca-cert"
 
-echo "https://$(cat${OUTPUT_DIR}/external-ip)" > "${OUTPUT_DIR}/director-url"
+# Adding https: escapes the regex that would otherwise convert to sslip
+echo "https://$(cat "${OUTPUT_DIR}/external-ip")" > "${OUTPUT_DIR}/director-url"

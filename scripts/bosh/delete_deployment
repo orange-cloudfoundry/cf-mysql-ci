@@ -9,13 +9,15 @@ WORKSPACE_DIR="$( cd ${CI_DIR}/../ && pwd )"
 source ${CI_DIR}/scripts/utils.sh
 
 : "${ENV_TARGET_FILE:?}"
-: "${ENV_METADATA:?}"
 : "${DEPLOYMENT_NAME:?}"
 
 BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
-ENV="$(jq_val "env" "${ENV_METADATA}")"
-BOSH_USER="$(jq_val "bosh_user" "${ENV_METADATA}")"
-BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
+
+BOSH_USER=${BOSH_USER:-"$(jq_val "bosh_user" "${ENV_METADATA}")"}
+export BOSH_USER
+
+BOSH_PASSWORD=${BOSH_PASSWORD:-"$(jq_val "bosh_password" "${ENV_METADATA}")"}
+export BOSH_PASSWORD
 
 bosh -n target "${BOSH_TARGET}"
 bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
