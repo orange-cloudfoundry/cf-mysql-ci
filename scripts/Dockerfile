@@ -34,13 +34,11 @@ RUN \
     && apt-get -qq update \
     && apt-get -t $(lsb_release -cs)-backports install shellcheck
 
-RUN apt-add-repository "deb https://packages.cloud.google.com/apt cloud-sdk-$(lsb_release -c -s) main"
-
-RUN curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
-
-RUN apt-get update
-
-RUN apt-get install google-cloud-sdk
+RUN \
+    apt-add-repository "deb https://packages.cloud.google.com/apt cloud-sdk-$(lsb_release -c -s) main" \
+    && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add - \
+    && apt-get update \
+    && apt-get -y install google-cloud-sdk
 
 # Alias nodejs as node for switchboard ui
 RUN ln -s /usr/bin/nodejs /usr/bin/node
