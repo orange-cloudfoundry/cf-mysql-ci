@@ -1388,68 +1388,102 @@ jobs:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
       trigger: true
-    - put: bosh-lite-environment
-      resource: bosh-lite-no-cf-environment
-      params:
-        acquire: true
     - get: cf-mysql-ci
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+    - get: bosh-deployment
+      resource: bosh-deployment-repo
     - get: bosh-lite-stemcell
-    - get: bosh-lite-repo
+    - get: deployments
+      resource: deployments-configuration
+    - get: bosh-warden-cpi-compiled-release
+      passed: [compile-bosh-lite-releases]
+    - get: garden-linux-compiled-release
+      passed: [compile-bosh-lite-releases]
+    - get: stemcell
+      resource: bosh-lite-stemcell
     - get: version
       passed: [create-and-compile-release]
-  - *delete-deployment-bosh-lite
-  - task: make-manifest
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-release
-      outputs:
-        - name: deployment-manifest
-      params:
-        OUTPUT_FILE: deployment-manifest/deployment.yml
-      run:
-        path: bash
-        args:
-        - -c
-        - |
-          set -eu
+  - aggregate:
+    - task: make-manifest
+      config:
+        platform: *platform
+        image_resource: *image_resource
+        inputs:
+        - name: cf-mysql-release
+        outputs:
+          - name: deployment-manifest
+        params:
+          OUTPUT_FILE: deployment-manifest/deployment.yml
+        run:
+          path: bash
+          args:
+          - -c
+          - |
+            set -eu
 
-          gobosh interpolate \
-            ./cf-mysql-release/manifest-generation/cf-mysql-template-v2.yml \
-            -l ./cf-mysql-release/manifest-generation/bosh2.0/bosh-lite/default-vars.yml \
-            > "${OUTPUT_FILE}"
-  - put: bosh-2.0-bosh-lite-deployment
-    params:
-      manifest: deployment-manifest/deployment.yml
-      releases:
-      - compiled-release-tarball/*.tgz
-      stemcells:
-      - bosh-lite-stemcell/*.tgz
-      target_file: bosh-lite-environment/name
-  - task: run-smoke-tests
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: bosh-lite-repo
-        - name: cf-mysql-ci
-        - name: bosh-lite-environment
+            gobosh interpolate \
+              ./cf-mysql-release/manifest-generation/cf-mysql-template-v2.yml \
+              -l ./cf-mysql-release/manifest-generation/bosh2.0/bosh-lite/default-vars.yml \
+              > "${OUTPUT_FILE}"
+    - task: apply-terraform
+      file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+  - do:
+    - task: create-bosh-lite
+      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+      input_mapping: {deployments: deployments-terraformed}
       params:
-        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-        ERRAND: smoke-tests
-        DEPLOYMENT_NAME: cf-mysql
-      run:
-        path: cf-mysql-ci/scripts/bosh/run_errand
-  - put: bosh-lite-environment
-    resource: bosh-lite-no-cf-environment
-    params:
-      release: bosh-lite-environment
+        PROJECT_ID: {{gcp-bosh-lite-project-id}}
+        ZONE: {{gcp-bosh-lite-zone}}
+        NETWORK: {{gcp-bosh-lite-network}}
+        SUBNETWORK: {{gcp-bosh-lite-subnetwork}}
+        BOSH_PASSWORD: {{bosh-lite-password}}
+    - put: bosh-2.0-bosh-lite-deployment
+      params:
+        manifest: deployment-manifest/deployment.yml
+        releases:
+        - compiled-release-tarball/*.tgz
+        stemcells:
+        - bosh-lite-stemcell/*.tgz
+        target_file: bosh-lite-info/external-ip
+    - task: run-smoke-tests
+      config:
+        platform: *platform
+        image_resource: *image_resource
+        inputs:
+          - name: cf-mysql-ci
+          - name: bosh-lite-info
+        params:
+          BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
+          BOSH_USER: {{bosh-lite-username}}
+          BOSH_PASSWORD: {{bosh-lite-password}}
+          ENV_TARGET_FILE: bosh-lite-info/director-url
+          ERRAND: smoke-tests
+          DEPLOYMENT_NAME: cf-mysql
+        run:
+          path: cf-mysql-ci/scripts/bosh/run_errand
+    ensure:
+      do:
+      - task: delete-deployment
+        config:
+          platform: *platform
+          image_resource: *image_resource
+          inputs:
+          - name: cf-mysql-ci
+          - name: bosh-lite-info
+          params:
+            BOSH_USER: {{bosh-lite-username}}
+            BOSH_PASSWORD: {{bosh-lite-password}}
+            ENV_TARGET_FILE: bosh-lite-info/external-ip
+            DEPLOYMENT_NAME: cf-mysql
+          run:
+            path: cf-mysql-ci/scripts/bosh/delete_deployment
+      - task: destroy-bosh-lite
+        file: cf-mysql-ci/ci/tasks/destroy-bosh-lite.yml
+      - task: destroy-terraform
+        file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
+        input_mapping: {deployments: deployments-terraformed}
 
 - name: compile-bosh-lite-releases
   serial: true
@@ -1524,6 +1558,7 @@ jobs:
         ZONE: {{gcp-bosh-lite-zone}}
         NETWORK: {{gcp-bosh-lite-network}}
         SUBNETWORK: {{gcp-bosh-lite-subnetwork}}
+        BOSH_PASSWORD: {{bosh-lite-password}}
     ensure:
       do:
       - task: destroy-bosh-lite
