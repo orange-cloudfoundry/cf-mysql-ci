@@ -193,6 +193,14 @@ resources:
     key: version
     initial_version: 33.0.0
 
+- name: cf-mysql-release-final-release
+  type: s3
+  source:
+    bucket: pcf-mysql-releases
+    access_key_id: {{pcf-mysql-releases-reader-aws-access-key-id}}
+    secret_access_key: {{pcf-mysql-releases-reader-aws-secret-access-key}}
+    regexp: final/cf-mysql-([\d+\.]+)\.tgz
+
 ### JOBS
 jobs:
 - name: build-dockerfile
@@ -788,6 +796,8 @@ jobs:
     - get: cf-mysql-release
       resource: cf-mysql-master
       trigger: true
+    - get: release-tarball
+      resource: cf-mysql-release-final-release
     - put: bosh-lite-environment
       params:
         acquire: true
@@ -799,24 +809,22 @@ jobs:
       passed: [create-and-compile-release]
   - try: *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
-  - aggregate:
-    - *create-release
-    - task: make-manifest
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-        - name: cf-mysql-release
-        - name: cf-mysql-ci
-        - name: bosh-lite-environment
-        outputs:
-        - name: deployment-manifest
-        params:
-          OUTPUT_FILE: deployment-manifest/deployment.yml
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-        run:
-          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
+  - task: make-manifest
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-release
+      - name: cf-mysql-ci
+      - name: bosh-lite-environment
+      outputs:
+      - name: deployment-manifest
+      params:
+        OUTPUT_FILE: deployment-manifest/deployment.yml
+        ENV_TARGET_FILE: bosh-lite-environment/name
+        ENV_METADATA: bosh-lite-environment/metadata
+      run:
+        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - put: compiled-packages-lock
     params:
       acquire: true
