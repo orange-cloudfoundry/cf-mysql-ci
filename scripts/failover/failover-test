@@ -26,11 +26,11 @@ function bosh-ip() {
 }
 
 BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
-BOSH_USER="$(jq_val "bosh_user" "${ENV_METADATA}")"
+BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
 BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
 bosh -n target "${BOSH_TARGET}"
-bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
+bosh -n login "${BOSH_CLIENT}" "${BOSH_PASSWORD}"
 
 export BROKER_0_REMOTE_IP=$(bosh-ip cf-mysql-broker_z1/0)
 export BROKER_1_REMOTE_IP=$(bosh-ip cf-mysql-broker_z2/0)

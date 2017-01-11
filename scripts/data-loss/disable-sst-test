@@ -14,12 +14,12 @@ source ${CI_DIR}/scripts/utils.sh
 
 BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
 ENV="$(jq_val "env" "${ENV_METADATA}")"
-BOSH_USER="$(jq_val "bosh_user" "${ENV_METADATA}")"
+BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
 BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
 function start_mysql_z2_0() {
   bosh -n target "${BOSH_TARGET}"
-  bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
+  bosh -n login "${BOSH_CLIENT}" "${BOSH_PASSWORD}"
   bosh deployment ${DEPLOYMENT_MANIFEST}
   bosh -n start mysql_z2 0 --force
 }

@@ -13,7 +13,7 @@ MYSQL_CONFIG=${MY_DIR}/mysql.config
 source ${CI_DIR}/scripts/utils.sh
 
 BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
-BOSH_USER="$(jq_val "bosh_user" "${ENV_METADATA}")"
+BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
 BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
 DEPLOYMENT_NAME=cf-warden-mysql
@@ -57,7 +57,7 @@ function close-ssh-tunnels() {
 
 function verify_schemas() {
   bosh -n target "${BOSH_TARGET}"
-  bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
+  bosh -n login "${BOSH_CLIENT}" "${BOSH_PASSWORD}"
   bosh -n download manifest ${DEPLOYMENT_NAME} ${DEPLOYMENT_NAME}.yml
   bosh deployment ${DEPLOYMENT_NAME}.yml
 

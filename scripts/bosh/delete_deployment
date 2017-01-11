@@ -13,14 +13,14 @@ source ${CI_DIR}/scripts/utils.sh
 
 BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
 
-BOSH_USER=${BOSH_USER:-"$(jq_val "bosh_user" "${ENV_METADATA}")"}
-export BOSH_USER
+BOSH_CLIENT=${BOSH_CLIENT:-"$(jq_val "bosh_user" "${ENV_METADATA}")"}
+export BOSH_CLIENT
 
 BOSH_PASSWORD=${BOSH_PASSWORD:-"$(jq_val "bosh_password" "${ENV_METADATA}")"}
 export BOSH_PASSWORD
 
 bosh -n target "${BOSH_TARGET}"
-bosh -n login "${BOSH_USER}" "${BOSH_PASSWORD}"
+bosh -n login "${BOSH_CLIENT}" "${BOSH_PASSWORD}"
 
 set +e
 check_if_deployment_exists ${DEPLOYMENT_NAME}
