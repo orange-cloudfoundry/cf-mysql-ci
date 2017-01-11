@@ -86,6 +86,15 @@ resources:
     uri: https://github.com/cloudfoundry/bosh-lite.git
     branch: master
 
+- name: version
+  type: semver
+  source:
+    driver: s3
+    bucket: cf-mysql-releases
+    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
+    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
+    key: version-v22
+
 ### JOBS
 jobs:
 - name: test-unit
@@ -95,6 +104,10 @@ jobs:
       trigger: true
     - get: weekly-trigger
       trigger: true
+    - get: old_version
+      resource: version
+      params:
+        pre: rc
   - task: test-unit
     config:
       platform: &platform linux
@@ -114,6 +127,9 @@ jobs:
       - name: cf-mysql-release
       run:
         path: cf-mysql-release/scripts/test-sample-stubs
+  - put: version
+    params:
+      file: old_version/version
 
 - name: deploy-to-full-bosh
   plan:
@@ -130,6 +146,8 @@ jobs:
     - get: cf-mysql-ci
     - get: deployments-configuration
     - get: aws-bosh-stemcell
+    - get: version
+      passed: [test-unit]
   - try:
       task: run-broker-deregistrar
       config:
@@ -170,6 +188,7 @@ jobs:
         inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
+        - name: version
         outputs:
         - name: release-tarball
         params:
@@ -310,6 +329,8 @@ jobs:
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
     - get: bosh-lite-repo
+    - get: version
+      passed: [test-unit]
   - &broker-deregistrar-bosh-lite
     try:
       task: run-broker-deregistrar
@@ -462,6 +483,8 @@ jobs:
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
     - get: bosh-lite-repo
+    - get: version
+      passed: [test-unit]
   - *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
   - aggregate:
@@ -584,3 +607,14 @@ jobs:
   - put: pcf-mysql-rc-artifacts
     params:
       file: release-tarball/cf-mysql*.tgz
+
+- name: bump-minor
+  plan:
+  - aggregate:
+    - get: version
+      params:
+        bump: minor
+        pre: rc
+  - put: version
+    params:
+      file: version/version
