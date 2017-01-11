@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eu
+set -eux
 
 my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 scripts_dir="$( cd "${my_dir}/../" && pwd )"
