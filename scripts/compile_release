@@ -52,8 +52,8 @@ EOF
 
   echo "Targeting ${BOSH_DIRECTOR}"
   set +x
-    bosh -u ${BOSH_USERNAME} -p ${BOSH_PASSWORD} target ${BOSH_DIRECTOR}
-    bosh login ${BOSH_USERNAME} ${BOSH_PASSWORD}
+    bosh -u ${BOSH_CLIENT} -p ${BOSH_CLIENT_SECRET} target ${BOSH_DIRECTOR}
+    bosh login ${BOSH_CLIENT} ${BOSH_CLIENT_SECRET}
   set -x
 
   bosh deployment deployment.yml

@@ -29,8 +29,8 @@ fi
 pushd "${WORKSPACE_DIR}"
   DIRECTOR_IP=$(cat "${ENV_TARGET_FILE}")
 
-  BOSH_USERNAME="$(jq_val "bosh_user" "${ENV_METADATA}")"
-  BOSH_PASSWORD="$(jq_val "bosh_password" "${ENV_METADATA}")"
+  BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
+  BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
   CF_API_USER="$(jq_val "cf_api_user" "${ENV_METADATA}")"
   CF_API_PASSWORD="$(jq_val "cf_api_password" "${ENV_METADATA}")"
@@ -39,7 +39,7 @@ popd
 CF_MANIFEST="${tmpdir}/cf-warden.yml"
 if [ "${STANDALONE_MODE}" = false ] ; then
   bosh -n target "${DIRECTOR_IP}"
-  bosh -n login "${BOSH_USERNAME}" "${BOSH_PASSWORD}"
+  bosh -n login "${BOSH_CLIENT}" "${BOSH_CLIENT_SECRET}"
 
   bosh -n download manifest cf-warden "${CF_MANIFEST}"
 else

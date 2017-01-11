@@ -307,8 +307,8 @@ jobs:
       outputs:
       - name: compiled-release-tarball
       params:
-        BOSH_USERNAME: {{bosh_compilation_username}}
-        BOSH_PASSWORD: {{bosh_compilation_password}}
+        BOSH_CLIENT: {{bosh_compilation_username}}
+        BOSH_CLIENT_SECRET: {{bosh_compilation_password}}
         BOSH_DIRECTOR: {{bosh_compilation_director}}
       run:
         path: cf-mysql-ci/scripts/compile_release
@@ -1446,7 +1446,7 @@ jobs:
         ZONE: {{gcp-bosh-lite-zone}}
         NETWORK: {{gcp-bosh-lite-network}}
         SUBNETWORK: {{gcp-bosh-lite-subnetwork}}
-        BOSH_PASSWORD: {{bosh-lite-password}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
     - put: bosh-2.0-bosh-lite-deployment
       params:
         manifest: deployment-manifest/deployment.yml
@@ -1465,7 +1465,7 @@ jobs:
         params:
           BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
           BOSH_CLIENT: {{bosh-lite-username}}
-          BOSH_PASSWORD: {{bosh-lite-password}}
+          BOSH_CLIENT_SECRET: {{bosh-lite-password}}
           ENV_TARGET_FILE: bosh-lite-info/director-url
           ERRAND: smoke-tests
           DEPLOYMENT_NAME: cf-mysql
@@ -1482,7 +1482,7 @@ jobs:
           - name: bosh-lite-info
           params:
             BOSH_CLIENT: {{bosh-lite-username}}
-            BOSH_PASSWORD: {{bosh-lite-password}}
+            BOSH_CLIENT_SECRET: {{bosh-lite-password}}
             ENV_TARGET_FILE: bosh-lite-info/external-ip
             DEPLOYMENT_NAME: cf-mysql
           run:
@@ -1511,8 +1511,8 @@ jobs:
     input_mapping: {release-tarball: bosh-warden-cpi-bosh-io-release}
     output_mapping: {compiled-release-tarball: compiled-bosh-warden-cpi-bosh-io-release}
     params:
-        BOSH_USERNAME: {{bosh_compilation_username}}
-        BOSH_PASSWORD: {{bosh_compilation_password}}
+        BOSH_CLIENT: {{bosh_compilation_username}}
+        BOSH_CLIENT_SECRET: {{bosh_compilation_password}}
         BOSH_DIRECTOR: {{bosh_compilation_director}}
     ensure:
       put: compiled-packages-lock
@@ -1529,8 +1529,8 @@ jobs:
     input_mapping: {release-tarball: garden-linux-bosh-io-release}
     output_mapping: {compiled-release-tarball: compiled-garden-linux-bosh-io-release}
     params:
-        BOSH_USERNAME: {{bosh_compilation_username}}
-        BOSH_PASSWORD: {{bosh_compilation_password}}
+        BOSH_CLIENT: {{bosh_compilation_username}}
+        BOSH_CLIENT_SECRET: {{bosh_compilation_password}}
         BOSH_DIRECTOR: {{bosh_compilation_director}}
     ensure:
       put: compiled-packages-lock

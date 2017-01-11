@@ -18,7 +18,7 @@ pushd "${MY_DIR}"
 popd
 
 bosh -n target "${DIRECTOR_IP}"
-bosh -n login "${BOSH_CLIENT}" "${BOSH_PASSWORD}"
+bosh -n login "${BOSH_CLIENT}" "${BOSH_CLIENT_SECRET}"
 
 scale_down_to_minimal
 clear_data

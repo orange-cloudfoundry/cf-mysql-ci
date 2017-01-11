@@ -24,7 +24,7 @@ run:
 params:
   OUTPUT_DIR: bosh-lite-info
   BOSH_DEPLOYMENT_DIR: bosh-deployment
-  BOSH_PASSWORD:
+  BOSH_CLIENT_SECRET:
   DEPLOYMENTS_DIR: deployments
   STEMCELL_DIR: stemcell
   BOSH_WARDEN_CPI_RELEASE_DIR: bosh-warden-cpi-compiled-release

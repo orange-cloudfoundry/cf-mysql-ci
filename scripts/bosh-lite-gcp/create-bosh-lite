@@ -17,7 +17,7 @@ GARDEN_LINUX_RELEASE_DIR="${workspace_dir}/${GARDEN_LINUX_RELEASE_DIR}"
 : "${ZONE}"
 : "${NETWORK}"
 : "${SUBNETWORK}"
-: "${BOSH_PASSWORD}"
+: "${BOSH_CLIENT_SECRET}"
 
 source "${scripts_dir}/create_release_override"
 
@@ -52,7 +52,7 @@ gobosh interpolate "${BOSH_DEPLOYMENT_DIR}/bosh.yml" \
   -v project_id="${PROJECT_ID}" \
   -v zone="${ZONE}" \
   -v network="${NETWORK}" \
-  -v admin_password="${BOSH_PASSWORD}" \
+  -v admin_password="${BOSH_CLIENT_SECRET}" \
   -v subnetwork="${SUBNETWORK}" > "${OUTPUT_DIR}/manifest.yml"
 
 gobosh create-env "${OUTPUT_DIR}/manifest.yml" \
@@ -65,13 +65,13 @@ gobosh -n interpolate "${OUTPUT_DIR}/credentials.yml" \
 gobosh -n upload-stemcell "${STEMCELL_DIR}"/*.tgz \
   -e "$(cat "${OUTPUT_DIR}/external-ip")" \
   --client admin \
-  --client-secret "${BOSH_PASSWORD}" \
+  --client-secret "${BOSH_CLIENT_SECRET}" \
   --ca-cert "${OUTPUT_DIR}/ca-cert"
 
 gobosh -n update-cloud-config "${cf_mysql_release_dir}/manifest-generation/bosh2.0/bosh-lite/cloud-config.yml" \
   -e "$(cat "${OUTPUT_DIR}/external-ip")" \
   --client admin \
-  --client-secret "${BOSH_PASSWORD}" \
+  --client-secret "${BOSH_CLIENT_SECRET}" \
   --ca-cert "${OUTPUT_DIR}/ca-cert"
 
 # Adding https: escapes the regex that would otherwise convert to sslip

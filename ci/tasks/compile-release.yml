@@ -15,8 +15,8 @@ outputs:
 - name: compiled-release-tarball
 
 params:
-  BOSH_USERNAME:
-  BOSH_PASSWORD:
+  BOSH_CLIENT:
+  BOSH_CLIENT_SECRET:
   BOSH_DIRECTOR:
 
 run:
