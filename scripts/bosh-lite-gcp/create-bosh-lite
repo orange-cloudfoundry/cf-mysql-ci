@@ -64,14 +64,14 @@ gobosh -n interpolate "${OUTPUT_DIR}/credentials.yml" \
 
 gobosh -n upload-stemcell "${STEMCELL_DIR}"/*.tgz \
   -e "$(cat "${OUTPUT_DIR}/external-ip")" \
-  --user admin \
-  --password "${BOSH_PASSWORD}" \
+  --client admin \
+  --client-secret "${BOSH_PASSWORD}" \
   --ca-cert "${OUTPUT_DIR}/ca-cert"
 
 gobosh -n update-cloud-config "${cf_mysql_release_dir}/manifest-generation/bosh2.0/bosh-lite/cloud-config.yml" \
   -e "$(cat "${OUTPUT_DIR}/external-ip")" \
-  --user admin \
-  --password "${BOSH_PASSWORD}" \
+  --client admin \
+  --client-secret "${BOSH_PASSWORD}" \
   --ca-cert "${OUTPUT_DIR}/ca-cert"
 
 # Adding https: escapes the regex that would otherwise convert to sslip
