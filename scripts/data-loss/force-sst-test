@@ -23,7 +23,7 @@ MYSQL_TUNNEL_PORT=3307
 MYSQL_TUNNEL_USERNAME=jumpbox
 MYSQL_VM_IP=10.244.7.2
 MYSQL_VM_PORT=3306
-GCACHE_SIZE_PLUS_ONE=129
+GCACHE_SIZE_PLUS_ONE=513
 
 # Figure out the name of mysql z2
 MYSQL_NODE_NAME=`gobosh instances | grep "mysql/" | grep "z2" | cut -d ' ' -f 1`
