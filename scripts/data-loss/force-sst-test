@@ -13,8 +13,9 @@ WORKSPACE_DIR="$( cd ${MY_DIR}/../../.. && pwd )"
 source ${CI_DIR}/scripts/utils.sh
 
 BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
+BOSH_ENVIRONMENT="$(sslip_from_ip "${BOSH_TARGET}")"
+export BOSH_ENVIRONMENT
 
-export BOSH_ENVIRONMENT=${BOSH_TARGET}
 if [[ -z "${BOSH_CA_CERT}" ]]; then
   export BOSH_CA_CERT="${WORKSPACE_DIR}/bosh-lite-info/ca-cert"
 fi
