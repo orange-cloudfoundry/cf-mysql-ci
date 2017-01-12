@@ -1030,7 +1030,7 @@ jobs:
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         DEPLOYMENT_NAME: cf-mysql
       run:
-        path: cf-mysql-ci/scripts/data-loss/force-sst-test-gcp
+        path: cf-mysql-ci/scripts/data-loss/force-sst-test-ondemand
   - task: run-rejoin-unsafe-errand
     config:
       platform: *platform
@@ -1050,107 +1050,43 @@ jobs:
   - *ondemand-teardown
 
 ### DISABLE AUTO SST
-- name: deploy-to-disable-auto-sst
+- name: test-interruptor-can-be-disabled
   plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [create-and-compile-release]
-      trigger: true
-    - put: bosh-lite-environment
-      params:
-        acquire: true
-    - get: cf-mysql-ci
-    - get: bosh-lite-stemcell
-    - get: bosh-lite-repo
-    - get: compiled-release-tarball
-      resource: cf-mysql-compiled-release
-      passed: [create-and-compile-release]
-    - get: version
-      passed: [create-and-compile-release]
-  - try: *broker-deregistrar-bosh-lite
-  - *delete-deployment-bosh-lite
-  - task: make-manifest
+  - *ondemand-setup
+  - task: run-data-loss-tests # leaves cluster in broken state with node z2 down
     config:
       platform: *platform
       image_resource: *image_resource
       inputs:
-      - name: cf-mysql-ci
-      - name: cf-mysql-release
-      - name: bosh-lite-environment
-      outputs:
-        - name: deployment-manifest
-      params:
-        OUTPUT_FILE: deployment-manifest/deployment.yml
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-        TINY_GCACHE: true
-      run:
-        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-  - *deploy-to-bosh-lite
-
-- name: test-disable-auto-sst
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [deploy-to-disable-auto-sst]
-    - get: bosh-lite-environment
-      passed: [deploy-to-disable-auto-sst]
-      trigger: true
-      version: every
-    - get: version
-      passed: [deploy-to-disable-auto-sst]
-  - aggregate:
-    - task: break-cluster
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-          - name: cf-mysql-ci
-          - name: bosh-lite-environment
-        params:
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-          BOSH_SSH_KEY: {{bosh-lite-private-key}}
-          DEPLOYMENT_NAME: cf-warden-mysql
-        run:
-          path: cf-mysql-ci/scripts/data-loss/force-sst-test
-    - task: make-manifest
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
         - name: cf-mysql-ci
+        - name: bosh-lite-info
         - name: cf-mysql-release
-        - name: bosh-lite-environment
-        outputs:
-          - name: deployment-manifest
-        params:
-          OUTPUT_FILE: deployment-manifest/deployment.yml
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-          TINY_GCACHE: true
-          DISABLE_PARANOIA: true
-        run:
-          path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-  - task: disable-sst-to-fix-cluster
+      params:
+        ENV_TARGET_FILE: bosh-lite-info/director-url
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        DEPLOYMENT_NAME: cf-mysql
+      run:
+        path: cf-mysql-ci/scripts/data-loss/force-sst-test-ondemand
+  - task: make-manifest-with-interruptor-disabled
+    file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+    params:
+      DISABLE_INTERRUPTOR: true
+  - task: restart-broken-node
     config:
       platform: *platform
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
-        - name: bosh-lite-environment
-        - name: deployment-manifest
+        - name: bosh-lite-info
       params:
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-        BOSH_SSH_KEY: {{bosh-lite-private-key}}
-        DEPLOYMENT_MANIFEST: deployment-manifest/deployment.yml
+        ENV_TARGET_FILE: bosh-lite-info/director-url
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        DEPLOYMENT_NAME: cf-mysql
       run:
-        path: cf-mysql-ci/scripts/data-loss/disable-sst-test
-  - put: bosh-lite-environment
-    params:
-      release: bosh-lite-environment
+        path: cf-mysql-ci/scripts/data-loss/restart-broken-node
+  - *ondemand-teardown
 
 ### VERIFY CLUSTER SCHEMAS
 - name: deploy-to-verify-cluster-schemas
@@ -1234,8 +1170,8 @@ jobs:
       - test-scaling
       - test-failover
       - test-verify-cluster-schemas
-      - test-disable-auto-sst
       - test-interruptor-prevents-data-loss
+      - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-arb-to-full-scaling
       - test-persistence-after-upgrade
@@ -1257,8 +1193,8 @@ jobs:
       - test-scaling
       - test-failover
       - test-verify-cluster-schemas
-      - test-disable-auto-sst
       - test-interruptor-prevents-data-loss
+      - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-arb-to-full-scaling
       - test-persistence-after-upgrade
@@ -1368,26 +1304,7 @@ jobs:
         passed: [create-and-compile-release]
     - aggregate:
       - task: make-manifest
-        config:
-          platform: *platform
-          image_resource: *image_resource
-          inputs:
-          - name: cf-mysql-release
-          outputs:
-            - name: deployment-manifest
-          params:
-            OUTPUT_FILE: deployment-manifest/deployment.yml
-          run:
-            path: bash
-            args:
-            - -c
-            - |
-              set -eu
-
-              gobosh interpolate \
-                ./cf-mysql-release/manifest-generation/cf-mysql-template-v2.yml \
-                -l ./cf-mysql-release/manifest-generation/bosh2.0/bosh-lite/default-vars.yml \
-                > "${OUTPUT_FILE}"
+        file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
       - task: apply-terraform
         file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
     - task: create-bosh-lite

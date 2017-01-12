@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# DEPRECATED
+# This is the old bosh 1.0 style manifest generation. Use make-manifest-ondemand instead!
+
 set -eux
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
