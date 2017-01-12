@@ -681,6 +681,7 @@ jobs:
   - *deploy-to-bosh-lite
   - *broker-registrar-bosh-lite
 
+# Verify that replication works in several different topologies
 - name: test-arb-to-full-scaling
   plan:
   - aggregate:
@@ -1037,11 +1038,10 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-info
-        - name: bosh-lite-repo
       params:
-        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
+        BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
         ENV_TARGET_FILE: bosh-lite-info/director-url
-        DEPLOYMENT_NAME: cf-warden-mysql
+        DEPLOYMENT_NAME: cf-mysql
         ERRAND: rejoin-unsafe
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
