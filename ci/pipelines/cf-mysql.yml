@@ -1350,8 +1350,8 @@ jobs:
         - name: cf-mysql-ci
         - name: bosh-lite-info
         params:
-          BOSH_USER: {{bosh-lite-username}}
-          BOSH_PASSWORD: {{bosh-lite-password}}
+          BOSH_CLIENT: {{bosh-lite-username}}
+          BOSH_CLIENT_SECRET: {{bosh-lite-password}}
           ENV_TARGET_FILE: bosh-lite-info/external-ip
           DEPLOYMENT_NAME: cf-mysql
         run:
