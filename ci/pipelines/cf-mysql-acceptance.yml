@@ -27,6 +27,14 @@ resources:
     branch: release-candidate
     private_key: {{git-writer-private-key}}
 
+- name: cf-mysql-rc-bucket
+  type: s3
+  source:
+    bucket: cf-mysql-releases
+    regexp: release-candidate/cf-mysql-(.*)\+.*.tgz
+    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
+    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
+
 - name: aws-acceptance-environment
   type: pool
   source:
@@ -76,26 +84,27 @@ jobs:
         passed: [claim-aws-environment]
       - get: cf-mysql-ci
       - get: deployments-configuration
-    - task: run-broker-deregistrar
-      config:
-        platform: linux
-        image_resource: &image_resource
-          type: docker-image
-          source:
-            repository: cloudfoundry/cf-mysql-ci
-        inputs:
-          - name: cf-mysql-ci
-          - name: deployments-configuration
-          - name: aws-acceptance-environment
-        params:
-          ENV_REPO: deployments-configuration
-          ENV_TARGET_FILE: aws-acceptance-environment/name
-          ENV_METADATA: aws-acceptance-environment/metadata
-          ERRAND: broker-deregistrar
-          SKIP_IF_NO_DEPLOYMENT: true
-          DEPLOYMENT_NAME: cf-mysql
-        run:
-          path: cf-mysql-ci/scripts/bosh/run_errand
+    - try:
+        task: run-broker-deregistrar
+        config:
+          platform: linux
+          image_resource: &image_resource
+            type: docker-image
+            source:
+              repository: cloudfoundry/cf-mysql-ci
+          inputs:
+            - name: cf-mysql-ci
+            - name: deployments-configuration
+            - name: aws-acceptance-environment
+          params:
+            ENV_REPO: deployments-configuration
+            ENV_TARGET_FILE: aws-acceptance-environment/name
+            ENV_METADATA: aws-acceptance-environment/metadata
+            ERRAND: broker-deregistrar
+            SKIP_IF_NO_DEPLOYMENT: true
+            DEPLOYMENT_NAME: cf-mysql
+          run:
+            path: cf-mysql-ci/scripts/bosh/run_errand
     - task: delete-acceptance-deployment
       config:
         platform: linux
@@ -126,40 +135,26 @@ jobs:
         passed: [delete-acceptance-deployment]
         trigger: true
         version: every
-    - aggregate:
-      - task: create-release
-        config:
-          platform: linux
-          image_resource: *image_resource
-          inputs:
-          - name: cf-mysql-ci
-          - name: cf-mysql-release
-          outputs:
-          - name: release-tarball
-          params:
-            RELEASE_NAME: cf-mysql
-            OUTPUT_DIR: release-tarball
-            TAG_MATCH: v32
-          run:
-            path: cf-mysql-ci/scripts/create_release
-      - task: make-manifest
-        config:
-          platform: linux
-          image_resource: *image_resource
-          inputs:
-          - name: cf-mysql-ci
-          - name: deployments-configuration
-          - name: cf-mysql-release
-          - name: aws-acceptance-environment
-          outputs:
-          - name: deployment-manifest
-          params:
-            ENV_TARGET_FILE: aws-acceptance-environment/name
-            ENV_METADATA: aws-acceptance-environment/metadata
-            DEPLOYMENTS_DIR: deployments-configuration
-            MANIFEST_DIR: deployment-manifest
-          run:
-            path: cf-mysql-ci/scripts/bosh/make_manifest
+      - get: release-tarball
+        resource: cf-mysql-rc-bucket
+    - task: make-manifest
+      config:
+        platform: linux
+        image_resource: *image_resource
+        inputs:
+        - name: cf-mysql-ci
+        - name: deployments-configuration
+        - name: cf-mysql-release
+        - name: aws-acceptance-environment
+        outputs:
+        - name: deployment-manifest
+        params:
+          ENV_TARGET_FILE: aws-acceptance-environment/name
+          ENV_METADATA: aws-acceptance-environment/metadata
+          DEPLOYMENTS_DIR: deployments-configuration
+          MANIFEST_DIR: deployment-manifest
+        run:
+          path: cf-mysql-ci/scripts/bosh/make_manifest
     - put: compiled-packages-lock
       params:
         acquire: true
