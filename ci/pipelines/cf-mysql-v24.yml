@@ -86,7 +86,7 @@ resources:
     bucket: pcf-mysql-releases
     access_key_id: {{pcf-mysql-ci-aws-access-key-id}}
     secret_access_key: {{pcf-mysql-ci-aws-secret-access-key}}
-    regexp: releases-24/tested/cf-mysql-([\d.]+)\+.*.tgz
+    regexp: releases-24/tested/cf-mysql-(.*).tgz
 
 - name: cf-mysql-compiled-release
   type: s3
@@ -102,8 +102,29 @@ resources:
     uri: https://github.com/cloudfoundry/bosh-lite.git
     branch: master
 
+- name: version
+  type: semver
+  source:
+    driver: s3
+    bucket: cf-mysql-releases
+    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
+    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
+    key: version-v24
+    initial_version: 24.11.0
+
 ### JOBS
 jobs:
+- name: bump-minor
+  plan:
+  - aggregate:
+    - get: version
+      params:
+        bump: minor
+        pre: rc
+  - put: version
+    params:
+      file: version/version
+
 - name: test-unit
   plan:
   - aggregate:
@@ -112,6 +133,10 @@ jobs:
     - get: weekly-trigger
       trigger: true
     - get: cf-mysql-ci
+    - get: old_version
+      resource: version
+      params:
+        pre: rc
   - aggregate:
     - task: test-unit
       file: cf-mysql-ci/ci/tasks/test-unit.yml
@@ -141,8 +166,11 @@ jobs:
             cd cf-mysql-release/src/cf-mysql-broker
 
             bundle-audit
-  - task: test-sample-stubs
-    file: cf-mysql-ci/ci/tasks/test-sample-stubs.yml
+    - task: test-sample-stubs
+      file: cf-mysql-ci/ci/tasks/test-sample-stubs.yml
+  - put: version
+    params:
+      file: old_version/version
 
 - name: create-and-compile-release
   serial: true
@@ -158,8 +186,9 @@ jobs:
         - test-unit
     - get: cf-mysql-ci
     - get: aws-bosh-stemcell
-  - &create-release
-    task: create-release
+    - get: version
+      passed: [test-unit]
+  - task: create-release
     config:
       platform: &platform linux
       image_resource: &image_resource
@@ -169,6 +198,7 @@ jobs:
       inputs:
       - name: cf-mysql-ci
       - name: cf-mysql-release
+      - name: version
       outputs:
       - name: release-tarball
       params:
@@ -221,6 +251,8 @@ jobs:
     - get: aws-bosh-stemcell
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
+      passed: [create-and-compile-release]
+    - get: version
       passed: [create-and-compile-release]
   - try:
       task: run-broker-deregistrar
@@ -289,6 +321,8 @@ jobs:
       passed: [deploy-to-full-bosh]
     - get: cf-mysql-ci
     - get: deployments-configuration
+    - get: version
+      passed: [deploy-to-full-bosh]
   - task: run-broker-registrar
     config:
       platform: *platform
@@ -389,6 +423,8 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+    - get: version
+      passed: [create-and-compile-release]
   - &broker-deregistrar-bosh-lite
     try:
       task: run-broker-deregistrar
@@ -488,6 +524,8 @@ jobs:
       trigger: true
       version: every
     - get: bosh-lite-repo
+    - get: version
+      passed: [deploy-to-scaling]
   - &smoke-tests-bosh-lite
     task: run-smoke-tests
     config:
@@ -542,6 +580,8 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+    - get: version
+      passed: [create-and-compile-release]
   - *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
   - task: make-manifest
@@ -574,6 +614,8 @@ jobs:
       trigger: true
       version: every
     - get: bosh-lite-repo
+    - get: version
+      passed: [deploy-to-failover]
   - *smoke-tests-bosh-lite
   - task: run-failover-tests
     config:
@@ -612,6 +654,8 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+    - get: version
+      passed: [create-and-compile-release]
   - *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
   - task: make-manifest
@@ -644,6 +688,8 @@ jobs:
       trigger: true
       version: every
     - get: bosh-lite-repo
+    - get: version
+      passed: [deploy-to-data-loss]
   - task: run-data-loss-tests
     config:
       platform: *platform
@@ -651,7 +697,6 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
-        - name: cf-mysql-release
       params:
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
@@ -708,6 +753,8 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+    - get: version
+      passed: [create-and-compile-release]
   - *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
   - task: make-manifest
@@ -739,6 +786,8 @@ jobs:
       passed: [deploy-to-disable-auto-sst]
       trigger: true
       version: every
+    - get: version
+      passed: [deploy-to-disable-auto-sst]
   - aggregate:
     - task: break-cluster
       config:
@@ -819,6 +868,8 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+    - get: version
+      passed: [create-and-compile-release]
   - *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
   - task: make-manifest
@@ -850,6 +901,8 @@ jobs:
       passed: [deploy-to-verify-cluster-schemas]
       trigger: true
       version: every
+    - get: version
+      passed: [deploy-to-verify-cluster-schemas]
   - task: run-verify-cluster-schemas-tests
     config:
       platform: *platform
@@ -927,6 +980,14 @@ jobs:
       - test-verify-cluster-schemas
       trigger: true
     - get: cf-mysql-ci
+    - get: version
+      passed:
+      - test-full-bosh
+      - test-failover
+      - test-data-loss
+      - test-scaling
+      - test-disable-auto-sst
+      - test-verify-cluster-schemas
   - task: create-rc-release-artifacts
     config:
       platform: *platform
@@ -934,6 +995,7 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
+        - name: version
       outputs:
         - name: release-tarball
       params:

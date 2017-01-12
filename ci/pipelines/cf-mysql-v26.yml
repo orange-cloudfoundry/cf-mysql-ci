@@ -102,7 +102,7 @@ resources:
     bucket: pcf-mysql-releases
     access_key_id: {{pcf-mysql-ci-aws-access-key-id}}
     secret_access_key: {{pcf-mysql-ci-aws-secret-access-key}}
-    regexp: releases-26/tested/cf-mysql-([\d.]+)\+.*.tgz
+    regexp: releases-26/tested/cf-mysql-(.*).tgz
 
 - name: cf-mysql-compiled-release
   type: s3
@@ -118,8 +118,37 @@ resources:
     uri: https://github.com/cloudfoundry/bosh-lite.git
     branch: master
 
+- name: version
+  type: semver
+  source:
+    driver: s3
+    bucket: cf-mysql-releases
+    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
+    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
+    key: version-v26
+    initial_version: 26.8.0
+
+- name: cf-mysql-release-final-v26
+  type: s3
+  source:
+    bucket: pcf-mysql-releases
+    access_key_id: {{pcf-mysql-releases-reader-aws-access-key-id}}
+    secret_access_key: {{pcf-mysql-releases-reader-aws-secret-access-key}}
+    regexp: final/cf-mysql-(26\.[\d+\.]+)\.tgz
+
 ### JOBS
 jobs:
+- name: bump-minor
+  plan:
+  - aggregate:
+    - get: version
+      params:
+        bump: minor
+        pre: rc
+  - put: version
+    params:
+      file: version/version
+
 - name: test-unit
   plan:
   - aggregate:
@@ -128,6 +157,10 @@ jobs:
     - get: weekly-trigger
       trigger: true
     - get: cf-mysql-ci
+    - get: old_version
+      resource: version
+      params:
+        pre: rc
   - aggregate:
      - task: test-unit
        file: cf-mysql-ci/ci/tasks/test-unit.yml
@@ -159,6 +192,9 @@ jobs:
              bundle-audit
      - task: test-sample-stubs
        file: cf-mysql-ci/ci/tasks/test-sample-stubs.yml
+  - put: version
+    params:
+      file: old_version/version
 
 - name: create-and-compile-release
   serial: true
@@ -174,6 +210,8 @@ jobs:
         - test-unit
     - get: cf-mysql-ci
     - get: aws-bosh-stemcell
+    - get: version
+      passed: [test-unit]
   - &create-release
     task: create-release
     config:
@@ -185,6 +223,7 @@ jobs:
       inputs:
       - name: cf-mysql-ci
       - name: cf-mysql-release
+      - name: version
       outputs:
       - name: release-tarball
       params:
@@ -238,6 +277,8 @@ jobs:
         acquire: true
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
+      passed: [create-and-compile-release]
+    - get: version
       passed: [create-and-compile-release]
   - try:
       task: run-broker-deregistrar
@@ -306,6 +347,8 @@ jobs:
       passed: [deploy-to-full-bosh]
     - get: cf-mysql-ci
     - get: deployments-configuration
+    - get: version
+      passed: [deploy-to-full-bosh]
   - task: run-broker-registrar
     config:
       platform: *platform
@@ -405,6 +448,8 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+    - get: version
+      passed: [create-and-compile-release]
   - &broker-deregistrar-bosh-lite
     try:
       task: run-broker-deregistrar
@@ -488,6 +533,8 @@ jobs:
       trigger: true
       version: every
     - get: bosh-lite-repo
+    - get: version
+      passed: [deploy-to-scaling]
   - &broker-registrar-bosh-lite
     task: run-broker-registrar
     config:
@@ -559,6 +606,8 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+    - get: version
+      passed: [create-and-compile-release]
   - *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
   - &make-manifest-bosh-lite
@@ -592,6 +641,8 @@ jobs:
       trigger: true
       version: every
     - get: bosh-lite-repo
+    - get: version
+      passed: [deploy-to-arb-to-full-scaling]
   - *smoke-tests-bosh-lite
   - task: run-arb-to-full-scaling-tests
     config:
@@ -631,6 +682,8 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+    - get: version
+      passed: [create-and-compile-release]
   - *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
   - task: make-manifest
@@ -663,6 +716,8 @@ jobs:
       trigger: true
       version: every
     - get: bosh-lite-repo
+    - get: version
+      passed: [deploy-to-failover]
   - *smoke-tests-bosh-lite
   - task: run-failover-tests
     config:
@@ -693,6 +748,8 @@ jobs:
       trigger: true
     - get: cf-mysql-release
       resource: cf-mysql-current-v26
+    - get: release-tarball
+      resource: cf-mysql-release-final-v26
     - get: weekly-trigger
       passed: [test-unit]
       trigger: true
@@ -703,10 +760,11 @@ jobs:
     - get: bosh-lite-stemcell
     - get: bosh-lite-repo
     - get: aws-bosh-stemcell
+    - get: version
+      passed: [create-and-compile-release]
   - *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
   - aggregate:
-    - *create-release
     - task: make-manifest
       config:
         platform: *platform
@@ -745,6 +803,8 @@ jobs:
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
     - get: bosh-lite-repo
+    - get: version
+      passed: [deploy-previous-to-upgrade]
   - &persistence-test-data-write
     task: persistence-test-data-write
     config:
@@ -836,6 +896,8 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+    - get: version
+      passed: [create-and-compile-release]
   - *delete-deployment-bosh-lite
   - task: make-manifest
     config:
@@ -868,6 +930,8 @@ jobs:
       trigger: true
       version: every
     - get: bosh-lite-repo
+    - get: version
+      passed: [deploy-to-standalone-for-boostrap]
   - *persistence-test-data-write
   - task: break-mysql-cluster
     config:
@@ -880,6 +944,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
+        GALERA_HEALTHCHECK_USERNAME: username
       run:
         path: cf-mysql-ci/scripts/bootstrap/break-mysql-cluster
   - task: bootstrap
@@ -924,6 +989,8 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+    - get: version
+      passed: [create-and-compile-release]
   - *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
   - task: make-manifest
@@ -956,6 +1023,8 @@ jobs:
       trigger: true
       version: every
     - get: bosh-lite-repo
+    - get: version
+      passed: [deploy-to-data-loss]
   - task: run-data-loss-tests
     config:
       platform: *platform
@@ -963,7 +1032,6 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
-        - name: cf-mysql-release
       params:
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
@@ -1020,6 +1088,8 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+    - get: version
+      passed: [create-and-compile-release]
   - *broker-deregistrar-bosh-lite
   - *delete-deployment-bosh-lite
   - task: make-manifest
@@ -1051,6 +1121,8 @@ jobs:
       passed: [deploy-to-disable-auto-sst]
       trigger: true
       version: every
+    - get: version
+      passed: [deploy-to-disable-auto-sst]
   - aggregate:
     - task: break-cluster
       config:
@@ -1174,6 +1246,16 @@ jobs:
       - test-disable-auto-sst
       trigger: true
     - get: cf-mysql-ci
+    - get: version
+      passed:
+      - test-full-bosh
+      - test-scaling
+      - test-arb-to-full-scaling
+      - test-failover
+      - test-persistence-after-upgrade
+      - test-bootstrap-on-standalone
+      - test-data-loss
+      - test-disable-auto-sst
   - task: create-rc-release-artifacts
     config:
       platform: *platform
@@ -1181,6 +1263,7 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
+        - name: version
       outputs:
         - name: release-tarball
       params:

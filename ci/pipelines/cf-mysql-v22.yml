@@ -78,7 +78,7 @@ resources:
     bucket: pcf-mysql-releases
     access_key_id: {{pcf-mysql-ci-aws-access-key-id}}
     secret_access_key: {{pcf-mysql-ci-aws-secret-access-key}}
-    regexp: releases-22/tested/cf-mysql-([\d.]+)\+.*.tgz
+    regexp: releases-22/tested/cf-mysql-(.*).tgz
 
 - name: bosh-lite-repo
   type: git
@@ -232,6 +232,8 @@ jobs:
       passed: [deploy-to-full-bosh]
     - get: cf-mysql-ci
     - get: deployments-configuration
+    - get: version
+      passed: [deploy-to-full-bosh]
   - task: run-broker-registrar
     config:
       platform: *platform
@@ -432,6 +434,8 @@ jobs:
       trigger: true
       version: every
     - get: bosh-lite-repo
+    - get: version
+      passed: [deploy-to-scaling]
   - &smoke-tests-bosh-lite
     task: run-smoke-tests
     config:
@@ -519,6 +523,8 @@ jobs:
       trigger: true
       version: every
     - get: bosh-lite-repo
+    - get: version
+      passed: [deploy-to-failover]
   - *smoke-tests-bosh-lite
   - task: run-failover-tests
     config:
@@ -590,6 +596,11 @@ jobs:
       - test-scaling
       trigger: true
     - get: cf-mysql-ci
+    - get: version
+      passed:
+      - test-full-bosh
+      - test-failover
+      - test-scaling
   - task: create-rc-release-artifacts
     config:
       platform: *platform
@@ -597,6 +608,7 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
+        - name: version
       outputs:
         - name: release-tarball
       params:
