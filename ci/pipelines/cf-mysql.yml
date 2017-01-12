@@ -1040,6 +1040,8 @@ jobs:
         - name: bosh-lite-info
       params:
         BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         ENV_TARGET_FILE: bosh-lite-info/director-url
         DEPLOYMENT_NAME: cf-mysql
         ERRAND: rejoin-unsafe
