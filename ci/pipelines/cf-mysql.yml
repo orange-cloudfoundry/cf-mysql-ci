@@ -1029,7 +1029,7 @@ jobs:
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         DEPLOYMENT_NAME: cf-mysql
       run:
-        path: cf-mysql-ci/scripts/data-loss/force-sst-test
+        path: cf-mysql-ci/scripts/data-loss/force-sst-test-gcp
   - task: run-rejoin-unsafe-errand
     config:
       platform: *platform
