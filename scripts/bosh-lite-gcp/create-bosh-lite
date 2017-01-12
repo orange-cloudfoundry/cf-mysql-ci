@@ -63,7 +63,7 @@ gobosh -n interpolate "${OUTPUT_DIR}/credentials.yml" \
   --path /director_ssl/ca > "${OUTPUT_DIR}/ca-cert"
 
 gobosh -n interpolate "${OUTPUT_DIR}/credentials.yml" \
-  --path /jumbox_ssh/private_key > "${OUTPUT_DIR}/jumpbox-private-key"
+  --path /jumpbox_ssh/private_key > "${OUTPUT_DIR}/jumpbox-private-key"
 chmod 600 "${OUTPUT_DIR}/jumpbox-private-key"
 
 gobosh -n upload-stemcell "${STEMCELL_DIR}"/*.tgz \
