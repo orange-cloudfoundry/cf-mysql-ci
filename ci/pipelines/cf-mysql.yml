@@ -512,77 +512,28 @@ jobs:
   - *ondemand-teardown
 
 ### ARB-TO-FULL-SCALING
-- name: deploy-to-arb-to-full-scaling
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [create-and-compile-release]
-      trigger: true
-    - put: bosh-lite-environment
-      params:
-        acquire: true
-    - get: cf-mysql-ci
-    - get: bosh-lite-stemcell
-    - get: bosh-lite-repo
-    - get: compiled-release-tarball
-      resource: cf-mysql-compiled-release
-      passed: [create-and-compile-release]
-    - get: version
-      passed: [create-and-compile-release]
-  - try: *broker-deregistrar-bosh-lite
-  - *delete-deployment-bosh-lite
-  - &make-manifest-bosh-lite
-    task: make-manifest
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-ci
-      - name: cf-mysql-release
-      - name: bosh-lite-environment
-      outputs:
-        - name: deployment-manifest
-      params:
-        OUTPUT_FILE: deployment-manifest/deployment.yml
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-      run:
-        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-  - *deploy-to-bosh-lite
-  - *broker-registrar-bosh-lite
-
 # Verify that replication works in several different topologies
 - name: test-arb-to-full-scaling
   plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [deploy-to-arb-to-full-scaling]
-    - get: bosh-lite-environment
-      passed: [deploy-to-arb-to-full-scaling]
-      trigger: true
-      version: every
-    - get: bosh-lite-repo
-    - get: version
-      passed: [deploy-to-arb-to-full-scaling]
-  - *smoke-tests-bosh-lite
+  - *ondemand-setup
+  - *run-smoke-tests-ondemand
   - task: run-arb-to-full-scaling-tests
     config:
       platform: *platform
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
-        - name: bosh-lite-environment
+        - name: bosh-lite-info
         - name: cf-mysql-release
       params:
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-        BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
+        BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        BOSH_DEPLOYMENT: cf-mysql
+        ENV_TARGET_FILE: bosh-lite-info/director-url
       run:
         path: cf-mysql-ci/scripts/scaling/scaling-arb-to-full-test
-  - put: bosh-lite-environment
-    params:
-      release: bosh-lite-environment
+  - *ondemand-teardown
 
 ### FAILOVER
 # This requires CF; the failover test pushes an app
