@@ -10,7 +10,6 @@ source "${ci_dir}/scripts/utils.sh"
 
 : "${ENV_TARGET_FILE:?}"
 : "${ERRAND:?}"
-: "${DEPLOYMENT_NAME:?}"
 
 BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
 BOSH_ENVIRONMENT="$(sslip_from_ip "${BOSH_ENVIRONMENT}")"
@@ -25,7 +24,7 @@ export BOSH_CLIENT_SECRET
 BOSH_CA_CERT=${BOSH_CA_CERT_PATH:-"${WORKSPACE_DIR}/${ENV_REPO}/$(jq_val "env" "${ENV_METADATA}")/certs/rootCA.pem"}
 export BOSH_CA_CERT
 
-BOSH_DEPLOYMENT="${DEPLOYMENT_NAME}"
+BOSH_DEPLOYMENT=${BOSH_DEPLOYMENT:-"${DEPLOYMENT_NAME}"}
 export BOSH_DEPLOYMENT
 
 gobosh \

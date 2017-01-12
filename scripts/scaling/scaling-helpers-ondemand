@@ -1,0 +1,122 @@
+#!/bin/bash
+
+set -eux
+
+function close-ssh-tunnels() {
+  echo "Closing SSH tunnels ..."
+  OLD_TUNNELS=`ps aux | grep "ssh" | \
+    grep "\-L 43306\|\-L 43307\|\-L 43308" | \
+    awk '{print $2}'`
+  [[ -z "${OLD_TUNNELS}" ]] || kill ${OLD_TUNNELS}
+}
+
+function setup_infrastructure_variables() {
+  pushd "${WORKSPACE_DIR}"
+    source ${CI_DIR}/scripts/utils.sh
+
+    : "${ENV_TARGET_FILE:?}"
+    : "${DEPLOYMENT_NAME:?}"
+    : "${BOSH_CLIENT:?}"
+    : "${BOSH_CLIENT_SECRET:?}"
+
+    DIRECTOR_IP=$(cat "${ENV_TARGET_FILE}")
+    BOSH_LITE_SSH_KEY_FILE="${WORKSPACE_DIR}/bosh-lite-info/jumpbox-private-key"
+
+    TUNNEL_HOST="127.0.0.1"
+    TUNNEL_PORTS=()
+    BASE_TUNNEL_PORT=43306
+    MYSQL_IPS=()
+    num_ips=$#
+    MYSQL_IPS=("$@")
+    for i in `seq 1 $num_ips`; do
+      TUNNEL_PORTS[$i-1]=$(( BASE_TUNNEL_PORT++ ))
+    done
+
+    trap close-ssh-tunnels EXIT
+    for i in `seq 1 $num_ips`; do
+      PORT=${TUNNEL_PORTS[$i-1]}
+      MYSQL_IP=${MYSQL_IPS[$i-1]}
+
+      echo "$PORT and $MYSQL_IP"
+      ssh -L ${PORT}:${MYSQL_IP}:3306 \
+        -NnTf \
+        -i "${BOSH_LITE_SSH_KEY_FILE}" \
+        -o StrictHostKeyChecking=no \
+        "jumpbox@${DIRECTOR_IP#https://}"
+    done
+  popd
+}
+
+function verify_replicated_row_count_is() {
+  pushd "${MY_DIR}"
+    for port in "${TUNNEL_PORTS[@]}"; do
+      ROW_COUNT=$(bundle exec ruby mariadb_crud.rb select --host ${TUNNEL_HOST} --port ${port})
+      if [[ "${ROW_COUNT}" != $1 ]]; then
+        echo "Node ${node_index} did write data correctly:"
+        echo "Expected count: $1"
+        echo "Actual count: $ROW_COUNT"
+        exit 1
+      fi
+    done
+  popd
+}
+
+function scale_down_to_minimal() {
+  echo "Scaling down to minimal deployment"
+
+  MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
+  MINIMAL_MODE=true \
+    OUTPUT_FILE="${MANIFEST_FILE}" \
+    ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
+
+  gobosh -n deploy $MANIFEST_FILE
+}
+
+function scale_up_to_default() {
+  echo "Scaling up to full deployment (2 nodes plus arbitrator or 3 nodes depending on release of cf-mysql)"
+  MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
+
+  MINIMAL_MODE=false \
+  OUTPUT_FILE="${MANIFEST_FILE}" \
+    ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
+
+  gobosh -n deploy $MANIFEST_FILE
+}
+
+function deploy_full_cluster() {
+  echo "Scaling to up to full deployment (3 nodes)"
+  MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
+
+  NO_ARBITRATOR=true \
+  OUTPUT_FILE="${MANIFEST_FILE}" \
+    ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
+
+  gobosh -n deploy $MANIFEST_FILE
+}
+
+function write_some_data() {
+  pushd "${MY_DIR}"
+    PORT=${TUNNEL_PORTS[0]}
+    echo "Writing some data to Node 0"
+    bundle exec ruby mariadb_crud.rb insert $1 --host "${TUNNEL_HOST}" --port "${PORT}"
+  popd
+}
+
+function verify_first_node_row_count_is() {
+  pushd "${MY_DIR}"
+    PORT=${TUNNEL_PORTS[0]}
+    ROW_COUNT=$(bundle exec ruby mariadb_crud.rb select --host "${TUNNEL_HOST}" --port "${PORT}")
+    if [ ! "${ROW_COUNT}" -eq $1 ] ; then
+      echo "Expected record count is not equal to ${ROW_COUNT}"
+      exit 1
+    fi
+  popd
+}
+
+function clear_data() {
+  pushd "${MY_DIR}"
+    PORT=${TUNNEL_PORTS[0]}
+    echo "Removing test data from Node 0"
+    bundle exec ruby mariadb_crud.rb delete --host "${TUNNEL_HOST}" --port "${PORT}"
+  popd
+}

@@ -6,19 +6,16 @@ CI_DIR="$( cd ${MY_DIR}/../../ && pwd )"
 WORKSPACE_DIR="$( cd ${MY_DIR}/../../.. && pwd )"
 
 : "${ENV_TARGET_FILE:?}"
-: "${DEPLOYMENT_NAME:?}"
+: "${BOSH_DEPLOYMENT:?}"
 : "${BOSH_CLIENT:?}"
 : "${BOSH_CLIENT_SECRET:?}"
 
 source ${CI_DIR}/scripts/utils.sh
 
-BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
-
-export BOSH_ENVIRONMENT=${BOSH_TARGET}
+export BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
 export BOSH_CA_CERT="${WORKSPACE_DIR}/bosh-lite-info/ca-cert"
-export BOSH_DEPLOYMENT=${DEPLOYMENT_NAME}
 
-MYSQL_TUNNEL_RELAY=${BOSH_TARGET#https://}
+MYSQL_TUNNEL_RELAY=${BOSH_ENVIRONMENT#https://}
 MYSQL_TUNNEL_PORT=3307
 MYSQL_TUNNEL_USERNAME=jumpbox
 MYSQL_VM_IP=10.244.7.2

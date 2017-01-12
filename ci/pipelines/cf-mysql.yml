@@ -353,7 +353,7 @@ jobs:
           ENV_METADATA: aws-environment/metadata
           ERRAND: broker-deregistrar
           SKIP_IF_NO_DEPLOYMENT: true
-          DEPLOYMENT_NAME: cf-mysql
+          BOSH_DEPLOYMENT: cf-mysql
         run:
           path: cf-mysql-ci/scripts/bosh/run_errand
   - task: delete-aws-deployment
@@ -366,7 +366,7 @@ jobs:
       params:
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
-        DEPLOYMENT_NAME: cf-mysql
+        BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
   - task: make-manifest
@@ -405,7 +405,7 @@ jobs:
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
         ERRAND: broker-registrar
-        DEPLOYMENT_NAME: cf-mysql
+        BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
 
@@ -435,7 +435,7 @@ jobs:
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
         ERRAND: smoke-tests
-        DEPLOYMENT_NAME: cf-mysql
+        BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
   - task: acceptance-test
@@ -468,7 +468,7 @@ jobs:
           ENV_METADATA: aws-environment/metadata
           ERRAND: broker-deregistrar
           SKIP_IF_NO_DEPLOYMENT: true
-          DEPLOYMENT_NAME: cf-mysql
+          BOSH_DEPLOYMENT: cf-mysql
         run:
           path: cf-mysql-ci/scripts/bosh/run_errand
   - task: delete-aws-deployment
@@ -481,7 +481,7 @@ jobs:
       params:
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
-        DEPLOYMENT_NAME: cf-mysql
+        BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
   - put: aws-environment
@@ -489,157 +489,27 @@ jobs:
       release: aws-environment
 
 ### SCALING
-- name: deploy-to-scaling
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [create-and-compile-release]
-      trigger: true
-    - put: bosh-lite-environment
-      params:
-        acquire: true
-    - get: cf-mysql-ci
-    - get: bosh-lite-stemcell
-    - get: bosh-lite-repo
-    - get: compiled-release-tarball
-      resource: cf-mysql-compiled-release
-      passed: [create-and-compile-release]
-    - get: version
-      passed: [create-and-compile-release]
-  - try: &broker-deregistrar-bosh-lite
-      task: run-broker-deregistrar
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-          - name: bosh-lite-environment
-          - name: bosh-lite-repo
-          - name: cf-mysql-ci
-        params:
-          BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-          ERRAND: broker-deregistrar
-          DEPLOYMENT_NAME: cf-warden-mysql
-        run:
-          path: cf-mysql-ci/scripts/bosh/run_errand
-  - &delete-deployment-bosh-lite
-    aggregate:
-    - task: delete-cf-mysql-deployment
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-          - name: bosh-lite-environment
-          - name: cf-mysql-ci
-        params:
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-          DEPLOYMENT_NAME: cf-mysql
-        run:
-          path: cf-mysql-ci/scripts/bosh/delete_deployment
-    - task: delete-cf-warden-mysql-deployment
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-          - name: bosh-lite-environment
-          - name: cf-mysql-ci
-        params:
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-          DEPLOYMENT_NAME: cf-warden-mysql
-        run:
-          path: cf-mysql-ci/scripts/bosh/delete_deployment
-  - task: make-manifest
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-ci
-      - name: cf-mysql-release
-      - name: bosh-lite-environment
-      outputs:
-        - name: deployment-manifest
-      params:
-        OUTPUT_FILE: deployment-manifest/deployment.yml
-        MINIMAL_MODE: true
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-      run:
-        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-  - &deploy-to-bosh-lite
-    put: bosh-lite-deployment
-    params:
-      target_file: bosh-lite-environment/name
-      manifest: deployment-manifest/deployment.yml
-      releases: [compiled-release-tarball/*.tgz]
-      stemcells: [bosh-lite-stemcell/*.tgz]
-  - &broker-registrar-bosh-lite
-    task: run-broker-registrar
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: cf-mysql-ci
-        - name: bosh-lite-environment
-        - name: bosh-lite-repo
-      params:
-        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-        ERRAND: broker-registrar
-        DEPLOYMENT_NAME: cf-warden-mysql
-      run:
-        path: cf-mysql-ci/scripts/bosh/run_errand
-
 - name: test-scaling
   plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [deploy-to-scaling]
-    - get: bosh-lite-environment
-      passed: [deploy-to-scaling]
-      trigger: true
-      version: every
-    - get: bosh-lite-repo
-    - get: version
-      passed: [deploy-to-scaling]
-  - &smoke-tests-bosh-lite
-    task: run-smoke-tests
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: cf-mysql-ci
-        - name: bosh-lite-environment
-        - name: bosh-lite-repo
-      params:
-        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-        ERRAND: smoke-tests
-        DEPLOYMENT_NAME: cf-warden-mysql
-      run:
-        path: cf-mysql-ci/scripts/bosh/run_errand
+  - *ondemand-setup
+  - *run-smoke-tests-ondemand
   - task: run-scaling-tests
     config:
       platform: *platform
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
-        - name: bosh-lite-environment
+        - name: bosh-lite-info
         - name: cf-mysql-release
       params:
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-        BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
+        BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        BOSH_DEPLOYMENT: cf-mysql
+        ENV_TARGET_FILE: bosh-lite-info/director-url
       run:
-        path: cf-mysql-ci/scripts/scaling/scaling-test
-  - put: bosh-lite-environment
-    params:
-      release: bosh-lite-environment
+        path: cf-mysql-ci/scripts/scaling/scaling-test-ondemand
+  - *ondemand-teardown
 
 ### ARB-TO-FULL-SCALING
 - name: deploy-to-arb-to-full-scaling
@@ -733,8 +603,51 @@ jobs:
       passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
-  - try: *broker-deregistrar-bosh-lite
-  - *delete-deployment-bosh-lite
+  - try: &broker-deregistrar-bosh-lite
+      task: run-broker-deregistrar
+      config:
+        platform: *platform
+        image_resource: *image_resource
+        inputs:
+          - name: bosh-lite-environment
+          - name: bosh-lite-repo
+          - name: cf-mysql-ci
+        params:
+          BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
+          ENV_TARGET_FILE: bosh-lite-environment/name
+          ENV_METADATA: bosh-lite-environment/metadata
+          ERRAND: broker-deregistrar
+          BOSH_DEPLOYMENT: cf-warden-mysql
+        run:
+          path: cf-mysql-ci/scripts/bosh/run_errand
+  - &delete-deployment-bosh-lite
+    aggregate:
+    - task: delete-cf-mysql-deployment
+      config:
+        platform: *platform
+        image_resource: *image_resource
+        inputs:
+          - name: bosh-lite-environment
+          - name: cf-mysql-ci
+        params:
+          ENV_TARGET_FILE: bosh-lite-environment/name
+          ENV_METADATA: bosh-lite-environment/metadata
+          BOSH_DEPLOYMENT: cf-mysql
+        run:
+          path: cf-mysql-ci/scripts/bosh/delete_deployment
+    - task: delete-cf-warden-mysql-deployment
+      config:
+        platform: *platform
+        image_resource: *image_resource
+        inputs:
+          - name: bosh-lite-environment
+          - name: cf-mysql-ci
+        params:
+          ENV_TARGET_FILE: bosh-lite-environment/name
+          ENV_METADATA: bosh-lite-environment/metadata
+          BOSH_DEPLOYMENT: cf-warden-mysql
+        run:
+          path: cf-mysql-ci/scripts/bosh/delete_deployment
   - &make-manifest-bosh-lite
     task: make-manifest
     config:
@@ -752,8 +665,30 @@ jobs:
         ENV_METADATA: bosh-lite-environment/metadata
       run:
         path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-  - *deploy-to-bosh-lite
-  - *broker-registrar-bosh-lite
+  - &deploy-to-bosh-lite
+    put: bosh-lite-deployment
+    params:
+      target_file: bosh-lite-environment/name
+      manifest: deployment-manifest/deployment.yml
+      releases: [compiled-release-tarball/*.tgz]
+      stemcells: [bosh-lite-stemcell/*.tgz]
+  - &broker-registrar-bosh-lite
+    task: run-broker-registrar
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+        - name: cf-mysql-ci
+        - name: bosh-lite-environment
+        - name: bosh-lite-repo
+      params:
+        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
+        ENV_TARGET_FILE: bosh-lite-environment/name
+        ENV_METADATA: bosh-lite-environment/metadata
+        ERRAND: broker-registrar
+        BOSH_DEPLOYMENT: cf-warden-mysql
+      run:
+        path: cf-mysql-ci/scripts/bosh/run_errand
 
 - name: test-failover
   plan:
@@ -768,7 +703,23 @@ jobs:
     - get: bosh-lite-repo
     - get: version
       passed: [deploy-to-failover]
-  - *smoke-tests-bosh-lite
+  - &smoke-tests-bosh-lite
+    task: run-smoke-tests
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+        - name: cf-mysql-ci
+        - name: bosh-lite-environment
+        - name: bosh-lite-repo
+      params:
+        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
+        ENV_TARGET_FILE: bosh-lite-environment/name
+        ENV_METADATA: bosh-lite-environment/metadata
+        ERRAND: smoke-tests
+        BOSH_DEPLOYMENT: cf-warden-mysql
+      run:
+        path: cf-mysql-ci/scripts/bosh/run_errand
   - task: run-failover-tests
     config:
       platform: *platform
@@ -1002,7 +953,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-environment/name
         BOSH_CLIENT: {{bosh-lite-username}}
         ENV_METADATA: bosh-lite-environment/metadata
-        DEPLOYMENT_NAME: cf-warden-mysql
+        BOSH_DEPLOYMENT: cf-warden-mysql
         ERRAND: bootstrap
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
@@ -1028,7 +979,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-info/director-url
         BOSH_CLIENT: {{bosh-lite-username}}
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
-        DEPLOYMENT_NAME: cf-mysql
+        BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/data-loss/force-sst-test-ondemand
   - task: run-rejoin-unsafe-errand
@@ -1043,7 +994,7 @@ jobs:
         BOSH_CLIENT: {{bosh-lite-username}}
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         ENV_TARGET_FILE: bosh-lite-info/director-url
-        DEPLOYMENT_NAME: cf-mysql
+        BOSH_DEPLOYMENT: cf-mysql
         ERRAND: rejoin-unsafe
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
@@ -1065,7 +1016,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-info/director-url
         BOSH_CLIENT: {{bosh-lite-username}}
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
-        DEPLOYMENT_NAME: cf-mysql
+        BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/data-loss/force-sst-test-ondemand
   - task: make-manifest-with-interruptor-disabled
@@ -1083,7 +1034,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-info/director-url
         BOSH_CLIENT: {{bosh-lite-username}}
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
-        DEPLOYMENT_NAME: cf-mysql
+        BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/data-loss/restart-broken-node
   - *ondemand-teardown
@@ -1151,7 +1102,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         BOSH_SSH_KEY: {{bosh-lite-private-key}}
-        DEPLOYMENT_NAME: cf-warden-mysql
+        BOSH_DEPLOYMENT: cf-warden-mysql
       run:
         path: cf-mysql-ci/scripts/verify-cluster-schemas/force-divergent-schemas-test
   - put: bosh-lite-environment
@@ -1324,7 +1275,8 @@ jobs:
         stemcells:
         - bosh-lite-stemcell/*.tgz
         target_file: bosh-lite-info/external-ip
-  - task: run-smoke-tests
+  - &run-smoke-tests-ondemand
+    task: run-smoke-tests
     config:
       platform: *platform
       image_resource: *image_resource
@@ -1336,8 +1288,8 @@ jobs:
         BOSH_CLIENT: {{bosh-lite-username}}
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         ENV_TARGET_FILE: bosh-lite-info/director-url
+        BOSH_DEPLOYMENT: cf-mysql
         ERRAND: smoke-tests
-        DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
   - &ondemand-teardown
@@ -1352,8 +1304,8 @@ jobs:
         params:
           BOSH_CLIENT: {{bosh-lite-username}}
           BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+          BOSH_DEPLOYMENT: cf-mysql
           ENV_TARGET_FILE: bosh-lite-info/external-ip
-          DEPLOYMENT_NAME: cf-mysql
         run:
           path: cf-mysql-ci/scripts/bosh/delete_deployment
     - task: destroy-bosh-lite

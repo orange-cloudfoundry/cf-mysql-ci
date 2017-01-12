@@ -19,3 +19,4 @@ run:
 params:
   OUTPUT_FILE: deployment-manifest/deployment.yml
   DISABLE_INTERRUPTOR: false
+  MINIMAL_MODE: false

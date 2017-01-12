@@ -6,7 +6,7 @@ CI_DIR="$( cd ${MY_DIR}/../../ && pwd )"
 WORKSPACE_DIR="$( cd ${MY_DIR}/../../.. && pwd )"
 
 : "${ENV_TARGET_FILE:?}"
-: "${DEPLOYMENT_NAME:?}"
+: "${BOSH_DEPLOYMENT:?}"
 : "${BOSH_CLIENT:?}"
 : "${BOSH_CLIENT_SECRET:?}"
 

@@ -2,14 +2,22 @@
 
 set -eux
 
-disable_interruptor_override=""
+overrides=""
 
-if [[ "${DISABLE_INTERRUPTOR}" == true ]]; then
-    disable_interruptor_override="-o ./cf-mysql-release/manifest-generation/bosh2.0/overrides/disable-interruptor.yml"
+if ${MINIMAL_MODE}; then
+    overrides="$overrides -o ./cf-mysql-release/manifest-generation/bosh2.0/overrides/minimal-mode.yml"
+fi
+
+if ${DISABLE_INTERRUPTOR}; then
+    overrides="$overrides -o ./cf-mysql-release/manifest-generation/bosh2.0/overrides/disable-interruptor.yml"
+fi
+
+if ${NO_ARBITRATOR}; then
+    overrides="$overrides -o ./cf-mysql-release/manifest-generation/bosh2.0/overrides/no-arbitrator.yml"
 fi
 
 gobosh interpolate \
     ./cf-mysql-release/manifest-generation/cf-mysql-template-v2.yml \
-    ${disable_interruptor_override} \
+    ${overrides} \
     -l ./cf-mysql-release/manifest-generation/bosh2.0/bosh-lite/default-vars.yml \
     > "${OUTPUT_FILE}"
