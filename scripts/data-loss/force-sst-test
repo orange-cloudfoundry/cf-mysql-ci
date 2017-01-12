@@ -15,7 +15,9 @@ source ${CI_DIR}/scripts/utils.sh
 BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
 
 export BOSH_ENVIRONMENT=${BOSH_TARGET}
-export BOSH_CA_CERT="${WORKSPACE_DIR}/bosh-lite-info/ca-cert"
+if [[ -z "${BOSH_CA_CERT}" ]]; then
+  export BOSH_CA_CERT="${WORKSPACE_DIR}/bosh-lite-info/ca-cert"
+fi
 export BOSH_DEPLOYMENT=${DEPLOYMENT_NAME}
 
 MYSQL_TUNNEL_RELAY=${BOSH_TARGET#https://}
@@ -35,7 +37,15 @@ function close-ssh-tunnels() {
 }
 
 function open_ssh_tunnel_to_bosh_lite() {
-  SSH_KEY_FILE="${WORKSPACE_DIR}/bosh-lite-info/jumpbox-private-key"
+
+  if [[ -n "${BOSH_SSH_KEY}" ]]; then
+    SSH_KEY_FILE="bosh-lite-key"
+    echo "${BOSH_SSH_KEY}" > "${SSH_KEY_FILE}"
+    chmod 600 "${SSH_KEY_FILE}"
+  else
+    SSH_KEY_FILE="${WORKSPACE_DIR}/bosh-lite-info/jumpbox-private-key"
+  fi
+
 
   ssh -L ${MYSQL_TUNNEL_PORT}:${MYSQL_VM_IP}:${MYSQL_VM_PORT} \
     -nNTf \
