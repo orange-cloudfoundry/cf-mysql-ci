@@ -974,6 +974,7 @@ jobs:
     file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
     params:
       DISABLE_INTERRUPTOR: true
+  - *ondemand-deploy-manifest
   - task: restart-broken-node
     config:
       platform: *platform
@@ -1218,7 +1219,8 @@ jobs:
         NETWORK: {{gcp-bosh-lite-network}}
         SUBNETWORK: {{gcp-bosh-lite-subnetwork}}
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
-    - put: bosh-2.0-bosh-lite-deployment
+    - &ondemand-deploy-manifest
+      put: bosh-2.0-bosh-lite-deployment
       params:
         manifest: deployment-manifest/deployment.yml
         releases:
