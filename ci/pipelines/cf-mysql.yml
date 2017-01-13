@@ -279,19 +279,10 @@ jobs:
       passed: [test-unit]
   - &create-release
     task: create-release
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-ci
-      - name: cf-mysql-release
-      - name: version
-      outputs:
-      - name: release-tarball
-      params:
-        RELEASE_NAME: cf-mysql
-      run:
-        path: cf-mysql-ci/scripts/create_release
+    file: cf-mysql-ci/ci/tasks/create-release.yml
+    input_mapping: {release-repo: cf-mysql-release}
+    params:
+      RELEASE_NAME: cf-mysql
   - put: compiled-packages-lock
     params:
       acquire: true

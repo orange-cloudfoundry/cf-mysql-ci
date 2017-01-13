@@ -7,8 +7,8 @@ WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 
 : "${RELEASE_NAME:?}"
 
-default_release_name="${RELEASE_NAME}-release"
-RELEASE_DIR="${WORKSPACE_DIR}/${RELEASE_RELATIVE_DIR:-${default_release_name}}"
+release_repo="${WORKSPACE_DIR}/release-repo"
+
 OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-release-tarball}"
 FINAL=${FINAL:-}
 
@@ -17,7 +17,7 @@ AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-}"
 
 function write_private_yaml() {
   if [[ -n "${AWS_ACCESS_KEY_ID}" && -n "${AWS_SECRET_ACCESS_KEY}" ]]; then
-    pushd "${RELEASE_DIR}" > /dev/null
+    pushd "${release_repo}" > /dev/null
       cat <<EOF > config/private.yml
 ---
 blobstore:
@@ -29,7 +29,7 @@ EOF
   fi
 }
 
-pushd "${RELEASE_DIR}"
+pushd "${release_repo}"
     write_private_yaml
 
     version=$(cat ${WORKSPACE_DIR}/version/version)
