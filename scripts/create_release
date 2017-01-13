@@ -35,7 +35,7 @@ EOF
 # copy all files, including hidden (e.g. .git/)
 shopt -s dotglob
 
-cp "${release_repo}"/* "${release_repo_modified}"
+cp -r "${release_repo}"/* "${release_repo_modified}"
 
 pushd "${release_repo_modified}"
     write_private_yaml
