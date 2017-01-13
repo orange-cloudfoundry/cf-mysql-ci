@@ -37,6 +37,9 @@ pushd "${release_repo}"
     tarball_path="${OUTPUT_DIR}/${RELEASE_NAME}-${version}.tgz"
 
     create_release_command="gobosh -n create-release --name ${RELEASE_NAME} --version ${version} --tarball ${tarball_path} --force"
+    if [ -n "${FINAL}" ]; then
+      create_release_command="${create_release_command} --final"
+    fi
 
     set +e
     create_release_output=$(${create_release_command} 2>&1)
