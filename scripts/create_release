@@ -29,8 +29,8 @@ EOF
   fi
 }
 
-
 pushd "${RELEASE_DIR}"
+    write_private_yaml
 
     version=$(cat ${WORKSPACE_DIR}/version/version)
 
