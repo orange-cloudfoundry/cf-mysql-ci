@@ -2,6 +2,10 @@
 
 set -eux
 
+: "${MINIMAL_MODE:=false}"
+: "${DISABLE_INTERRUPTOR:=false}"
+: "${NO_ARBITRATOR:=false}"
+
 overrides=""
 
 if ${MINIMAL_MODE}; then
