@@ -15,7 +15,7 @@ function setup_infrastructure_variables() {
     source ${CI_DIR}/scripts/utils.sh
 
     : "${ENV_TARGET_FILE:?}"
-    : "${DEPLOYMENT_NAME:?}"
+    : "${BOSH_DEPLOYMENT:?}"
     : "${BOSH_CLIENT:?}"
     : "${BOSH_CLIENT_SECRET:?}"
 

@@ -9,7 +9,9 @@ WORKSPACE_DIR="$( cd ${CI_DIR}/../ && pwd )"
 source ${CI_DIR}/scripts/utils.sh
 
 : "${ENV_TARGET_FILE:?}"
-: "${BOSH_DEPLOYMENT:?}"
+
+# accepts either for now
+DEPLOYMENT_NAME=${DEPLOYMENT_NAME:-"${BOSH_DEPLOYMENT}"}
 
 BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
 
@@ -23,16 +25,16 @@ bosh -n target "${BOSH_TARGET}"
 bosh -n login "${BOSH_CLIENT}" "${BOSH_CLIENT_SECRET}"
 
 set +e
-check_if_deployment_exists ${BOSH_DEPLOYMENT}
+check_if_deployment_exists ${DEPLOYMENT_NAME}
 DEPLOYMENT_GREP_RESULT=$?
 set -e
 
 # A value of 0 indicates grep matched successfully,
 # and hence the deployment exists
 if [ ${DEPLOYMENT_GREP_RESULT} -eq 0 ]; then
-  bosh -n delete deployment ${BOSH_DEPLOYMENT} --force
+  bosh -n delete deployment ${DEPLOYMENT_NAME} --force
 else
-  echo "deployment ${BOSH_DEPLOYMENT} not found - nothing to delete"
+  echo "deployment ${DEPLOYMENT_NAME} not found - nothing to delete"
 fi
 
 bosh -n cleanup --all
