@@ -18,19 +18,24 @@ release_repo="${WORKSPACE_DIR}/release-repo"
 release_repo_modified="${WORKSPACE_DIR}/release-repo-modified"
 tarball_dir="${WORKSPACE_DIR}/release-tarball"
 
+
 function write_private_yaml() {
-  if [[ -n "${AWS_ACCESS_KEY_ID}" && -n "${AWS_SECRET_ACCESS_KEY}" ]]; then
-    pushd "${release_repo}" > /dev/null
-      cat <<EOF > config/private.yml
+  cat <<EOF > ./config/private.yml
 ---
 blobstore:
   s3:
     access_key_id: ${AWS_ACCESS_KEY_ID}
     secret_access_key: ${AWS_SECRET_ACCESS_KEY}
 EOF
-    popd > /dev/null
-  fi
 }
+
+version=$(cat ${WORKSPACE_DIR}/version/version)
+tarball_path="${tarball_dir}/${RELEASE_NAME}-${version}.tgz"
+
+create_release_command="gobosh -n create-release --name ${RELEASE_NAME} --version ${version} --tarball ${tarball_path} --force"
+if [ -n "${FINAL}" ]; then
+  create_release_command="${create_release_command} --final"
+fi
 
 # copy all files, including hidden (e.g. .git/)
 shopt -s dotglob
@@ -38,15 +43,8 @@ shopt -s dotglob
 cp -r "${release_repo}"/* "${release_repo_modified}"
 
 pushd "${release_repo_modified}"
-    write_private_yaml
-
-    version=$(cat ${WORKSPACE_DIR}/version/version)
-
-    tarball_path="${tarball_dir}/${RELEASE_NAME}-${version}.tgz"
-
-    create_release_command="gobosh -n create-release --name ${RELEASE_NAME} --version ${version} --tarball ${tarball_path} --force"
-    if [ -n "${FINAL}" ]; then
-      create_release_command="${create_release_command} --final"
+    if [[ -n "${AWS_ACCESS_KEY_ID}" && -n "${AWS_SECRET_ACCESS_KEY}" ]]; then
+      write_private_yaml
     fi
 
     set +e
