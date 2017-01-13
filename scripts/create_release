@@ -12,6 +12,24 @@ RELEASE_DIR="${WORKSPACE_DIR}/${RELEASE_RELATIVE_DIR:-${default_release_name}}"
 OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-release-tarball}"
 FINAL=${FINAL:-}
 
+AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-}"
+AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-}"
+
+function write_private_yaml() {
+  if [[ -n "${AWS_ACCESS_KEY_ID}" && -n "${AWS_SECRET_ACCESS_KEY}" ]]; then
+    pushd "${RELEASE_DIR}" > /dev/null
+      cat <<EOF > config/private.yml
+---
+blobstore:
+  s3:
+    access_key_id: ${AWS_ACCESS_KEY_ID}
+    secret_access_key: ${AWS_SECRET_ACCESS_KEY}
+EOF
+    popd > /dev/null
+  fi
+}
+
+
 pushd "${RELEASE_DIR}"
 
     version=$(cat ${WORKSPACE_DIR}/version/version)
