@@ -106,14 +106,6 @@ resources:
     pool: bosh-lites-working
     private_key: {{git-writer-private-key}}
 
-- name: bosh-lite-no-cf-environment
-  type: pool
-  source:
-    uri: *pool-uri
-    branch: master
-    pool: bosh-lites-no-cf
-    private_key: {{git-writer-private-key}}
-
 - name: compiled-packages-lock
   type: pool
   source:
@@ -817,93 +809,76 @@ jobs:
       release: bosh-lite-environment
 
 ### STANDALONE FOR BOOTSTRAP
-- name: deploy-to-standalone-for-bootstrap
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [create-and-compile-release]
-      trigger: true
-    - put: bosh-lite-environment
-      resource: bosh-lite-no-cf-environment
-      params:
-        acquire: true
-    - get: cf-mysql-ci
-    - get: bosh-lite-stemcell
-    - get: compiled-release-tarball
-      resource: cf-mysql-compiled-release
-      passed: [create-and-compile-release]
-    - get: version
-      passed: [create-and-compile-release]
-  - *delete-deployment-bosh-lite
-  - task: make-manifest
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-ci
-      - name: cf-mysql-release
-      - name: bosh-lite-environment
-      outputs:
-        - name: deployment-manifest
-      params:
-        OUTPUT_FILE: deployment-manifest/deployment.yml
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-        STANDALONE_MODE: true
-      run:
-        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-  - *deploy-to-bosh-lite
-
 - name: test-bootstrap-on-standalone
   plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [deploy-to-standalone-for-bootstrap]
-    - get: bosh-lite-environment
-      resource: bosh-lite-no-cf-environment
-      passed: [deploy-to-standalone-for-bootstrap]
-      trigger: true
-      version: every
-    - get: bosh-lite-repo
-    - get: version
-      passed: [deploy-to-standalone-for-bootstrap]
-  - *persistence-test-data-write
+  - *ondemand-setup
+  - task: make-manifest-with-standalone
+    file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+    params:
+      STANDALONE_MODE: true
+  - *ondemand-deploy-manifest
+  - task: persistence-test-data-write
+    config:
+      platform: *platform
+      image_resource:
+        type: docker-image
+        source:
+          repository: pivotalcf/mysql-restore
+      inputs:
+      - name: bosh-lite-info
+      - name: cf-mysql-ci
+      params:
+        ENV_TARGET_FILE: bosh-lite-info/director-url
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        BOSH_DEPLOYMENT: cf-mysql
+      run:
+        path: cf-mysql-ci/scripts/persistence/load-test-data-ondemand
   - task: break-mysql-cluster
     config:
       platform: *platform
       image_resource: *image_resource
       inputs:
       - name: cf-mysql-ci
-      - name: bosh-lite-environment
+      - name: bosh-lite-info
       params:
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-        BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
+        ENV_TARGET_FILE: bosh-lite-info/director-url
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        BOSH_DEPLOYMENT: cf-mysql
       run:
-        path: cf-mysql-ci/scripts/bootstrap/break-mysql-cluster
+        path: cf-mysql-ci/scripts/bootstrap/break-mysql-cluster-ondemand
   - task: bootstrap
     config:
       platform: *platform
       image_resource: *image_resource
       inputs:
-        - name: bosh-lite-environment
-        - name: bosh-lite-repo
-        - name: cf-mysql-ci
+      - name: bosh-lite-info
+      - name: bosh-lite-repo
+      - name: cf-mysql-ci
       params:
-        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
-        ENV_TARGET_FILE: bosh-lite-environment/name
+        ENV_TARGET_FILE: bosh-lite-info/director-url
         BOSH_CLIENT: {{bosh-lite-username}}
-        ENV_METADATA: bosh-lite-environment/metadata
-        BOSH_DEPLOYMENT: cf-warden-mysql
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        BOSH_DEPLOYMENT: cf-mysql
         ERRAND: bootstrap
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
-  - *persistence-test-data-read
-  - put: bosh-lite-environment
-    resource: bosh-lite-no-cf-environment
-    params:
-      release: bosh-lite-environment
+  - task: persistence-test-data-read
+    config:
+      platform: *platform
+      image_resource:
+        type: docker-image
+        source:
+          repository: pivotalcf/mysql-restore
+      inputs:
+      - name: bosh-lite-info
+      - name: cf-mysql-ci
+      params:
+        ENV_TARGET_FILE: bosh-lite-info/director-url
+      run:
+        path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data-ondemand
+  - *ondemand-teardown
 
 ### DATA LOSS
 - name: test-interruptor-prevents-data-loss

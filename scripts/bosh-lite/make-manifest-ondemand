@@ -5,6 +5,7 @@ set -eux
 : "${MINIMAL_MODE:=false}"
 : "${DISABLE_INTERRUPTOR:=false}"
 : "${NO_ARBITRATOR:=false}"
+: "${STANDALONE_MODE:=false}"
 
 overrides=""
 
@@ -18,6 +19,10 @@ fi
 
 if ${NO_ARBITRATOR}; then
     overrides="$overrides -o ./cf-mysql-release/manifest-generation/bosh2.0/overrides/no-arbitrator.yml"
+fi
+
+if ${STANDALONE_MODE}; then
+    overrides="$overrides -o ./cf-mysql-release/manifest-generation/bosh2.0/overrides/standalone-mode.yml"
 fi
 
 gobosh interpolate \
