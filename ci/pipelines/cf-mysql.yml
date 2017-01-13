@@ -532,7 +532,7 @@ jobs:
         BOSH_DEPLOYMENT: cf-mysql
         ENV_TARGET_FILE: bosh-lite-info/director-url
       run:
-        path: cf-mysql-ci/scripts/scaling/scaling-arb-to-full-test
+        path: cf-mysql-ci/scripts/scaling/scaling-arb-to-full-test-ondemand
   - *ondemand-teardown
 
 ### FAILOVER
