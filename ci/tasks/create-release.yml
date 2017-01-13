@@ -12,6 +12,7 @@ inputs:
 
 outputs:
 - name: release-tarball
+- name: release-repo-modified
 
 params:
   RELEASE_NAME: ~

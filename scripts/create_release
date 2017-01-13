@@ -5,15 +5,18 @@ set -eux
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 
+# Params
 : "${RELEASE_NAME:?}"
-
-release_repo="${WORKSPACE_DIR}/release-repo"
-
-OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-release-tarball}"
 FINAL=${FINAL:-}
-
 AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-}"
 AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-}"
+
+# Inputs
+release_repo="${WORKSPACE_DIR}/release-repo"
+
+# Outputs
+release_repo_modified="${WORKSPACE_DIR}/release-repo-modified"
+tarball_dir="${WORKSPACE_DIR}/release-tarball"
 
 function write_private_yaml() {
   if [[ -n "${AWS_ACCESS_KEY_ID}" && -n "${AWS_SECRET_ACCESS_KEY}" ]]; then
@@ -29,12 +32,17 @@ EOF
   fi
 }
 
-pushd "${release_repo}"
+# copy all files, including hidden (e.g. .git/)
+shopt -s dotglob
+
+cp "${release_repo}"/* "${release_repo_modified}"
+
+pushd "${release_repo_modified}"
     write_private_yaml
 
     version=$(cat ${WORKSPACE_DIR}/version/version)
 
-    tarball_path="${OUTPUT_DIR}/${RELEASE_NAME}-${version}.tgz"
+    tarball_path="${tarball_dir}/${RELEASE_NAME}-${version}.tgz"
 
     create_release_command="gobosh -n create-release --name ${RELEASE_NAME} --version ${version} --tarball ${tarball_path} --force"
     if [ -n "${FINAL}" ]; then
