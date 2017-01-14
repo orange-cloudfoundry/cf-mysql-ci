@@ -19,10 +19,10 @@ set_env(){
 
 stop_all_nodes() {
   pushd "${WORKSPACE_DIR}"
-    # assumes we are running against a remote bosh-lite
     SSH_KEY_FILE="${WORKSPACE_DIR}/bosh-lite-info/jumpbox-private-key"
 
-    for MYSQL_NODE in 10.244.7.2 10.244.9.6; do
+    # stopping mysql on node0 and the arbitrator node
+    for MYSQL_NODE in 10.244.7.2 10.244.9.2; do
       ssh \
           -t \
           -i "${SSH_KEY_FILE}" \
