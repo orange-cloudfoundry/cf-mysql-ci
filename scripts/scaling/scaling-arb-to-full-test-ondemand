@@ -19,6 +19,7 @@ export BOSH_CA_CERT="${WORKSPACE_DIR}/bosh-lite-info/ca-cert"
 
 source "${MY_DIR}/scaling-helpers-ondemand"
 
+# After deploy_full_cluster, the third mysql node will be in z1
 setup_infrastructure_variables 10.244.7.2 10.244.8.2 10.244.7.4
 
 pushd "${MY_DIR}"
