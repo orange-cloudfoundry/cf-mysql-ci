@@ -16,6 +16,9 @@ outputs:
 
 params:
   RELEASE_NAME: ~
+  BLOBS_BUCKET_NAME: ~
+  AWS_ACCESS_KEY_ID: ~
+  AWS_SECRET_ACCESS_KEY: ~
 
 run:
   path: cf-mysql-ci/scripts/create_release
