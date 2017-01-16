@@ -50,9 +50,9 @@ update:
   update_watch_time: 1000-90000
 EOF
 
-  echo "Targeting ${BOSH_DIRECTOR}"
+  echo "Targeting ${BOSH_ENVIRONMENT}"
   set +x
-    bosh -u ${BOSH_CLIENT} -p ${BOSH_CLIENT_SECRET} target ${BOSH_DIRECTOR}
+    bosh -u ${BOSH_CLIENT} -p ${BOSH_CLIENT_SECRET} target ${BOSH_ENVIRONMENT}
     bosh login ${BOSH_CLIENT} ${BOSH_CLIENT_SECRET}
   set -x
 

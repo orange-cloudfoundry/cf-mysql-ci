@@ -292,7 +292,7 @@ jobs:
       params:
         BOSH_CLIENT: {{bosh_compilation_username}}
         BOSH_CLIENT_SECRET: {{bosh_compilation_password}}
-        BOSH_DIRECTOR: {{bosh_compilation_director}}
+        BOSH_ENVIRONMENT: {{bosh_compilation_director}}
       run:
         path: cf-mysql-ci/scripts/compile_release
     ensure:
@@ -1254,7 +1254,7 @@ jobs:
     params:
         BOSH_CLIENT: {{bosh_compilation_username}}
         BOSH_CLIENT_SECRET: {{bosh_compilation_password}}
-        BOSH_DIRECTOR: {{bosh_compilation_director}}
+        BOSH_ENVIRONMENT: {{bosh_compilation_director}}
     ensure:
       put: compiled-packages-lock
       params:
@@ -1272,7 +1272,7 @@ jobs:
     params:
         BOSH_CLIENT: {{bosh_compilation_username}}
         BOSH_CLIENT_SECRET: {{bosh_compilation_password}}
-        BOSH_DIRECTOR: {{bosh_compilation_director}}
+        BOSH_ENVIRONMENT: {{bosh_compilation_director}}
     ensure:
       put: compiled-packages-lock
       params:
