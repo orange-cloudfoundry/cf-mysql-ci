@@ -10,6 +10,8 @@ SQL_QUERY_DIR=$( cd ${MY_DIR}/test-data && pwd )
 
 BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
 
+bosh_ip=$(echo "${BOSH_ENVIRONMENT}" | sed 's$https://$$g')
+
 MYSQL_TUNNEL_IP=127.0.0.1
 MYSQL_TUNNEL_PORT=3307
 MYSQL_VM_IP=10.244.7.2
@@ -36,7 +38,7 @@ ssh -L ${MYSQL_TUNNEL_PORT}:${MYSQL_VM_IP}:${MYSQL_VM_PORT} \
   -nNTf \
   -o StrictHostKeyChecking=no \
   -i "${SSH_KEY_FILE}" \
-  ubuntu@${BOSH_ENVIRONMENT}
+  ubuntu@${bosh_ip}
 
 MYSQL_HOST=${MYSQL_TUNNEL_IP}
 MYSQL_PORT=${MYSQL_TUNNEL_PORT}
