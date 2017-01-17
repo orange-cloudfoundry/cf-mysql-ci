@@ -13,7 +13,7 @@ MYSQL_CONFIG=${MY_DIR}/mysql.config
 
 source ${CI_DIR}/scripts/utils.sh
 
-BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
+director_ip="$(cat "${ENV_TARGET_FILE}")"
 
 DEPLOYMENT_NAME=${DEPLOYMENT_NAME:-${BOSH_DEPLOYMENT:-"cf-warden-mysql"}}
 MYSQL_TUNNEL_IP=127.0.0.1
@@ -45,7 +45,7 @@ function open_ssh_tunnel_to_bosh_lite() {
     -nNTf \
     -o StrictHostKeyChecking=no \
     -i "${SSH_KEY_FILE}" \
-    ${MYSQL_TUNNEL_USERNAME}@${BOSH_TARGET}
+    ${MYSQL_TUNNEL_USERNAME}@${director_ip}
 }
 
 function close-ssh-tunnels() {
@@ -55,7 +55,7 @@ function close-ssh-tunnels() {
 }
 
 function verify_schemas() {
-  bosh -n target "${BOSH_TARGET}"
+  bosh -n target "${director_ip}"
   bosh -n login "${BOSH_CLIENT}" "${BOSH_CLIENT_SECRET}"
   bosh -n download manifest ${DEPLOYMENT_NAME} ${DEPLOYMENT_NAME}.yml
   bosh deployment ${DEPLOYMENT_NAME}.yml

@@ -12,8 +12,7 @@ set_env(){
   : "${BOSH_CLIENT:?}"
   : "${BOSH_CLIENT_SECRET:?}"
 
-  BOSH_ENVIRONMENT=$(cat "${ENV_TARGET_FILE}")
-  bosh_ip=$(echo "${BOSH_ENVIRONMENT}" | sed 's$https://$$g')
+  bosh_ip=$(cat "${ENV_TARGET_FILE}")
 
   GALERA_HEALTHCHECK_USERNAME="${GALERA_HEALTHCHECK_USERNAME:-galera-healthcheck}"
 }
