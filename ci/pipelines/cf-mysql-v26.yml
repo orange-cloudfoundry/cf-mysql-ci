@@ -1153,7 +1153,7 @@ jobs:
         path: /bin/bash
         args:
         - "-c"
-        - "sleep 300"
+        - "sleep 225"
   - task: disable-sst-to-fix-cluster
     config:
       platform: *platform
