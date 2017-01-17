@@ -1263,21 +1263,7 @@ jobs:
       - test-bootstrap-on-standalone
       - test-arb-to-full-scaling
       - test-persistence-after-upgrade
-  - task: create-rc-release-artifacts
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
-        - name: version
-      outputs:
-        - name: release-tarball
-      params:
-        RELEASE_NAME: cf-mysql
-        TAG_MATCH: v32*
-      run:
-        path: cf-mysql-ci/scripts/create_release
+  - *create-release
   - put: pcf-mysql-rc-artifacts
     params:
       file: release-tarball/cf-mysql*.tgz
