@@ -31,7 +31,7 @@ ssh -L ${MYSQL_TUNNEL_PORT}:${MYSQL_VM_IP}:${MYSQL_VM_PORT} \
   -nNTf \
   -o StrictHostKeyChecking=no \
   -i "${SSH_KEY_FILE}" \
-  ubuntu@${BOSH_ENVIRONMENT}
+  jumpbox@${BOSH_ENVIRONMENT}
 
 MYSQL_HOST=${MYSQL_TUNNEL_IP}
 MYSQL_PORT=${MYSQL_TUNNEL_PORT}

@@ -875,7 +875,7 @@ jobs:
       - name: bosh-lite-info
       - name: cf-mysql-ci
       params:
-        ENV_TARGET_FILE: bosh-lite-info/director-url
+        ENV_TARGET_FILE: bosh-lite-info/external-ip
       run:
         path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data-ondemand
   - *ondemand-teardown
