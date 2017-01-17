@@ -1144,6 +1144,7 @@ jobs:
         run:
           path: cf-mysql-ci/scripts/bosh-lite/make_manifest
   - task: disable-sst-to-fix-cluster
+    attempts: 5
     config:
       platform: *platform
       image_resource: *image_resource
