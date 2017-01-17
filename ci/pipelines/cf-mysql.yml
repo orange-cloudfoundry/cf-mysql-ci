@@ -978,7 +978,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-info/director-url
         TINY_GCACHE: true #TODO: do we need this?
       run:
-        path: cf-mysql-ci/scripts/bosh-lite/make_manifest-ondemand
+        path: cf-mysql-ci/scripts/bosh-lite/make-manifest-ondemand
   - *ondemand-deploy-manifest
   - task: run-verify-cluster-schemas-tests
     config:
