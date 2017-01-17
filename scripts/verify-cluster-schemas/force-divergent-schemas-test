@@ -8,13 +8,12 @@ MYSQL_CONFIG=${MY_DIR}/mysql.config
 
 : "${BOSH_SSH_KEY:?}"
 : "${ENV_TARGET_FILE:?}"
-: "${ENV_METADATA:?}"
+: "${BOSH_CLIENT}"
+: "${BOSH_CLIENT_SECRET}"
 
 source ${CI_DIR}/scripts/utils.sh
 
 BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
-BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
-BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
 DEPLOYMENT_NAME=${DEPLOYMENT_NAME:-${BOSH_DEPLOYMENT:-"cf-warden-mysql"}}
 MYSQL_TUNNEL_IP=127.0.0.1

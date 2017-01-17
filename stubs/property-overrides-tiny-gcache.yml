@@ -1,3 +1,0 @@
-property_overrides:
-  mysql:
-    gcache_size: 128

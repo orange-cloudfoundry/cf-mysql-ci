@@ -6,6 +6,7 @@ set -eux
 : "${DISABLE_INTERRUPTOR:=false}"
 : "${NO_ARBITRATOR:=false}"
 : "${STANDALONE_MODE:=false}"
+: "${TINY_GCACHE:=false}"
 
 overrides=""
 
@@ -23,6 +24,10 @@ fi
 
 if ${STANDALONE_MODE}; then
     overrides="$overrides -o ./cf-mysql-release/manifest-generation/bosh2.0/overrides/standalone-mode.yml"
+fi
+
+if ${TINY_GCACHE}; then
+    overrides="$overrides -o ./cf-mysql-ci/overrides/tiny-gcache.yml"
 fi
 
 gobosh interpolate \
