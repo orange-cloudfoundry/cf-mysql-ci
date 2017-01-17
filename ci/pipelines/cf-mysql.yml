@@ -960,72 +960,44 @@ jobs:
 ### VERIFY CLUSTER SCHEMAS
 - name: deploy-to-verify-cluster-schemas
   plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [create-and-compile-release]
-      trigger: true
-    - put: bosh-lite-environment
-      params:
-        acquire: true
-    - get: cf-mysql-ci
-    - get: bosh-lite-stemcell
-    - get: bosh-lite-repo
-    - get: compiled-release-tarball
-      resource: cf-mysql-compiled-release
-      passed: [create-and-compile-release]
-    - get: version
-      passed: [create-and-compile-release]
-  - try: *broker-deregistrar-bosh-lite
-  - *delete-deployment-bosh-lite
+  - *ondemand-setup
   - task: make-manifest
     config:
       platform: *platform
       image_resource: *image_resource
       inputs:
       - name: cf-mysql-ci
+      - name: bosh-lite-info
       - name: cf-mysql-release
-      - name: bosh-lite-environment
       outputs:
         - name: deployment-manifest
       params:
         OUTPUT_FILE: deployment-manifest/deployment.yml
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-        TINY_GCACHE: true
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        ENV_TARGET_FILE: bosh-lite-info/director-url
+        TINY_GCACHE: true #TODO: do we need this?
       run:
-        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-  - *deploy-to-bosh-lite
-
-- name: test-verify-cluster-schemas
-  plan:
-  - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [deploy-to-verify-cluster-schemas]
-    - get: bosh-lite-environment
-      passed: [deploy-to-verify-cluster-schemas]
-      trigger: true
-      version: every
-    - get: version
-      passed: [deploy-to-verify-cluster-schemas]
+        path: cf-mysql-ci/scripts/bosh-lite/make_manifest-ondemand
+  - *ondemand-deploy-manifest
   - task: run-verify-cluster-schemas-tests
     config:
       platform: *platform
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
-        - name: bosh-lite-environment
+        - name: bosh-lite-info
         - name: cf-mysql-release
       params:
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
+        ENV_TARGET_FILE: bosh-lite-info/director-url
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         BOSH_SSH_KEY: {{bosh-lite-private-key}}
-        BOSH_DEPLOYMENT: cf-warden-mysql
+        BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/verify-cluster-schemas/force-divergent-schemas-test
-  - put: bosh-lite-environment
-    params:
-      release: bosh-lite-environment
+  - *ondemand-teardown
+
 
 ### INTEGRATION
 - name: deploy-to-integration
@@ -1038,7 +1010,7 @@ jobs:
       - test-full-bosh
       - test-scaling
       - test-failover
-      - test-verify-cluster-schemas
+      - deploy-to-verify-cluster-schemas
       - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
@@ -1061,7 +1033,7 @@ jobs:
       - test-full-bosh
       - test-scaling
       - test-failover
-      - test-verify-cluster-schemas
+      - deploy-to-verify-cluster-schemas
       - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone

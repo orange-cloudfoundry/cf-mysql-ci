@@ -13,6 +13,7 @@ set_env(){
   : "${BOSH_CLIENT_SECRET:?}"
 
   BOSH_ENVIRONMENT=$(cat "${ENV_TARGET_FILE}")
+  bosh_ip=$(echo "${BOSH_ENVIRONMENT}" | sed 's$https://$$g')
 
   GALERA_HEALTHCHECK_USERNAME="${GALERA_HEALTHCHECK_USERNAME:-galera-healthcheck}"
 }
@@ -27,7 +28,7 @@ stop_all_nodes() {
           -t \
           -i "${SSH_KEY_FILE}" \
           -o StrictHostKeyChecking=no \
-          "ubuntu@${BOSH_ENVIRONMENT}" \
+          "jumpbox@${bosh_ip}" \
           "curl -vk -X POST ${GALERA_HEALTHCHECK_USERNAME}:password@${MYSQL_NODE}:9200/stop_mysql"
     done
   popd
