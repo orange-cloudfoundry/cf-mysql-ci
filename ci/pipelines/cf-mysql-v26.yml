@@ -1145,16 +1145,8 @@ jobs:
           DISABLE_PARANOIA: true
         run:
           path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-  - task: wait-for-monit
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      run:
-        path: /bin/bash
-        args:
-        - "-c"
-        - "sleep 225"
   - task: disable-sst-to-fix-cluster
+    attempts: 5
     config:
       platform: *platform
       image_resource: *image_resource
