@@ -989,10 +989,11 @@ jobs:
         - name: bosh-lite-info
         - name: cf-mysql-release
       params:
+        MYSQL_TUNNEL_USERNAME: jumpbox
         ENV_TARGET_FILE: bosh-lite-info/external-ip
         BOSH_CLIENT: {{bosh-lite-username}}
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
-        BOSH_SSH_KEY: {{bosh-lite-private-key}}
+        SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
         BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/verify-cluster-schemas/force-divergent-schemas-test
