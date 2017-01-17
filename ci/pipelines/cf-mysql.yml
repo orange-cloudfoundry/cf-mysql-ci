@@ -854,7 +854,6 @@ jobs:
       image_resource: *image_resource
       inputs:
       - name: bosh-lite-info
-      - name: bosh-lite-repo
       - name: cf-mysql-ci
       params:
         ENV_TARGET_FILE: bosh-lite-info/director-url
