@@ -673,7 +673,7 @@ jobs:
       release: bosh-lite-environment
 
 ### UPGRADE
-- name: deploy-previous-to-upgrade
+- name: test-upgrade-from-previous
   plan:
   - aggregate:
     - get: cf-mysql-release-develop
@@ -683,62 +683,49 @@ jobs:
     - get: cf-mysql-release
       resource: cf-mysql-master
       trigger: true
+    - get: cf-mysql-ci
     - get: release-tarball
       resource: cf-mysql-release-final-release
-    - put: bosh-lite-environment
-      params:
-        acquire: true
-    - get: cf-mysql-ci
+    - get: bosh-deployment
+      resource: bosh-deployment-repo
     - get: bosh-lite-stemcell
-    - get: bosh-lite-repo
+    - get: deployments
+      resource: deployments-configuration
+    - get: bosh-warden-cpi-compiled-release
+      passed: [compile-bosh-lite-releases]
+    - get: garden-linux-compiled-release
+      passed: [compile-bosh-lite-releases]
+    - get: stemcell
+      resource: bosh-lite-stemcell
     - get: aws-bosh-stemcell
     - get: version
       passed: [create-and-compile-release]
-  - try: *broker-deregistrar-bosh-lite
-  - *delete-deployment-bosh-lite
-  - task: make-manifest
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-release
-      - name: cf-mysql-ci
-      - name: bosh-lite-environment
-      outputs:
-      - name: deployment-manifest
-      params:
-        OUTPUT_FILE: deployment-manifest/deployment.yml
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-      run:
-        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-  - put: compiled-packages-lock
-    params:
-      acquire: true
-  - *compile-release
-  - *deploy-to-bosh-lite
-  - *broker-registrar-bosh-lite
-
-- name: test-persistence-after-upgrade
-  plan:
   - aggregate:
-    - get: cf-mysql-ci
-    - get: cf-mysql-release
-      passed: [deploy-previous-to-upgrade]
-    - get: bosh-lite-environment
-      passed: [deploy-previous-to-upgrade]
-      trigger: true
-      version: every
-    - get: bosh-lite-stemcell
-      passed: [deploy-previous-to-upgrade]
-    - get: compiled-release-tarball
-      resource: cf-mysql-compiled-release
-      passed: [create-and-compile-release]
-    - get: bosh-lite-repo
-    - get: version
-      passed: [create-and-compile-release,deploy-previous-to-upgrade]
-  - &persistence-test-data-write
-    task: persistence-test-data-write
+    - task: make-manifest
+      file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+      params:
+        STANDALONE_MODE: true
+    - do:
+      - task: apply-terraform
+        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+      - task: create-bosh-lite
+        file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+        input_mapping: {deployments: deployments-terraformed}
+        params:
+          PROJECT_ID: {{gcp-bosh-lite-project-id}}
+          ZONE: {{gcp-bosh-lite-zone}}
+          NETWORK: {{gcp-bosh-lite-network}}
+          SUBNETWORK: {{gcp-bosh-lite-subnetwork}}
+          BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+    - do:
+      - put: compiled-packages-lock
+        params:
+          acquire: true
+      - *compile-release
+
+  - *ondemand-deploy-manifest
+
+  - task: persistence-test-data-write
     config:
       platform: *platform
       image_resource:
@@ -746,33 +733,22 @@ jobs:
         source:
           repository: pivotalcf/mysql-restore
       inputs:
-      - name: bosh-lite-environment
+      - name: bosh-lite-info
       - name: cf-mysql-ci
       params:
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
+        MYSQL_TUNNEL_USERNAME: jumpbox
+        ENV_TARGET_FILE: bosh-lite-info/external-ip
+        SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
       run:
-        path: cf-mysql-ci/scripts/persistence/load-test-data
+        path: cf-mysql-ci/scripts/persistence/load-test-data-ondemand
+
   - task: make-manifest
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-ci
-      - name: cf-mysql-release
-      - name: bosh-lite-environment
-      outputs:
-        - name: deployment-manifest
-      params:
-        OUTPUT_FILE: deployment-manifest/deployment.yml
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-      run:
-        path: cf-mysql-ci/scripts/bosh-lite/make_manifest
-  - *deploy-to-bosh-lite
-  - *broker-registrar-bosh-lite
-  - &persistence-test-data-read
-    task: persistence-test-data-read
+    file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+    input_mapping: {cf-mysql-release: cf-mysql-release-develop}
+
+  - *ondemand-deploy-manifest
+
+  - task: persistence-test-data-read
     config:
       platform: *platform
       image_resource:
@@ -780,33 +756,14 @@ jobs:
         source:
           repository: pivotalcf/mysql-restore
       inputs:
-      - name: bosh-lite-environment
+      - name: bosh-lite-info
       - name: cf-mysql-ci
       params:
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
+        ENV_TARGET_FILE: bosh-lite-info/external-ip
       run:
-        path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data
-  - *smoke-tests-bosh-lite
-  - task: dashboard-test-bosh-lite
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-release
-      - name: bosh-lite-environment
-      - name: cf-mysql-ci
-      params:
-        ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
-        USE_SMALL_PLANS: true
-        USE_HTTPS: false
-        TEST_TYPE: dashboard
-      run:
-        path: cf-mysql-ci/scripts/acceptance-tests
-  - put: bosh-lite-environment
-    params:
-      release: bosh-lite-environment
+        path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data-ondemand
+
+  - *run-smoke-tests-ondemand
 
 ### STANDALONE FOR BOOTSTRAP
 - name: test-bootstrap-on-standalone
@@ -814,8 +771,6 @@ jobs:
   - *ondemand-setup
   - task: make-manifest-with-standalone
     file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
-    params:
-      STANDALONE_MODE: true
   - *ondemand-deploy-manifest
   - task: persistence-test-data-write
     config:
@@ -1016,7 +971,7 @@ jobs:
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-arb-to-full-scaling
-      - test-persistence-after-upgrade
+      - test-upgrade-from-previous
       - deploy-to-bosh-2.0
       trigger: true
     - get: deployments-configuration
@@ -1039,7 +994,7 @@ jobs:
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-arb-to-full-scaling
-      - test-persistence-after-upgrade
+      - test-upgrade-from-previous
       - deploy-to-bosh-2.0
   - task: make-manifest
     config:
