@@ -897,6 +897,7 @@ jobs:
       DISABLE_INTERRUPTOR: true
   - *ondemand-deploy-manifest
   - task: restart-broken-node
+    attempts: 5
     config:
       platform: *platform
       image_resource: *image_resource
