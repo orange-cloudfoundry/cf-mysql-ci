@@ -738,6 +738,7 @@ jobs:
       - name: cf-mysql-ci
       params:
         MYSQL_TUNNEL_USERNAME: jumpbox
+        MYSQL_VM_IP: 10.244.7.4
         ENV_TARGET_FILE: bosh-lite-info/external-ip
         SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
       run:
