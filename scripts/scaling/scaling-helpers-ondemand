@@ -11,7 +11,7 @@ function close-ssh-tunnels() {
 }
 
 function setup_infrastructure_variables() {
-  pushd "${WORKSPACE_DIR}"
+  pushd "${WORKSPACE_DIR}" > /dev/null
     source ${CI_DIR}/scripts/utils.sh
 
     : "${ENV_TARGET_FILE:?}"
@@ -44,11 +44,11 @@ function setup_infrastructure_variables() {
         -o StrictHostKeyChecking=no \
         "jumpbox@${DIRECTOR_IP#https://}"
     done
-  popd
+  popd > /dev/null
 }
 
 function verify_replicated_row_count_is() {
-  pushd "${MY_DIR}"
+  pushd "${MY_DIR}" > /dev/null
     for port in "${TUNNEL_PORTS[@]}"; do
       ROW_COUNT=$(bundle exec ruby mariadb_crud.rb select --host ${TUNNEL_HOST} --port ${port})
       if [[ "${ROW_COUNT}" != $1 ]]; then
@@ -58,7 +58,7 @@ function verify_replicated_row_count_is() {
         exit 1
       fi
     done
-  popd
+  popd > /dev/null
 }
 
 function scale_down_to_minimal() {
@@ -84,7 +84,7 @@ function scale_up_to_default() {
 }
 
 function deploy_full_cluster() {
-  echo "Scaling to up to full deployment (3 nodes)"
+  echo "Scaling up to full deployment (3 nodes)"
   MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
 
   NO_ARBITRATOR=true \
@@ -95,28 +95,28 @@ function deploy_full_cluster() {
 }
 
 function write_some_data() {
-  pushd "${MY_DIR}"
+  pushd "${MY_DIR}" > /dev/null
     PORT=${TUNNEL_PORTS[0]}
     echo "Writing some data to Node 0"
     bundle exec ruby mariadb_crud.rb insert $1 --host "${TUNNEL_HOST}" --port "${PORT}"
-  popd
+  popd > /dev/null
 }
 
 function verify_first_node_row_count_is() {
-  pushd "${MY_DIR}"
+  pushd "${MY_DIR}" > /dev/null
     PORT=${TUNNEL_PORTS[0]}
     ROW_COUNT=$(bundle exec ruby mariadb_crud.rb select --host "${TUNNEL_HOST}" --port "${PORT}")
     if [ ! "${ROW_COUNT}" -eq $1 ] ; then
       echo "Expected record count is not equal to ${ROW_COUNT}"
       exit 1
     fi
-  popd
+  popd > /dev/null
 }
 
 function clear_data() {
-  pushd "${MY_DIR}"
+  pushd "${MY_DIR}" > /dev/null
     PORT=${TUNNEL_PORTS[0]}
     echo "Removing test data from Node 0"
     bundle exec ruby mariadb_crud.rb delete --host "${TUNNEL_HOST}" --port "${PORT}"
-  popd
+  popd > /dev/null
 }
