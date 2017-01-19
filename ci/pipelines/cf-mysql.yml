@@ -769,6 +769,7 @@ jobs:
       - name: cf-mysql-ci
       params:
         ENV_TARGET_FILE: bosh-lite-info/external-ip
+        MYSQL_VM_IP: 10.244.7.4
       run:
         path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data-ondemand
 

@@ -12,7 +12,7 @@ BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
 
 MYSQL_TUNNEL_IP=127.0.0.1
 MYSQL_TUNNEL_PORT=3307
-MYSQL_VM_IP=10.244.7.4
+MYSQL_VM_IP="${MYSQL_VM_IP:-10.244.7.2}"
 MYSQL_VM_PORT=3306
 
 echo "Targeting remote bosh-lite, starting ssh tunnel..."
