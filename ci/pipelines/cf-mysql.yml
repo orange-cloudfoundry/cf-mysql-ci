@@ -700,6 +700,7 @@ jobs:
     - get: aws-bosh-stemcell
     - get: version
       passed: [create-and-compile-release]
+    - get: cf-mysql-compiled-release
   - aggregate:
     - task: make-manifest
       file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
@@ -746,7 +747,14 @@ jobs:
     file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
     input_mapping: {cf-mysql-release: cf-mysql-release-develop}
 
-  - *ondemand-deploy-manifest
+  - put: bosh-2.0-bosh-lite-deployment
+    params:
+      manifest: deployment-manifest/deployment.yml
+      releases:
+      - cf-mysql-compiled-release/*.tgz
+      stemcells:
+      - bosh-lite-stemcell/*.tgz
+      target_file: bosh-lite-info/external-ip
 
   - task: persistence-test-data-read
     config:
