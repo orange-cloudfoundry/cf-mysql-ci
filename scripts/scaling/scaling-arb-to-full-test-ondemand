@@ -29,7 +29,24 @@ popd
 clear_data
 write_some_data 1000
 
-deploy_full_cluster #this step removes the arbitrator
+echo "Scaling up to full deployment (3 nodes)"
+MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
+  cat << EOF > ${tmpdir}/4-nodes.yml
+---
+- type: replace
+  path: /instance_groups/name=mysql/instances
+  value: 4
+EOF
+
+gobosh interpolate \
+    ./cf-mysql-release/manifest-generation/cf-mysql-template-v2.yml \
+    -o ./cf-mysql-release/manifest-generation/bosh2.0/overrides/no-arbitrator.yml \
+    -o ${tmpdir}/4-nodes.yml \
+    -l ./cf-mysql-release/manifest-generation/bosh2.0/bosh-lite/default-vars.yml \
+    > "${MANIFEST_FILE}"
+
+gobosh -n deploy $MANIFEST_FILE
+   #this step removes the arbitrator
 verify_replicated_row_count_is 1000
 
 scale_down_to_minimal
