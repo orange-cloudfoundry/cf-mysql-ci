@@ -15,6 +15,7 @@ MYSQL_TUNNEL_PORT=3307
 MYSQL_TUNNEL_USERNAME=${MYSQL_TUNNEL_USERNAME:-ubuntu}
 MYSQL_VM_IP=10.244.7.2
 MYSQL_VM_PORT=3306
+SSH_KEY_FILE=${SSH_KEY_FILE:-""}
 
 echo "Targeting remote bosh-lite, starting ssh tunnel..."
 
