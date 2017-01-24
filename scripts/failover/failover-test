@@ -13,6 +13,8 @@ source "${CI_DIR}/scripts/utils.sh"
 : "${ENV_TARGET_FILE:?}"
 : "${ENV_METADATA:?}"
 
+DEPLOYMENT_NAME=${DEPLOYMENT_NAME:-cf-warden-mysql}
+
 function close-ssh-tunnels() {
   echo "Closing SSH tunnels ..."
   OLD_TUNNELS=`ps aux | grep "ssh" | \
@@ -22,7 +24,7 @@ function close-ssh-tunnels() {
 }
 
 function bosh-ip() {
-  bosh -n vms cf-warden-mysql | grep $1 | awk '{ print $11 }'
+  bosh -n vms ${DEPLOYMENT_NAME} | grep $1 | awk '{ print $11 }'
 }
 
 BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
