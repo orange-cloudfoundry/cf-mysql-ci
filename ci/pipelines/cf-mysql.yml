@@ -149,32 +149,6 @@ resources:
   source:
     uri: https://github.com/cloudfoundry/bosh-deployment
 
-- name: bosh-warden-cpi-bosh-io-release
-  type: bosh-io-release
-  source:
-    repository: cppforlife/bosh-warden-cpi-release
-
-- name: bosh-warden-cpi-compiled-release
-  type: s3
-  source:
-    bucket: cf-mysql-releases
-    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
-    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
-    versioned_file: compiled-releases/bosh-warden-cpi-ubuntu-trusty.tgz
-
-- name: garden-linux-bosh-io-release
-  type: bosh-io-release
-  source:
-    repository: cloudfoundry-incubator/garden-linux-release
-
-- name: garden-linux-compiled-release
-  type: s3
-  source:
-    bucket: cf-mysql-releases
-    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
-    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
-    versioned_file: compiled-releases/garden-linux-ubuntu-trusty.tgz
-
 - name: version
   type: semver
   source:
@@ -691,10 +665,6 @@ jobs:
     - get: bosh-lite-stemcell
     - get: deployments
       resource: deployments-configuration
-    - get: bosh-warden-cpi-compiled-release
-      passed: [compile-bosh-lite-releases]
-    - get: garden-linux-compiled-release
-      passed: [compile-bosh-lite-releases]
     - get: stemcell
       resource: bosh-lite-stemcell
     - get: aws-bosh-stemcell
@@ -1090,10 +1060,6 @@ jobs:
       - get: bosh-lite-stemcell
       - get: deployments
         resource: deployments-configuration
-      - get: bosh-warden-cpi-compiled-release
-        passed: [compile-bosh-lite-releases]
-      - get: garden-linux-compiled-release
-        passed: [compile-bosh-lite-releases]
       - get: stemcell
         resource: bosh-lite-stemcell
       - get: version
@@ -1159,50 +1125,3 @@ jobs:
     - task: destroy-terraform
       file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
       input_mapping: {deployments: deployments-terraformed}
-
-- name: compile-bosh-lite-releases
-  serial: true
-  plan:
-  - aggregate:
-    - get: bosh-warden-cpi-bosh-io-release
-      trigger: true
-    - get: garden-linux-bosh-io-release
-      trigger: true
-    - get: cf-mysql-ci
-    - get: aws-bosh-stemcell
-  - put: compiled-packages-lock
-    params:
-      acquire: true
-  - task: compile-warden-cpi-release
-    file: cf-mysql-ci/ci/tasks/compile-release.yml
-    input_mapping: {release-tarball: bosh-warden-cpi-bosh-io-release}
-    output_mapping: {compiled-release-tarball: compiled-bosh-warden-cpi-bosh-io-release}
-    params:
-        BOSH_CLIENT: {{bosh_compilation_username}}
-        BOSH_CLIENT_SECRET: {{bosh_compilation_password}}
-        BOSH_ENVIRONMENT: {{bosh_compilation_director}}
-    ensure:
-      put: compiled-packages-lock
-      params:
-        release: compiled-packages-lock
-  - put: bosh-warden-cpi-compiled-release
-    params:
-      file: compiled-bosh-warden-cpi-bosh-io-release/*.tgz
-  - put: compiled-packages-lock
-    params:
-      acquire: true
-  - task: compile-garden-linux-release
-    file: cf-mysql-ci/ci/tasks/compile-release.yml
-    input_mapping: {release-tarball: garden-linux-bosh-io-release}
-    output_mapping: {compiled-release-tarball: compiled-garden-linux-bosh-io-release}
-    params:
-        BOSH_CLIENT: {{bosh_compilation_username}}
-        BOSH_CLIENT_SECRET: {{bosh_compilation_password}}
-        BOSH_ENVIRONMENT: {{bosh_compilation_director}}
-    ensure:
-      put: compiled-packages-lock
-      params:
-        release: compiled-packages-lock
-  - put: garden-linux-compiled-release
-    params:
-      file: compiled-garden-linux-bosh-io-release/*.tgz
