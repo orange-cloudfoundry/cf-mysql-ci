@@ -25,10 +25,6 @@ bosh_warden_cpi_release_override="${OUTPUT_DIR}/bosh-warden-cpi-release-override
 override_for_release "${BOSH_WARDEN_CPI_RELEASE_DIR}" \
   > "${bosh_warden_cpi_release_override}"
 
-garden_linux_release_override="${OUTPUT_DIR}/garden-linux-release-override"
-override_for_release "${GARDEN_LINUX_RELEASE_DIR}" \
-  > "${garden_linux_release_override}"
-
 bosh_lite_dir="${DEPLOYMENTS_DIR}/bosh-lite-gcp"
 
 pushd "${bosh_lite_dir}" > /dev/null
@@ -44,7 +40,6 @@ gobosh interpolate "${BOSH_DEPLOYMENT_DIR}/bosh.yml" \
   -o "${bosh_lite_dir}/dynamic-network.yml" \
   -o "${bosh_lite_dir}/instance.yml" \
   -o "${bosh_warden_cpi_release_override}" \
-  -o "${garden_linux_release_override}" \
   --vars-store "${OUTPUT_DIR}/credentials.yml" \
   -v director_name=lite \
   -v internal_ip=127.0.0.1 \
