@@ -952,7 +952,6 @@ jobs:
       - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
-      - test-arb-to-full-scaling
       - test-upgrade-from-previous
       - deploy-to-bosh-2.0
       trigger: true
@@ -975,7 +974,6 @@ jobs:
       - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
-      - test-arb-to-full-scaling
       - test-upgrade-from-previous
       - deploy-to-bosh-2.0
   - task: make-manifest
