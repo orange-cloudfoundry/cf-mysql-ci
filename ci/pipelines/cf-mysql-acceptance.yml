@@ -85,7 +85,7 @@ jobs:
       - get: cf-mysql-ci
       - get: deployments-configuration
     - try:
-        task: run-broker-deregistrar
+        task: run-deregister-and-purge-instances
         config:
           platform: linux
           image_resource: &image_resource
@@ -100,7 +100,7 @@ jobs:
             ENV_REPO: deployments-configuration
             ENV_TARGET_FILE: aws-acceptance-environment/name
             ENV_METADATA: aws-acceptance-environment/metadata
-            ERRAND: broker-deregistrar
+            ERRAND: deregister-and-purge-instances
             SKIP_IF_NO_DEPLOYMENT: true
             DEPLOYMENT_NAME: cf-mysql
           run:
@@ -115,7 +115,7 @@ jobs:
           - name: aws-acceptance-environment
         params:
           ENV_TARGET_FILE: aws-acceptance-environment/name
-          ENV_METADATA: aws-acceptance-environment/metadata  
+          ENV_METADATA: aws-acceptance-environment/metadata
           DEPLOYMENT_NAME: cf-mysql
         run:
           path: cf-mysql-ci/scripts/bosh/delete_deployment

@@ -245,7 +245,7 @@ jobs:
     - get: version
       passed: [create-and-compile-release]
   - try:
-      task: run-broker-deregistrar
+      task: run-deregister-and-purge-instances
       config:
         platform: *platform
         image_resource: *image_resource
@@ -257,7 +257,7 @@ jobs:
           ENV_REPO: deployments-configuration
           ENV_TARGET_FILE: aws-environment/name
           ENV_METADATA: aws-environment/metadata
-          ERRAND: broker-deregistrar
+          ERRAND: deregister-and-purge-instances
           SKIP_IF_NO_DEPLOYMENT: true
           DEPLOYMENT_NAME: cf-mysql
         run:
@@ -360,7 +360,7 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/acceptance-tests
   - try:
-      task: run-broker-deregistrar
+      task: run-deregister-and-purge-instances
       config:
         platform: *platform
         image_resource: *image_resource
@@ -372,7 +372,7 @@ jobs:
           ENV_REPO: deployments-configuration
           ENV_TARGET_FILE: aws-environment/name
           ENV_METADATA: aws-environment/metadata
-          ERRAND: broker-deregistrar
+          ERRAND: deregister-and-purge-instances
           SKIP_IF_NO_DEPLOYMENT: true
           DEPLOYMENT_NAME: cf-mysql
         run:
@@ -415,9 +415,9 @@ jobs:
       passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
-  - &broker-deregistrar-bosh-lite
+  - &deregister-and-purge-instances-bosh-lite
     try:
-      task: run-broker-deregistrar
+      task: run-deregister-and-purge-instances
       config:
         platform: *platform
         image_resource: *image_resource
@@ -429,7 +429,7 @@ jobs:
           BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
-          ERRAND: broker-deregistrar
+          ERRAND: deregister-and-purge-instances
           DEPLOYMENT_NAME: cf-warden-mysql
         run:
           path: cf-mysql-ci/scripts/bosh/run_errand
@@ -572,7 +572,7 @@ jobs:
       passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
-  - *broker-deregistrar-bosh-lite
+  - *deregister-and-purge-instances-bosh-lite
   - *delete-deployment-bosh-lite
   - task: make-manifest
     config:
@@ -646,7 +646,7 @@ jobs:
       passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
-  - *broker-deregistrar-bosh-lite
+  - *deregister-and-purge-instances-bosh-lite
   - *delete-deployment-bosh-lite
   - task: make-manifest
     config:
@@ -745,7 +745,7 @@ jobs:
       passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
-  - *broker-deregistrar-bosh-lite
+  - *deregister-and-purge-instances-bosh-lite
   - *delete-deployment-bosh-lite
   - task: make-manifest
     config:
@@ -860,7 +860,7 @@ jobs:
       passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
-  - *broker-deregistrar-bosh-lite
+  - *deregister-and-purge-instances-bosh-lite
   - *delete-deployment-bosh-lite
   - task: make-manifest
     config:
