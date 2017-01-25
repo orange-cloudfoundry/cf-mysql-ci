@@ -903,7 +903,8 @@ jobs:
         - name: cf-mysql-release
       params:
         ENV_TARGET_FILE: bosh-lite-environment/name
-        ENV_METADATA: bosh-lite-environment/metadata
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         BOSH_SSH_KEY: {{bosh-lite-private-key}}
         DEPLOYMENT_NAME: cf-warden-mysql
       run:
