@@ -55,7 +55,7 @@ resources:
   source:
     username: {{bosh-lite-username}}
     password: {{bosh-lite-password}}
-    deployment: cf-warden-mysql
+    deployment: cf-mysql
     ignore_ssl: true
 
 - name: aws-environment
@@ -462,7 +462,7 @@ jobs:
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
           ERRAND: deregister-and-purge-instances
-          DEPLOYMENT_NAME: cf-warden-mysql
+          DEPLOYMENT_NAME: cf-mysql
         run:
           path: cf-mysql-ci/scripts/bosh/run_errand
   - &delete-deployment-bosh-lite
@@ -531,7 +531,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         ERRAND: broker-registrar
-        DEPLOYMENT_NAME: cf-warden-mysql
+        DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
 
@@ -562,7 +562,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         ERRAND: smoke-tests
-        DEPLOYMENT_NAME: cf-warden-mysql
+        DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
   - task: run-scaling-tests
@@ -956,7 +956,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-environment/name
         BOSH_CLIENT: {{bosh-lite-username}}
         ENV_METADATA: bosh-lite-environment/metadata
-        DEPLOYMENT_NAME: cf-warden-mysql
+        DEPLOYMENT_NAME: cf-mysql
         ERRAND: bootstrap
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
@@ -1032,7 +1032,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         BOSH_SSH_KEY: {{bosh-lite-private-key}}
-        DEPLOYMENT_NAME: cf-warden-mysql
+        DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/data-loss/force-sst-test
   - task: run-rejoin-unsafe-errand
@@ -1048,7 +1048,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         BOSH_SSH_KEY: {{bosh-lite-private-key}}
-        DEPLOYMENT_NAME: cf-warden-mysql
+        DEPLOYMENT_NAME: cf-mysql
         ERRAND: rejoin-unsafe
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
@@ -1122,7 +1122,7 @@ jobs:
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
           BOSH_SSH_KEY: {{bosh-lite-private-key}}
-          DEPLOYMENT_NAME: cf-warden-mysql
+          DEPLOYMENT_NAME: cf-mysql
         run:
           path: cf-mysql-ci/scripts/data-loss/force-sst-test
     - task: make-manifest
@@ -1230,7 +1230,7 @@ jobs:
         BOSH_CLIENT: {{bosh-lite-username}}
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         BOSH_SSH_KEY: {{bosh-lite-private-key}}
-        DEPLOYMENT_NAME: cf-warden-mysql
+        DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/verify-cluster-schemas/force-divergent-schemas-test
   - put: bosh-lite-environment
