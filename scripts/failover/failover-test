@@ -13,7 +13,7 @@ source "${CI_DIR}/scripts/utils.sh"
 : "${ENV_TARGET_FILE:?}"
 : "${ENV_METADATA:?}"
 
-DEPLOYMENT_NAME=${DEPLOYMENT_NAME:-cf-warden-mysql}
+DEPLOYMENT_NAME=${DEPLOYMENT_NAME:-cf-mysql}
 
 function close-ssh-tunnels() {
   echo "Closing SSH tunnels ..."
