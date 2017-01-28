@@ -46,7 +46,7 @@ resources:
   source:
     username: {{bosh-lite-username}}
     password: {{bosh-lite-password}}
-    deployment: cf-warden-mysql
+    deployment: cf-mysql
     ignore_ssl: true
 
 - name: aws-environment
@@ -338,7 +338,7 @@ jobs:
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
           ERRAND: deregister-and-purge-instances
-          DEPLOYMENT_NAME: cf-warden-mysql
+          DEPLOYMENT_NAME: cf-mysql
         run:
           path: cf-mysql-ci/scripts/bosh/run_errand
   - &delete-deployment-bosh-lite
@@ -409,7 +409,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         ERRAND: broker-registrar
-        DEPLOYMENT_NAME: cf-warden-mysql
+        DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
 
@@ -440,7 +440,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         ERRAND: acceptance-tests
-        DEPLOYMENT_NAME: cf-warden-mysql
+        DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
   - task: run-scaling-tests
