@@ -7,26 +7,26 @@ set -eux
 : "${NO_ARBITRATOR:=false}"
 : "${TINY_GCACHE:=false}"
 
-overrides=""
+operations=""
 
 if ${MINIMAL_MODE}; then
-    overrides="$overrides -o ./cf-mysql-deployment/manifest-generation/bosh2.0/overrides/minimal-mode.yml"
+    operations="$operations -o ./cf-mysql-deployment/operations/minimal-mode.yml"
 fi
 
 if ${DISABLE_INTERRUPTOR}; then
-    overrides="$overrides -o ./cf-mysql-ci/overrides/disable-interruptor.yml"
+    operations="$operations -o ./cf-mysql-ci/operations/disable-interruptor.yml"
 fi
 
 if ${NO_ARBITRATOR}; then
-    overrides="$overrides -o ./cf-mysql-deployment/manifest-generation/bosh2.0/overrides/no-arbitrator.yml"
+    operations="$operations -o ./cf-mysql-deployment/operations/no-arbitrator.yml"
 fi
 
 if ${TINY_GCACHE}; then
-    overrides="$overrides -o ./cf-mysql-ci/overrides/tiny-gcache.yml"
+    operations="$operations -o ./cf-mysql-ci/operations/tiny-gcache.yml"
 fi
 
 gobosh interpolate \
     ./cf-mysql-deployment/cf-mysql-deployment.yml \
-    ${overrides} \
+    ${operations} \
     -l ./cf-mysql-deployment/bosh-lite/default-vars.yml \
     > "${OUTPUT_FILE}"
