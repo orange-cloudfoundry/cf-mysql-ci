@@ -5,25 +5,20 @@ set -eux
 : "${MINIMAL_MODE:=false}"
 : "${DISABLE_INTERRUPTOR:=false}"
 : "${NO_ARBITRATOR:=false}"
-: "${STANDALONE_MODE:=false}"
 : "${TINY_GCACHE:=false}"
 
 overrides=""
 
 if ${MINIMAL_MODE}; then
-    overrides="$overrides -o ./cf-mysql-release/manifest-generation/bosh2.0/overrides/minimal-mode.yml"
+    overrides="$overrides -o ./cf-mysql-deployment/manifest-generation/bosh2.0/overrides/minimal-mode.yml"
 fi
 
 if ${DISABLE_INTERRUPTOR}; then
-    overrides="$overrides -o ./cf-mysql-release/manifest-generation/bosh2.0/overrides/disable-interruptor.yml"
+    overrides="$overrides -o ./cf-mysql-deployment/manifest-generation/bosh2.0/overrides/disable-interruptor.yml"
 fi
 
 if ${NO_ARBITRATOR}; then
-    overrides="$overrides -o ./cf-mysql-release/manifest-generation/bosh2.0/overrides/no-arbitrator.yml"
-fi
-
-if ${STANDALONE_MODE}; then
-    overrides="$overrides -o ./cf-mysql-release/manifest-generation/bosh2.0/overrides/standalone-mode.yml"
+    overrides="$overrides -o ./cf-mysql-deployment/manifest-generation/bosh2.0/overrides/no-arbitrator.yml"
 fi
 
 if ${TINY_GCACHE}; then
@@ -31,7 +26,7 @@ if ${TINY_GCACHE}; then
 fi
 
 gobosh interpolate \
-    ./cf-mysql-release/manifest-generation/cf-mysql-template-v2.yml \
+    ./cf-mysql-deployment/cf-mysql-deployment.yml \
     ${overrides} \
-    -l ./cf-mysql-release/manifest-generation/bosh2.0/bosh-lite/default-vars.yml \
+    -l ./cf-mysql-deployment/bosh-lite/default-vars.yml \
     > "${OUTPUT_FILE}"

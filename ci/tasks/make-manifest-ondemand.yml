@@ -8,10 +8,10 @@ image_resource:
 
 inputs:
 - name: cf-mysql-ci
-- name: cf-mysql-release
+- name: cf-mysql-deployment
 
 outputs:
-  - name: deployment-manifest
+- name: deployment-manifest
 
 run:
   path: cf-mysql-ci/scripts/bosh-lite/make-manifest-ondemand
@@ -21,4 +21,3 @@ params:
   DISABLE_INTERRUPTOR: false
   MINIMAL_MODE: false
   NO_ARBITRATOR: false
-  STANDALONE_MODE: false
