@@ -479,7 +479,7 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-info
-        - name: cf-mysql-release
+        - name: cf-mysql-deployment
       params:
         BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
         BOSH_CLIENT: {{bosh-lite-username}}
@@ -503,7 +503,7 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-info
-        - name: cf-mysql-release
+        - name: cf-mysql-deployment
       params:
         BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
         BOSH_CLIENT: {{bosh-lite-username}}
@@ -932,23 +932,9 @@ jobs:
   plan:
   - *ondemand-setup
   - task: make-manifest
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-ci
-      - name: bosh-lite-info
-      - name: cf-mysql-release
-      outputs:
-        - name: deployment-manifest
-      params:
-        OUTPUT_FILE: deployment-manifest/deployment.yml
-        BOSH_CLIENT: {{bosh-lite-username}}
-        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
-        ENV_TARGET_FILE: bosh-lite-info/director-url
-        TINY_GCACHE: true #TODO: do we need this?
-      run:
-        path: cf-mysql-ci/scripts/bosh-lite/make-manifest-ondemand
+    file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+    params:
+      TINY_GCACHE: true #TODO: do we need this?
   - *ondemand-deploy-manifest
   - task: run-verify-cluster-schemas-tests
     config:
