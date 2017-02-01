@@ -952,6 +952,7 @@ jobs:
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
+      - test-arb-to-full-scaling
       - deploy-to-bosh-2.0
       trigger: true
     - get: deployments-configuration
@@ -974,6 +975,7 @@ jobs:
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
+      - test-arb-to-full-scaling
       - deploy-to-bosh-2.0
   - task: make-manifest
     config:
