@@ -9,7 +9,7 @@ image_resource:
 inputs:
 - name: bosh-deployment
 - name: cf-mysql-ci
-- name: cf-mysql-release
+- name: cf-mysql-deployment
 - name: deployments
 - name: stemcell
 

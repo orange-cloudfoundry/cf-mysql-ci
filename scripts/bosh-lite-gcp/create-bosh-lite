@@ -5,7 +5,8 @@ my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 scripts_dir="$( cd "${my_dir}/../" && pwd )"
 workspace_dir="$( cd "${my_dir}/../../../" && pwd )"
 
-cf_mysql_release_dir="${workspace_dir}/cf-mysql-release"
+cf_mysql_deployment_dir="${workspace_dir}/cf-mysql-deployment"
+
 OUTPUT_DIR="${workspace_dir}/${OUTPUT_DIR}"
 BOSH_DEPLOYMENT_DIR="${workspace_dir}/${BOSH_DEPLOYMENT_DIR}"
 DEPLOYMENTS_DIR="${workspace_dir}/${DEPLOYMENTS_DIR}"
@@ -61,7 +62,7 @@ gobosh -n upload-stemcell "${STEMCELL_DIR}"/*.tgz \
   --client-secret "${BOSH_CLIENT_SECRET}" \
   --ca-cert "${OUTPUT_DIR}/ca-cert"
 
-gobosh -n update-cloud-config "${cf_mysql_release_dir}/manifest-generation/bosh2.0/bosh-lite/cloud-config.yml" \
+gobosh -n update-cloud-config "${cf_mysql_deployment_dir}/bosh-lite/cloud-config.yml" \
   -e "$(cat "${OUTPUT_DIR}/external-ip")" \
   --client admin \
   --client-secret "${BOSH_CLIENT_SECRET}" \
