@@ -14,7 +14,7 @@ if ${MINIMAL_MODE}; then
 fi
 
 if ${DISABLE_INTERRUPTOR}; then
-    overrides="$overrides -o ./cf-mysql-deployment/manifest-generation/bosh2.0/overrides/disable-interruptor.yml"
+    overrides="$overrides -o ./cf-mysql-ci/overrides/disable-interruptor.yml"
 fi
 
 if ${NO_ARBITRATOR}; then
