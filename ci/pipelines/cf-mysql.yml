@@ -178,6 +178,7 @@ jobs:
       build: cf-mysql-dockerfile/scripts/
 
 - name: test-unit
+  serial: true
   plan:
   - aggregate:
     - get: cf-mysql-ci
@@ -232,7 +233,6 @@ jobs:
       file: old_version/version
 
 - name: create-and-compile-release
-  serial: true
   plan:
   - aggregate:
     - get: cf-mysql-release
