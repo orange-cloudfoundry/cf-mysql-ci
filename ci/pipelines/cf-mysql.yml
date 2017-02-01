@@ -1,6 +1,6 @@
 ---
 #
-# Whenver the cf-mysql-release repo is updated, run a series of integration tests and upload the artifact
+# Whenever the cf-mysql-release repo is updated, run a series of integration tests and upload the artifact
 # as a release candidate. Merges the develop branch into the release-candidate branch.
 #
 
@@ -43,6 +43,20 @@ resources:
   source:
     uri: https://github.com/cloudfoundry-incubator/cf-mysql-ci.git
     branch: master
+
+- name: cf-mysql-deployment
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry/cf-mysql-deployment.git
+    branch: develop
+    private_key: {{git-writer-private-key}}
+
+- name: cf-mysql-deployment-master
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/cf-mysql-deployment.git
+    branch: master
+    private_key: {{git-writer-private-key}}
 
 - name: cf-mysql-release
   type: git
@@ -238,7 +252,9 @@ jobs:
     - get: cf-mysql-release
       trigger: true
       passed:
-        - test-unit
+      - test-unit
+    - get: cf-mysql-deployment
+      trigger: true
     - get: cf-mysql-ci
     - get: aws-bosh-stemcell
     - get: version
@@ -281,6 +297,9 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
+      passed: [create-and-compile-release]
+      trigger: true
+    - get: cf-mysql-deployment
       passed: [create-and-compile-release]
       trigger: true
     - put: aws-environment
@@ -375,6 +394,9 @@ jobs:
       version: every
     - get: cf-mysql-release
       passed: [deploy-to-full-bosh]
+    - get: cf-mysql-deployment
+      passed: [deploy-to-full-bosh]
+      trigger: true
     - get: cf-mysql-ci
     - get: deployments-configuration
     - get: version
@@ -500,6 +522,9 @@ jobs:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
       trigger: true
+    - get: cf-mysql-deployment
+      passed: [create-and-compile-release]
+      trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
@@ -604,6 +629,9 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       passed: [deploy-to-failover]
+    - get: cf-mysql-deployment
+      passed: [deploy-to-failover]
+      trigger: true
     - get: bosh-lite-environment
       passed: [deploy-to-failover]
       trigger: true
@@ -654,8 +682,15 @@ jobs:
       resource: cf-mysql-release
       trigger: true
       passed: [create-and-compile-release]
+    - get: cf-mysql-deployment-develop
+      resource: cf-mysql-deployment
+      trigger: true
+      passed: [create-and-compile-release]
     - get: cf-mysql-release
       resource: cf-mysql-master
+      trigger: true
+    - get: cf-mysql-deployment
+      resource: cf-mysql-deployment-master
       trigger: true
     - get: cf-mysql-ci
     - get: release-tarball
@@ -674,8 +709,6 @@ jobs:
   - aggregate:
     - task: make-manifest
       file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
-      params:
-        STANDALONE_MODE: true
     - do:
       - task: apply-terraform
         file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
@@ -716,7 +749,8 @@ jobs:
 
   - task: make-manifest
     file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
-    input_mapping: {cf-mysql-release: cf-mysql-release-develop}
+    input_mapping:
+      cf-mysql-deployment: cf-mysql-deployment-develop
 
   - put: bosh-2.0-bosh-lite-deployment
     params:
@@ -955,6 +989,20 @@ jobs:
       - test-arb-to-full-scaling
       - deploy-to-bosh-2.0
       trigger: true
+    - get: cf-mysql-deployment
+      passed:
+      # all bosh-lite pipelines
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - deploy-to-verify-cluster-schemas
+      - test-interruptor-prevents-data-loss
+      - test-interruptor-can-be-disabled
+      - test-bootstrap-on-standalone
+      - test-upgrade-from-previous
+      - test-arb-to-full-scaling
+      - deploy-to-bosh-2.0
+      trigger: true
     - get: deployments-configuration
     - get: cf-mysql-ci
     - get: aws-bosh-stemcell
@@ -1027,6 +1075,9 @@ jobs:
       trigger: true
       params:
         fetch: [release-candidate]
+    - get: cf-mysql-deployment
+      passed: [deploy-to-integration]
+      trigger: true
     - get: cf-mysql-ci
   - task: merge-and-push-to-release-candidate
     config:
@@ -1049,6 +1100,9 @@ jobs:
     do:
     - aggregate:
       - get: cf-mysql-release
+        passed: [create-and-compile-release]
+        trigger: true
+      - get: cf-mysql-deployment
         passed: [create-and-compile-release]
         trigger: true
       - get: cf-mysql-ci
