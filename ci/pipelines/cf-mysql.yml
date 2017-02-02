@@ -780,9 +780,6 @@ jobs:
       resource: cf-mysql-deployment
       trigger: true
       passed: [create-and-compile-release]
-    - get: cf-mysql-release
-      resource: cf-mysql-master
-      trigger: true
     - get: cf-mysql-deployment
       resource: cf-mysql-deployment-master
       trigger: true
