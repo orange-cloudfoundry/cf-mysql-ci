@@ -67,6 +67,20 @@ resources:
     secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
     key: version
 
+- name: cf-mysql-deployment-release-candidate
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/cf-mysql-deployment.git
+    branch: release-candidate
+    private_key: {{git-writer-private-key}}
+
+- name: cf-mysql-deployment-master
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/cf-mysql-deployment.git
+    branch: master
+    private_key: {{git-writer-private-key}}
+
 jobs:
   - name: final-release
     plan:
@@ -77,6 +91,8 @@ jobs:
             - develop
             - release-candidate
             submodules: none
+        - get: cf-mysql-deployment-release-candidate
+        - get: cf-mysql-deployment-master
         - get: cf-mysql-ci
         - get: deployments-core-services
         - get: cf-mysql-develop
@@ -113,10 +129,15 @@ jobs:
             RELEASE_SECRET_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
       - aggregate:
         - do:
-          - put: cf-mysql-master
-            params:
-              repository: output-repo/cf-mysql-release
-              tag: output-release-dir/cf-mysql-tag
+          - aggregate:
+            - put: cf-mysql-deployment-master
+              params:
+                repository: cf-mysql-deployment-release-candidate
+                tag: output-release-dir/cf-mysql-tag
+            - put: cf-mysql-master
+              params:
+                repository: output-repo/cf-mysql-release
+                tag: output-release-dir/cf-mysql-tag
           - put: publish-github-release
             params:
               name: output-release-dir/cf-mysql-tag
