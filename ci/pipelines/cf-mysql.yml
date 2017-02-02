@@ -4,6 +4,13 @@
 # as a release candidate. Merges the develop branch into the release-candidate branch.
 #
 
+#
+# Create a final release of cf-mysql release develop branch, pushing it to the master branch.
+# Triggered by uploading a new version of the release notes to s3.
+# Publish the release and provided release notes to github.
+# Upload the tar to s3 bucket.
+#
+
 ### RESOURCES
 resources:
 - name: cf-mysql-ci-image
@@ -194,6 +201,29 @@ resources:
     access_key_id: {{pcf-mysql-releases-reader-aws-access-key-id}}
     secret_access_key: {{pcf-mysql-releases-reader-aws-secret-access-key}}
     regexp: final/cf-mysql-([\d+\.]+)\.tgz
+
+- name: s3-resource-final-release
+  type: s3
+  source:
+    bucket: cf-mysql-releases
+    regexp: final/cf-mysql-(.*).tgz
+    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
+    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
+
+- name: publish-github-release
+  type: github-release
+  source:
+    user: cloudfoundry
+    repository: cf-mysql-release
+    access_token: {{git-writer-github-access-token}}
+
+- name: release-notes
+  type: s3
+  source:
+    bucket: cf-mysql-release-notes
+    regexp: RELEASE_NOTES_v(\d+)
+    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
+    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
 
 ### JOBS
 jobs:
@@ -1161,4 +1191,129 @@ jobs:
       params:
         repository: cf-mysql-deployment
 
+- name: final-release
+  plan:
+    - aggregate:
+      - get: cf-mysql-master
+        params:
+          fetch:
+          - develop
+          - release-candidate
+          submodules: none
+      - get: cf-mysql-deployment-release-candidate
+      - get: cf-mysql-deployment-master
+      - get: cf-mysql-ci
+      - get: deployments-configuration
+      - get: release-notes
+        trigger: true
+      - get: version
+        params:
+          bump: final
+    - task: final-release
+      config:
+        platform: *platform
+        image_resource: *image_resource
+        inputs:
+        - name: cf-mysql-ci
+        - name: cf-mysql-master
+          path: cf-mysql-release
+        - name: release-notes
+        outputs:
+          - name: output-release-dir
+          - name: output-repo
+        run:
+          path: cf-mysql-ci/scripts/publish/cut-final-release
+        params:
+          RELEASE_NOTES_DIRECTORY: release-notes
+          OUTPUT_RELEASE_ARTIFACTS: output-release-dir/release-artifacts
+          OUTPUT_RELEASE_TAG: output-release-dir/cf-mysql-tag
+          OUTPUT_RELEASE_NOTES: output-release-dir/generated-release-notes
+          OUTPUT_RELEASE_COMMIT: output-release-dir/git-commit
+          OUTPUT_REPO_DIRECTORY: output-repo
+          RELEASE_ACCESS_KEY: {{cf-mysql-publish-blobs-aws-access-key-id}}
+          RELEASE_SECRET_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
+    - aggregate:
+      - do:
+        - aggregate:
+          - put: cf-mysql-deployment-master
+            params:
+              repository: cf-mysql-deployment-release-candidate
+              tag: output-release-dir/cf-mysql-tag
+          - put: cf-mysql-master
+            params:
+              repository: output-repo/cf-mysql-release
+              tag: output-release-dir/cf-mysql-tag
+        - put: publish-github-release
+          params:
+            name: output-release-dir/cf-mysql-tag
+            tag: output-release-dir/cf-mysql-tag
+            body: output-release-dir/generated-release-notes
+            commitish: output-release-dir/git-commit
+            globs:
+            - output-release-dir/release-artifacts/*.tgz
+      - put: cf-mysql-ci
+        params:
+          repository: cf-mysql-ci
+          tag: output-release-dir/cf-mysql-tag
+          only_tag: true
+          tag_prefix: cf-mysql-
+      - put: deployments-configuration
+        params:
+          repository: deployments-configuration
+          tag: output-release-dir/cf-mysql-tag
+          only_tag: true
+          tag_prefix: cf-mysql-
+      - put: s3-resource-final-release
+        params:
+          file: output-release-dir/release-artifacts/*.tgz
+    - put: version
+      params:
+        file: version/version
 
+- name: merge-master-into-develop
+  plan:
+  - aggregate:
+    - get: cf-mysql-master
+      trigger: true
+      params:
+        submodules: none
+    - get: cf-mysql-develop
+      resource: cf-mysql-release
+      params:
+        fetch:
+        - master
+    - get: cf-mysql-ci
+  - task: merge-master-into-develop
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: cf-mysql-develop
+        path: cf-mysql-release
+      run:
+        path: cf-mysql-ci/scripts/publish/merge-and-push
+      params:
+        SOURCE_BRANCH: develop
+        BRANCH_TO_MERGE: master
+        GIT_PRIVATE_KEY: {{git-writer-private-key}}
+
+- name: bump-minor
+  plan:
+  - aggregate:
+    - get: version
+      params:
+        bump: minor
+  - put: version
+    params:
+      file: version/version
+
+- name: bump-major
+  plan:
+  - aggregate:
+    - get: version
+      params:
+        bump: major
+  - put: version
+    params:
+      file: version/version
