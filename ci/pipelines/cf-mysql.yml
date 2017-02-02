@@ -484,8 +484,68 @@ jobs:
 ### SCALING
 - name: test-scaling
   plan:
-  - *ondemand-setup
-  - *run-smoke-tests-ondemand
+  - &ondemand-setup
+    do:
+    - aggregate:
+      - get: cf-mysql-release
+        passed: [create-and-compile-release]
+        trigger: true
+      - get: cf-mysql-deployment
+        passed: [create-and-compile-release]
+        trigger: true
+      - get: cf-mysql-ci
+      - get: compiled-release-tarball
+        resource: cf-mysql-compiled-release
+        passed: [create-and-compile-release]
+      - get: bosh-deployment
+        resource: bosh-deployment-repo
+      - get: bosh-lite-stemcell
+      - get: deployments
+        resource: deployments-configuration
+      - get: stemcell
+        resource: bosh-lite-stemcell
+      - get: version
+        passed: [create-and-compile-release]
+    - aggregate:
+      - task: make-manifest
+        file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+      - task: apply-terraform
+        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+    - task: create-bosh-lite
+      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+      input_mapping: {deployments: deployments-terraformed}
+      params:
+        PROJECT_ID: {{gcp-bosh-lite-project-id}}
+        ZONE: {{gcp-bosh-lite-zone}}
+        NETWORK: {{gcp-bosh-lite-network}}
+        SUBNETWORK: {{gcp-bosh-lite-subnetwork}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+    - &ondemand-deploy-manifest
+      put: bosh-2.0-bosh-lite-deployment
+      params:
+        manifest: deployment-manifest/deployment.yml
+        releases:
+        - compiled-release-tarball/*.tgz
+        stemcells:
+        - bosh-lite-stemcell/*.tgz
+        target_file: bosh-lite-info/external-ip
+  - &run-smoke-tests-ondemand
+    task: run-smoke-tests
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+        - name: cf-mysql-ci
+        - name: bosh-lite-info
+      params:
+        BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        ENV_TARGET_FILE: bosh-lite-info/director-url
+        BOSH_DEPLOYMENT: cf-mysql
+        ERRAND: smoke-tests
+      run:
+        path: cf-mysql-ci/scripts/bosh/run_errand
   - task: run-scaling-tests
     config:
       platform: *platform
@@ -502,7 +562,27 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-info/director-url
       run:
         path: cf-mysql-ci/scripts/scaling/scaling-test-ondemand
-  - *ondemand-teardown
+  - &ondemand-teardown
+      do:
+      - task: delete-deployment
+        config:
+          platform: *platform
+          image_resource: *image_resource
+          inputs:
+          - name: cf-mysql-ci
+          - name: bosh-lite-info
+          params:
+            BOSH_CLIENT: {{bosh-lite-username}}
+            BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+            BOSH_DEPLOYMENT: cf-mysql
+            ENV_TARGET_FILE: bosh-lite-info/external-ip
+          run:
+            path: cf-mysql-ci/scripts/bosh/delete_deployment
+      - task: destroy-bosh-lite
+        file: cf-mysql-ci/ci/tasks/destroy-bosh-lite.yml
+      - task: destroy-terraform
+        file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
+        input_mapping: {deployments: deployments-terraformed}
 
 ### ARB-TO-FULL-SCALING
 # Verify that replication works in several different topologies
@@ -987,7 +1067,6 @@ jobs:
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
-      - deploy-to-bosh-2.0
       trigger: true
     - get: cf-mysql-deployment
       passed:
@@ -1001,7 +1080,6 @@ jobs:
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
-      - deploy-to-bosh-2.0
       trigger: true
     - get: deployments-configuration
     - get: cf-mysql-ci
@@ -1024,7 +1102,6 @@ jobs:
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
-      - deploy-to-bosh-2.0
   - task: make-manifest
     config:
       platform: *platform
@@ -1087,89 +1164,4 @@ jobs:
       params:
         repository: cf-mysql-deployment
 
-### BOSH 2.0
-- name: deploy-to-bosh-2.0
-  plan:
-  - &ondemand-setup
-    do:
-    - aggregate:
-      - get: cf-mysql-release
-        passed: [create-and-compile-release]
-        trigger: true
-      - get: cf-mysql-deployment
-        passed: [create-and-compile-release]
-        trigger: true
-      - get: cf-mysql-ci
-      - get: compiled-release-tarball
-        resource: cf-mysql-compiled-release
-        passed: [create-and-compile-release]
-      - get: bosh-deployment
-        resource: bosh-deployment-repo
-      - get: bosh-lite-stemcell
-      - get: deployments
-        resource: deployments-configuration
-      - get: stemcell
-        resource: bosh-lite-stemcell
-      - get: version
-        passed: [create-and-compile-release]
-    - aggregate:
-      - task: make-manifest
-        file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
-      - task: apply-terraform
-        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
-    - task: create-bosh-lite
-      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
-      input_mapping: {deployments: deployments-terraformed}
-      params:
-        PROJECT_ID: {{gcp-bosh-lite-project-id}}
-        ZONE: {{gcp-bosh-lite-zone}}
-        NETWORK: {{gcp-bosh-lite-network}}
-        SUBNETWORK: {{gcp-bosh-lite-subnetwork}}
-        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
-    - &ondemand-deploy-manifest
-      put: bosh-2.0-bosh-lite-deployment
-      params:
-        manifest: deployment-manifest/deployment.yml
-        releases:
-        - compiled-release-tarball/*.tgz
-        stemcells:
-        - bosh-lite-stemcell/*.tgz
-        target_file: bosh-lite-info/external-ip
-  - &run-smoke-tests-ondemand
-    task: run-smoke-tests
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: cf-mysql-ci
-        - name: bosh-lite-info
-      params:
-        BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-        BOSH_CLIENT: {{bosh-lite-username}}
-        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
-        ENV_TARGET_FILE: bosh-lite-info/director-url
-        BOSH_DEPLOYMENT: cf-mysql
-        ERRAND: smoke-tests
-      run:
-        path: cf-mysql-ci/scripts/bosh/run_errand
-  - &ondemand-teardown
-    do:
-    - task: delete-deployment
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-        - name: cf-mysql-ci
-        - name: bosh-lite-info
-        params:
-          BOSH_CLIENT: {{bosh-lite-username}}
-          BOSH_CLIENT_SECRET: {{bosh-lite-password}}
-          BOSH_DEPLOYMENT: cf-mysql
-          ENV_TARGET_FILE: bosh-lite-info/external-ip
-        run:
-          path: cf-mysql-ci/scripts/bosh/delete_deployment
-    - task: destroy-bosh-lite
-      file: cf-mysql-ci/ci/tasks/destroy-bosh-lite.yml
-    - task: destroy-terraform
-      file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
-      input_mapping: {deployments: deployments-terraformed}
+
