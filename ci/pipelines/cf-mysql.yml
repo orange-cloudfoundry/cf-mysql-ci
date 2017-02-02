@@ -58,6 +58,13 @@ resources:
     branch: master
     private_key: {{git-writer-private-key}}
 
+- name: cf-mysql-deployment-release-candidate
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/cf-mysql-deployment.git
+    branch: release-candidate
+    private_key: {{git-writer-private-key}}
+
 - name: cf-mysql-release
   type: git
   source:
@@ -1065,19 +1072,23 @@ jobs:
       passed: [deploy-to-integration]
       trigger: true
     - get: cf-mysql-ci
-  - task: merge-and-push-to-release-candidate
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: cf-mysql-ci
-        - name: cf-mysql-release
-      run:
-        path: cf-mysql-ci/scripts/publish/merge-and-push
+  - aggregate:
+    - task: merge-and-push-to-release-candidate
+      config:
+        platform: *platform
+        image_resource: *image_resource
+        inputs:
+          - name: cf-mysql-ci
+          - name: cf-mysql-release
+        run:
+          path: cf-mysql-ci/scripts/publish/merge-and-push
+        params:
+          SOURCE_BRANCH: release-candidate
+          BRANCH_TO_MERGE: develop
+          GIT_PRIVATE_KEY: {{git-writer-private-key}}
+    - put: cf-mysql-deployment-release-candidate
       params:
-        SOURCE_BRANCH: release-candidate
-        BRANCH_TO_MERGE: develop
-        GIT_PRIVATE_KEY: {{git-writer-private-key}}
+        repository: cf-mysql-deployment
 
 ### BOSH 2.0
 - name: deploy-to-bosh-2.0
