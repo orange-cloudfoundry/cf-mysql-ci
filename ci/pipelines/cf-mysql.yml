@@ -741,7 +741,7 @@ jobs:
       - name: cf-mysql-ci
       params:
         MYSQL_TUNNEL_USERNAME: jumpbox
-        MYSQL_VM_IP: 10.244.7.4
+        MYSQL_VM_IP: 10.244.7.3
         ENV_TARGET_FILE: bosh-lite-info/external-ip
         SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
       run:
@@ -773,7 +773,7 @@ jobs:
       - name: cf-mysql-ci
       params:
         ENV_TARGET_FILE: bosh-lite-info/external-ip
-        MYSQL_VM_IP: 10.244.7.4
+        MYSQL_VM_IP: 10.244.7.3
       run:
         path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data-ondemand
 
