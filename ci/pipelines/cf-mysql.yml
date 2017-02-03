@@ -1201,6 +1201,7 @@ jobs:
           - release-candidate
           submodules: none
       - get: cf-mysql-deployment-release-candidate
+        passed: [promote-to-rc]
       - get: cf-mysql-deployment-master
       - get: cf-mysql-ci
       - get: deployments-configuration
