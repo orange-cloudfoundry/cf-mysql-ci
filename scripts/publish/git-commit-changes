@@ -1,0 +1,27 @@
+#!/bin/bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CI_DIR="$(cd "${MY_DIR}/../.." && pwd )"
+WORKSPACE_DIR="$(cd "${CI_DIR}/.." && pwd )"
+REPO_DIR="$(cd "${WORKSPACE_DIR}/${REPO_DIR:?}" && pwd )"
+
+OUTPUT_DIR="${OUTPUT_DIR:?}"
+GIT_COMMIT_MESSAGE="${GIT_COMMIT_MESSAGE:?}"
+
+pushd ${REPO_DIR}
+
+  git config --global user.email "core-services-bot@pivotal.io"
+  git config --global user.name "Final Release Builder"
+
+  git add -A .
+
+  if ! git diff-index --quiet HEAD; then
+    git commit -m "${GIT_COMMIT_MESSAGE}"
+  fi
+
+popd
+
+cd ${WORKSPACE_DIR}
+cp -rf ${REPO_DIR} ${OUTPUT_DIR}
