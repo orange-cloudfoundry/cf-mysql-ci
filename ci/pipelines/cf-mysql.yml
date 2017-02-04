@@ -445,6 +445,9 @@ jobs:
     - get: deployments-configuration
     - get: version
       passed: [deploy-to-full-bosh]
+    - get: compiled-release-tarball
+      resource: cf-mysql-compiled-release
+      passed: [deploy-to-full-bosh]
   - task: run-smoke-tests
     config:
       platform: *platform
@@ -762,6 +765,9 @@ jobs:
       version: every
     - get: bosh-lite-repo
     - get: version
+      passed: [deploy-to-failover]
+    - get: compiled-release-tarball
+      resource: cf-mysql-compiled-release
       passed: [deploy-to-failover]
   - &smoke-tests-bosh-lite
     task: run-smoke-tests
@@ -1117,7 +1123,16 @@ jobs:
         acquire: true
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
-      passed: [create-and-compile-release]
+      passed:
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - deploy-to-verify-cluster-schemas
+      - test-interruptor-prevents-data-loss
+      - test-interruptor-can-be-disabled
+      - test-bootstrap-on-standalone
+      - test-upgrade-from-previous
+      - test-arb-to-full-scaling
     - get: version
       passed:
       - test-full-bosh
