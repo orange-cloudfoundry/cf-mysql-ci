@@ -16,7 +16,7 @@ outputs:
 - name: updated-repo
 
 run:
-  path: runtime-ci/scripts/ci/commit-generated-manifest/task
+  path: cf-mysql-ci/scripts/ci/commit-generated-manifest/task
 
 params:
   MANIFEST_NAME:
