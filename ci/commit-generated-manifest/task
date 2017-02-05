@@ -1,0 +1,35 @@
+#!/bin/bash -exu
+
+set -o pipefail
+
+function main() {
+  local root_dir
+  root_dir="${1}"
+
+  cp ./manifest/"${MANIFEST_NAME}" ./repo/"${MANIFEST_DESTINATION}"
+  pushd repo > /dev/null
+    if [[ -n $(git status ${MANIFEST_DESTINATION} --porcelain) ]]; then
+      git config user.name "CF CORE SERVICES BOT"
+      git config user.email "pivotal-core-services-eng+gitbot@pivotal.io"
+
+      git add ./"${MANIFEST_DESTINATION}"
+
+      local commit_message
+      commit_message=$(cat ${root_dir}/commit-message/${COMMIT_MESSAGE_PATH})
+
+      if [ -z "${commit_message}" ]; then
+        commit_message="No changes"
+      fi
+
+      git commit -m "${commit_message}"
+
+      git status
+      git show --color | cat
+    fi
+  popd > /dev/null
+
+  shopt -s dotglob
+  cp -R repo/* updated-repo
+}
+
+main "${PWD}"
