@@ -1,0 +1,26 @@
+
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: relintdockerhubpushbot/create-binaries-manifest-section
+
+inputs:
+- name: runtime-ci
+- name: deployment-configuration
+- name: stemcell
+- name: cf-mysql-release
+
+outputs:
+- name: deployment-manifest
+- name: commit-message
+
+run:
+  path: runtime-ci/scripts/ci/create-binaries-manifest-section/task
+
+params:
+  DEPLOYMENT_MANIFEST_PATH: cf-mysql-deployment.yml
+  DEPLOYMENT_CONFIGURATION_PATH: cf-mysql-deployment.yml
+  COMMIT_MESSAGE_PATH: commit-message.txt
