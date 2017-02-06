@@ -39,7 +39,7 @@ pushd "${RELEASE_DIR}"
   git merge --no-edit --ff-only release-candidate # will always fast-forward
   git submodule foreach --recursive git submodule sync && git submodule update --init --recursive
 
-  VERSION=$(cat ${WORKSPACE_DIR}/version/version)
+  VERSION=$(cat ${WORKSPACE_DIR}/release-notes/version)
   VERSION_TAG="v${VERSION}"
 
   write_upload_keys
