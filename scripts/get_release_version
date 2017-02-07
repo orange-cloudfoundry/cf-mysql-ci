@@ -1,0 +1,11 @@
+#!/bin/bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
+OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-version}"
+
+source "${MY_DIR}/utils.sh"
+
+echo $(release_version) > ${OUTPUT_DIR}/version

@@ -37,13 +37,8 @@ sslip_from_ip () {
 # release_version returns the version of a bosh release from its
 # tarball or the version file.
 release_version() {
-    if [ -f "${RELEASE_TARBALL_DIR}/version" ]; then
-      release_manifest=$(tar --wildcards -zxOf "${RELEASE_TARBALL_DIR}/${RELEASE_FILE}" *release.MF)
-      version=$(echo "${release_manifest}" | grep "^version:" | sed 's/version: \(.*\)/\1/' | tr -d '"' | tr -d "'")
-    else
-      version=$(echo ${RELEASE_FILE} | sed 's/.*-\([0-9].*\).tgz/\1/')
-    fi
-    echo "${version}"
+    release_manifest=$(tar --wildcards -zxOf "${RELEASE_TARBALL_DIR}/${RELEASE_FILE}" *release.MF)
+    echo $(echo "${release_manifest}" | grep "^version:" | sed 's/version: \(.*\)/\1/' | tr -d '"' | tr -d "'")
 }
 
 # release_name returns the name of a bosh release from its
