@@ -45,7 +45,10 @@ pushd "${RELEASE_DIR}"
   write_upload_keys
 
   mkdir -p "${OUTPUT_RELEASE_ARTIFACTS}"
-  gobosh -n create-release --tarball="${OUTPUT_RELEASE_ARTIFACTS}/cf-mysql-${VERSION}.tgz" --final
+  gobosh -n create-release \
+    --tarball="${OUTPUT_RELEASE_ARTIFACTS}/cf-mysql-${VERSION}.tgz" \
+    --final \
+    --version="${VERSION}"
 
   git add .
   git commit -m "Final release version ${VERSION_TAG}"

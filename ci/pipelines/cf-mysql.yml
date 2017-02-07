@@ -1249,42 +1249,28 @@ jobs:
           RELEASE_ACCESS_KEY: {{cf-mysql-publish-blobs-aws-access-key-id}}
           RELEASE_SECRET_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
     - aggregate:
-      - do:
-        - aggregate:
-          - put: cf-mysql-deployment-master
-            params:
-              repository: cf-mysql-deployment-release-candidate
-              tag: output-release-dir/cf-mysql-tag
-          - put: cf-mysql-master
-            params:
-              repository: output-repo/cf-mysql-release
-              tag: output-release-dir/cf-mysql-tag
-        - put: publish-github-release
-          params:
-            name: output-release-dir/cf-mysql-tag
-            tag: output-release-dir/cf-mysql-tag
-            body: output-release-dir/generated-release-notes
-            commitish: output-release-dir/git-commit
-            globs:
-            - output-release-dir/release-artifacts/*.tgz
-      - put: cf-mysql-ci
+      - put: cf-mysql-deployment-master
         params:
-          repository: cf-mysql-ci
+          repository: cf-mysql-deployment-release-candidate
           tag: output-release-dir/cf-mysql-tag
-          only_tag: true
-          tag_prefix: cf-mysql-
-      - put: deployments-configuration
+      - put: cf-mysql-master
         params:
-          repository: deployments-configuration
+          repository: output-repo/cf-mysql-release
           tag: output-release-dir/cf-mysql-tag
-          only_tag: true
-          tag_prefix: cf-mysql-
+      - put: publish-github-release
+        params:
+          name: output-release-dir/cf-mysql-tag
+          tag: output-release-dir/cf-mysql-tag
+          body: output-release-dir/generated-release-notes
+          commitish: output-release-dir/git-commit
+          globs:
+          - output-release-dir/release-artifacts/*.tgz
       - put: s3-resource-final-release
         params:
           file: output-release-dir/release-artifacts/*.tgz
-    - put: version
-      params:
-        file: version/version
+      - put: version
+        params:
+          file: version/version
 
 - name: merge-master-into-develop
   plan:
