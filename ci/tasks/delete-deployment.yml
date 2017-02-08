@@ -1,0 +1,20 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: cloudfoundry/cf-mysql-ci
+
+inputs:
+- name: cf-mysql-ci
+- name: bosh-lite-environment
+
+run:
+  path: cf-mysql-ci/scripts/bosh/delete_deployment
+
+params:
+  ENV_TARGET_FILE: bosh-lite-environment/name
+  ENV_METADATA: bosh-lite-environment/metadata
+  BOSH_DEPLOYMENT: ~
+
