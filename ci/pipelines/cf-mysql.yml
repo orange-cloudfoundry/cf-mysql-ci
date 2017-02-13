@@ -728,7 +728,7 @@ jobs:
       target_file: bosh-lite-environment/name
       manifest: deployment-manifest/deployment.yml
       releases:
-      - routing-release
+      - routing-release/*.tgz
       - compiled-release-tarball/*.tgz
       stemcells: [bosh-lite-stemcell/*.tgz]
   - &broker-registrar-bosh-lite
