@@ -417,7 +417,7 @@ jobs:
       target_file: aws-environment/name
       manifest: deployment-manifest/deployment.yml
       releases:
-      - routing-release/*.tgx
+      - routing-release/*.tgz
       - compiled-release-tarball/*.tgz
       stemcells: [aws-bosh-stemcell/*.tgz]
   - task: run-broker-registrar
