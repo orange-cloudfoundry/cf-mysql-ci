@@ -549,7 +549,6 @@ jobs:
         resource: deployments-configuration
       - get: stemcell
         resource: bosh-lite-stemcell
-      - get: routing-release
       - get: version
         passed: [create-and-compile-release]
     - aggregate:
@@ -571,7 +570,6 @@ jobs:
       params:
         manifest: deployment-manifest/deployment.yml
         releases:
-        - routing-release/*.tgz
         - compiled-release-tarball/*.tgz
         stemcells:
         - bosh-lite-stemcell/*.tgz
@@ -831,7 +829,6 @@ jobs:
     - get: stemcell
       resource: bosh-lite-stemcell
     - get: aws-bosh-stemcell
-    - get: routing-release
     - get: version
       passed: [create-and-compile-release]
     - get: cf-mysql-compiled-release
@@ -1138,14 +1135,7 @@ jobs:
     - get: routing-release
       passed:
       - test-full-bosh
-      - test-scaling
       - test-failover
-      - deploy-to-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
-      - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
-      - test-upgrade-from-previous
-      - test-arb-to-full-scaling
     - get: version
       passed:
       - test-full-bosh
