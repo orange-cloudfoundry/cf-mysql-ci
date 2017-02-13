@@ -785,8 +785,6 @@ jobs:
 
   - task: make-manifest
     file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
-    input_mapping:
-      cf-mysql-deployment: cf-mysql-deployment-develop
 
   - put: bosh-2.0-bosh-lite-deployment
     params:
