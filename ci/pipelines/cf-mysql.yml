@@ -51,6 +51,11 @@ resources:
     uri: https://github.com/cloudfoundry-incubator/cf-mysql-ci.git
     branch: master
 
+- name: routing-release
+  type: bosh-io-release
+  source:
+    repository: cloudfoundry-incubator/cf-routing-release
+
 - name: cf-mysql-deployment
   type: git
   source:
@@ -356,6 +361,7 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+    - get: routing-release
     - get: version
       passed: [create-and-compile-release]
   - try:
@@ -410,7 +416,9 @@ jobs:
     params:
       target_file: aws-environment/name
       manifest: deployment-manifest/deployment.yml
-      releases: [compiled-release-tarball/*.tgz]
+      releases:
+      - routing-release/*.tgx
+      - compiled-release-tarball/*.tgz
       stemcells: [aws-bosh-stemcell/*.tgz]
   - task: run-broker-registrar
     config:
@@ -447,6 +455,8 @@ jobs:
       passed: [deploy-to-full-bosh]
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
+      passed: [deploy-to-full-bosh]
+    - get: routing-release
       passed: [deploy-to-full-bosh]
   - task: run-smoke-tests
     config:
@@ -537,6 +547,7 @@ jobs:
         resource: deployments-configuration
       - get: stemcell
         resource: bosh-lite-stemcell
+      - get: routing-release
       - get: version
         passed: [create-and-compile-release]
     - aggregate:
@@ -558,6 +569,7 @@ jobs:
       params:
         manifest: deployment-manifest/deployment.yml
         releases:
+        - routing-release/*.tgz
         - compiled-release-tarball/*.tgz
         stemcells:
         - bosh-lite-stemcell/*.tgz
@@ -661,6 +673,7 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+    - get: routing-release
     - get: version
       passed: [create-and-compile-release]
   - try: &deregister-and-purge-instances-bosh-lite
@@ -712,7 +725,9 @@ jobs:
     params:
       target_file: bosh-lite-environment/name
       manifest: deployment-manifest/deployment.yml
-      releases: [compiled-release-tarball/*.tgz]
+      releases:
+      - routing-release
+      - compiled-release-tarball/*.tgz
       stemcells: [bosh-lite-stemcell/*.tgz]
   - &broker-registrar-bosh-lite
     task: run-broker-registrar
@@ -746,10 +761,12 @@ jobs:
       trigger: true
       version: every
     - get: bosh-lite-repo
-    - get: version
-      passed: [deploy-to-failover]
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
+      passed: [deploy-to-failover]
+    - get: routing-release
+      passed: [deploy-to-failover]
+    - get: version
       passed: [deploy-to-failover]
   - &smoke-tests-bosh-lite
     task: run-smoke-tests
@@ -812,6 +829,7 @@ jobs:
     - get: stemcell
       resource: bosh-lite-stemcell
     - get: aws-bosh-stemcell
+    - get: routing-release
     - get: version
       passed: [create-and-compile-release]
     - get: cf-mysql-compiled-release
@@ -1115,6 +1133,17 @@ jobs:
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
+    - get: routing-release
+      passed:
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - deploy-to-verify-cluster-schemas
+      - test-interruptor-prevents-data-loss
+      - test-interruptor-can-be-disabled
+      - test-bootstrap-on-standalone
+      - test-upgrade-from-previous
+      - test-arb-to-full-scaling
     - get: version
       passed:
       - test-full-bosh
@@ -1148,7 +1177,9 @@ jobs:
     params:
       target_file: integration-environment/name
       manifest: deployment-manifest/deployment.yml
-      releases: [compiled-release-tarball/*.tgz]
+      releases:
+      - routing-release/*.tgz
+      - compiled-release-tarball/*.tgz
       stemcells: [aws-bosh-stemcell/*.tgz]
   - put: integration-environment
     params:
