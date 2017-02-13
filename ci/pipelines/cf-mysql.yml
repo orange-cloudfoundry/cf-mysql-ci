@@ -247,6 +247,8 @@ jobs:
     - get: cf-mysql-ci
     - get: cf-mysql-release
       trigger: true
+    - get: cf-mysql-deployment
+      trigger: true
     - get: old_version
       resource: version
       params:
@@ -300,10 +302,10 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       trigger: true
-      passed:
-      - test-unit
+      passed: [test-unit]
     - get: cf-mysql-deployment
       trigger: true
+      passed: [test-unit]
     - get: cf-mysql-ci
     - get: aws-bosh-stemcell
     - get: version
