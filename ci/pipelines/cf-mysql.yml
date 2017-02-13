@@ -698,11 +698,11 @@ jobs:
   - &delete-deployment-bosh-lite
     aggregate:
     - task: delete-cf-mysql-deployment
-      file: cf-mysql-ci/tasks/delete-deployment.yml
+      file: cf-mysql-ci/ci/tasks/delete-deployment.yml
       params:
         BOSH_DEPLOYMENT: cf-mysql
     - task: delete-cf-warden-mysql-deployment
-      file: cf-mysql-ci/tasks/delete-deployment.yml
+      file: cf-mysql-ci/ci/tasks/delete-deployment.yml
       params:
         BOSH_DEPLOYMENT: cf-warden-mysql
   - &make-manifest-bosh-lite
