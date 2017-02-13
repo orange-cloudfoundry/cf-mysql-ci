@@ -28,7 +28,7 @@ stop_all_nodes() {
           -i "${SSH_KEY_FILE}" \
           -o StrictHostKeyChecking=no \
           "jumpbox@${bosh_ip}" \
-          "curl -vk -X POST ${GALERA_HEALTHCHECK_USERNAME}:password@${MYSQL_NODE}:9200/stop_mysql"
+          "curl -vkf -X POST ${GALERA_HEALTHCHECK_USERNAME}:password@${MYSQL_NODE}:9200/stop_mysql"
     done
   popd
 }
