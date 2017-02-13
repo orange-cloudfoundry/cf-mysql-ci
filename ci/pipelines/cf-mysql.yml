@@ -904,6 +904,7 @@ jobs:
         path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data-ondemand
 
   - *run-smoke-tests-ondemand
+  - *ondemand-teardown
 
 ### STANDALONE FOR BOOTSTRAP
 - name: test-bootstrap-on-standalone
