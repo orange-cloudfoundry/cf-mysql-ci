@@ -20,6 +20,7 @@ source ${CI_DIR}/scripts/utils.sh
 : "${USE_SMALL_PLANS:=false}"
 : "${USE_HTTPS:=true}"
 : "${PROXY_COUNT:=2}"
+: "${NEW_STYLE_PROXY_URL:=false}"
 
 # optional, only needed for failover test
 : "${BROKER_0_REMOTE_IP:=}"
@@ -58,9 +59,17 @@ fi
 if [ "${PROXY_COUNT}" == 0 ]; then
   DASHBOARD_URLS="[]"
 elif [ "${PROXY_COUNT}" == 1 ]; then
-  DASHBOARD_URLS="[\"https://proxy-0-p-mysql.${DOMAIN}\"]"
+  if [ "${NEW_STYLE_PROXY_URL}" == "true" ]; then
+    DASHBOARD_URLS="[\"https://0-proxy-p-mysql.${DOMAIN}\"]"
+  else
+    DASHBOARD_URLS="[\"https://proxy-0-p-mysql.${DOMAIN}\"]"
+  fi
 else
-  DASHBOARD_URLS="[\"https://proxy-0-p-mysql.${DOMAIN}\", \"https://proxy-1-p-mysql.${DOMAIN}\"]"
+  if [ "${NEW_STYLE_PROXY_URL}" == "true" ]; then
+    DASHBOARD_URLS="[\"https://0-proxy-p-mysql.${DOMAIN}\", \"https://0-proxy-p-mysql.${DOMAIN}\"]"
+  else
+    DASHBOARD_URLS="[\"https://proxy-0-p-mysql.${DOMAIN}\", \"https://proxy-1-p-mysql.${DOMAIN}\"]"
+  fi
 fi
 
 cat > ${CONFIG_LOCATION} <<EOF
