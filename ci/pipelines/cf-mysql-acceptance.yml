@@ -59,6 +59,11 @@ resources:
     deployment: cf-mysql
     ignore_ssl: true
 
+- name: routing-release
+  type: bosh-io-release
+  source:
+    repository: cloudfoundry-incubator/cf-routing-release
+
 jobs:
 - name: claim-aws-environment
   plan:
@@ -137,6 +142,7 @@ jobs:
         version: every
       - get: release-tarball
         resource: cf-mysql-rc-bucket
+      - get: routing-release
     - task: make-manifest
       config:
         platform: linux
@@ -182,7 +188,9 @@ jobs:
       params:
         target_file: aws-acceptance-environment/name
         manifest: deployment-manifest/deployment.yml
-        releases: [compiled-release-tarball/*.tgz]
+        releases:
+        - compiled-release-tarball/*.tgz
+        - routing-release/*.tgz
         stemcells: [aws-bosh-stemcell/*.tgz]
 
 - name: run-smoke-tests-acceptance
