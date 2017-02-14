@@ -199,14 +199,6 @@ resources:
     key: version
     initial_version: 33.0.0
 
-- name: cf-mysql-release-final-release
-  type: s3
-  source:
-    bucket: pcf-mysql-releases
-    access_key_id: {{pcf-mysql-releases-reader-aws-access-key-id}}
-    secret_access_key: {{pcf-mysql-releases-reader-aws-secret-access-key}}
-    regexp: final/cf-mysql-([\d+\.]+)\.tgz
-
 - name: s3-resource-final-release
   type: s3
   source:
@@ -821,7 +813,7 @@ jobs:
       trigger: true
     - get: cf-mysql-ci
     - get: release-tarball
-      resource: cf-mysql-release-final-release
+      resource: s3-resource-final-release
     - get: bosh-deployment
       resource: bosh-deployment-repo
     - get: bosh-lite-stemcell
