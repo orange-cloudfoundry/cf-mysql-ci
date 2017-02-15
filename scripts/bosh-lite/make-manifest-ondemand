@@ -10,7 +10,7 @@ set -eux
 operations=""
 
 if ${MINIMAL_MODE}; then
-    operations="$operations -o ./cf-mysql-deployment/operations/minimal-mode.yml"
+    operations="$operations -o ./cf-mysql-ci/operations/minimal-mode.yml"
 fi
 
 if ${DISABLE_INTERRUPTOR}; then
