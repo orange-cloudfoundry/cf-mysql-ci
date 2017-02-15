@@ -10,7 +10,7 @@ cf_mysql_deployment_dir="${workspace_dir}/cf-mysql-deployment"
 OUTPUT_DIR="${workspace_dir}/${OUTPUT_DIR}"
 BOSH_DEPLOYMENT_DIR="${workspace_dir}/${BOSH_DEPLOYMENT_DIR}"
 DEPLOYMENTS_DIR="${workspace_dir}/${DEPLOYMENTS_DIR}"
-STEMCELL_DIR="${workspace_dir}/${STEMCELL_DIR}"
+stemcell_dir="${workspace_dir}/stemcell"
 
 : "${PROJECT_ID}"
 : "${ZONE}"
@@ -56,7 +56,7 @@ gobosh -n interpolate "${OUTPUT_DIR}/credentials.yml" \
   --path /jumpbox_ssh/private_key > "${OUTPUT_DIR}/jumpbox-private-key"
 chmod 600 "${OUTPUT_DIR}/jumpbox-private-key"
 
-gobosh -n upload-stemcell "${STEMCELL_DIR}"/*.tgz \
+gobosh -n upload-stemcell "${stemcell_dir}"/*.tgz \
   -e "$(cat "${OUTPUT_DIR}/external-ip")" \
   --client admin \
   --client-secret "${BOSH_CLIENT_SECRET}" \

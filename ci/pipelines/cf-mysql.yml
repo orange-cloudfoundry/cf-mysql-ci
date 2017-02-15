@@ -537,7 +537,6 @@ jobs:
         passed: [create-and-compile-release]
       - get: bosh-deployment
         resource: bosh-deployment-repo
-      - get: bosh-lite-stemcell
       - get: deployments
         resource: deployments-configuration
       - get: stemcell
@@ -565,7 +564,7 @@ jobs:
         releases:
         - compiled-release-tarball/*.tgz
         stemcells:
-        - bosh-lite-stemcell/*.tgz
+        - stemcell/*.tgz
         target_file: bosh-lite-info/external-ip
   - &run-smoke-tests-ondemand
     task: run-smoke-tests
@@ -816,7 +815,6 @@ jobs:
       resource: s3-resource-final-release
     - get: bosh-deployment
       resource: bosh-deployment-repo
-    - get: bosh-lite-stemcell
     - get: deployments
       resource: deployments-configuration
     - get: stemcell
@@ -877,7 +875,7 @@ jobs:
       releases:
       - cf-mysql-compiled-release/*.tgz
       stemcells:
-      - bosh-lite-stemcell/*.tgz
+      - stemcell/*.tgz
       target_file: bosh-lite-info/external-ip
 
   - task: persistence-test-data-read
