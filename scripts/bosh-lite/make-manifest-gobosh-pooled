@@ -6,8 +6,11 @@ set -eux
 : "${DISABLE_INTERRUPTOR:=false}"
 : "${NO_ARBITRATOR:=false}"
 : "${TINY_GCACHE:=false}"
+: "${ADD_BROKERS:=false}"
 
 operations=""
+
+domain=$(cat bosh-lite-environment/metadata | jq -r .domain)
 
 if ${MINIMAL_MODE}; then
     operations="$operations -o ./cf-mysql-ci/operations/minimal-mode.yml"
@@ -25,9 +28,18 @@ if ${TINY_GCACHE}; then
     operations="$operations -o ./cf-mysql-ci/operations/tiny-gcache.yml"
 fi
 
+if ${ADD_BROKERS}; then
+    operations="$operations -o ./cf-mysql-deployment/operations/add-broker.yml"
+    operations="$operations -o ./cf-mysql-deployment/operations/register-proxy-route.yml"
+    operations="$operations -o ./cf-mysql-deployment/operations/disable-cross-deployment-links.yml"
+fi
+
 gobosh interpolate \
     ./cf-mysql-deployment/cf-mysql-deployment.yml \
     -o ./cf-mysql-deployment/operations/latest-versions.yml \
     ${operations} \
     -l ./cf-mysql-deployment/bosh-lite/default-vars.yml \
+    -v cf_mysql_external_host="p-mysql.#{domain}"
+    -v app_domains="[#{domain}]"
+    -v cf_api_url="https://api.#{domain}"
     > "${OUTPUT_FILE}"
