@@ -1,0 +1,77 @@
+#!/bin/bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CI_DIR="$( cd "${MY_DIR}/../../" && pwd )"
+WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
+RELEASE_DIR="$(cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
+
+source "${CI_DIR}/scripts/utils.sh"
+
+: "${BOSH_LITE_SSH_KEY:?}"
+: "${ENV_TARGET_FILE:?}"
+: "${ENV_METADATA:?}"
+
+DEPLOYMENT_NAME=${DEPLOYMENT_NAME:-cf-mysql}
+
+function close-ssh-tunnels() {
+  echo "Closing SSH tunnels ..."
+  OLD_TUNNELS=`ps aux | grep "ssh" | \
+    grep "\-L ${BROKER_0_LOCAL_PORT}\|\-L ${BROKER_1_LOCAL_PORT}\|\-L ${MYSQL_NODE_0_LOCAL_PORT}" | \
+    awk '{print $2}'`
+  [[ -z "${OLD_TUNNELS}" ]] || kill ${OLD_TUNNELS}
+}
+
+function bosh-ip() {
+  bosh -n vms ${DEPLOYMENT_NAME} | grep $1 | awk '{ print $11 }'
+}
+
+BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
+BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
+BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
+
+bosh -n target "${BOSH_TARGET}"
+bosh -n login "${BOSH_CLIENT}" "${BOSH_CLIENT_SECRET}"
+
+export BROKER_0_REMOTE_IP=$(bosh-ip broker/0)
+export BROKER_1_REMOTE_IP=$(bosh-ip broker/1)
+export MYSQL_NODE_0_REMOTE_IP=$(bosh-ip mysql/0)
+
+# assumes we are running against a remote bosh-lite
+export BROKER_0_LOCAL_PORT="43306"
+export BROKER_1_LOCAL_PORT="43307"
+export MYSQL_NODE_0_LOCAL_PORT="43305"
+
+BOSH_LITE_KEY_FILE="/tmp/id_rsa"
+echo "${BOSH_LITE_SSH_KEY}" > "${BOSH_LITE_KEY_FILE}"
+chmod 600 "${BOSH_LITE_KEY_FILE}"
+trap close-ssh-tunnels EXIT
+ssh -L ${BROKER_0_LOCAL_PORT}:${BROKER_0_REMOTE_IP}:22 \
+  -NnTf \
+  -i "${BOSH_LITE_KEY_FILE}" \
+  -o StrictHostKeyChecking=no \
+  "ubuntu@${BOSH_TARGET}"
+
+ssh -L ${BROKER_1_LOCAL_PORT}:${BROKER_1_REMOTE_IP}:22 \
+  -NnTf \
+  -i "${BOSH_LITE_KEY_FILE}" \
+  -o StrictHostKeyChecking=no \
+   "ubuntu@${BOSH_TARGET}"
+
+ssh  -L ${MYSQL_NODE_0_LOCAL_PORT}:${MYSQL_NODE_0_REMOTE_IP}:22 \
+  -NnTf \
+  -i "${BOSH_LITE_KEY_FILE}" \
+  -o StrictHostKeyChecking=no \
+  "ubuntu@${BOSH_TARGET}"
+
+export CONFIG_LOCATION="${CI_DIR}/integration_config.json"
+export BOSH_LITE_METADATA
+${CI_DIR}/scripts/bosh/create_integration_test_config
+
+source ${RELEASE_DIR}/.envrc # To set GOPATH to release dir
+pushd ${RELEASE_DIR}/src/github.com/cloudfoundry-incubator/cf-mysql-acceptance-tests/
+  export CONFIG="${CONFIG_LOCATION}"
+  echo "Running tests ..."
+  ./bin/test-failover --noColor
+popd

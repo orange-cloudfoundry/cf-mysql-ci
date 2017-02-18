@@ -56,6 +56,8 @@ else
   LARGE_PLAN_NAME=1gb
 fi
 
+API_URL= "https://proxy-p-mysql.${DOMAIN}"
+
 if [ "${PROXY_COUNT}" == 0 ]; then
   DASHBOARD_URLS="[]"
 elif [ "${PROXY_COUNT}" == 1 ]; then
@@ -96,6 +98,7 @@ cat > ${CONFIG_LOCATION} <<EOF
   "timeout_scale": 1.0,
   "proxy": {
     "dashboard_urls": ${DASHBOARD_URLS},
+    "api_url": ${API_URL},
     "api_username":"${PROXY_API_USER}",
     "api_password":"${PROXY_API_PASSWORD}",
     "api_force_https": ${USE_HTTPS},
