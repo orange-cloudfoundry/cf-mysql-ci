@@ -56,7 +56,7 @@ else
   LARGE_PLAN_NAME=1gb
 fi
 
-API_URL= "https://proxy-p-mysql.${DOMAIN}"
+API_URL="https://proxy-p-mysql.${DOMAIN}"
 
 if [ "${PROXY_COUNT}" == 0 ]; then
   DASHBOARD_URLS="[]"
