@@ -11,6 +11,7 @@ set -eux
 operations=""
 
 domain=$(cat bosh-lite-environment/metadata | jq -r .domain)
+cf_admin_password=$(cat bosh-lite-environment/metadata | jq -r .cf_api_password)
 
 if ${MINIMAL_MODE}; then
     operations="$operations -o ./cf-mysql-ci/operations/minimal-mode.yml"
@@ -42,4 +43,5 @@ gobosh interpolate \
     -v cf_mysql_external_host="p-mysql.${domain}" \
     -v app_domains="[${domain}]" \
     -v cf_api_url="https://api.${domain}" \
+    -v cf_admin_password="${cf_admin_password}" \
     > "${OUTPUT_FILE}"
