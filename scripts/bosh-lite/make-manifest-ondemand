@@ -6,7 +6,7 @@ set -eux
 : "${DISABLE_INTERRUPTOR:=false}"
 : "${NO_ARBITRATOR:=false}"
 : "${TINY_GCACHE:=false}"
-: "${ADD_BROKERS:=false}
+: "${ADD_BROKERS:=false}"
 
 operations=""
 
@@ -27,9 +27,10 @@ if ${TINY_GCACHE}; then
 fi
 
 if ${ADD_BROKERS}; then
-    operations="$operations -o ./cf-mysql-deployment/operations/add-broker.yml\
-                            -o ./cf-mysql-deployment/operations/register-proxy-route.yml"
+    operations="$operations -o ./cf-mysql-deployment/operations/add-broker.yml"
+    operations="$operations -o ./cf-mysql-deployment/operations/register-proxy-route.yml"
 fi
+
 gobosh interpolate \
     ./cf-mysql-deployment/cf-mysql-deployment.yml \
     -o ./cf-mysql-deployment/operations/latest-versions.yml \
