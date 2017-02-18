@@ -8,6 +8,8 @@ WORKSPACE_DIR="$( cd "${CI_DIR}/.." && pwd )"
 MANIFEST_DIR="${WORKSPACE_DIR}/deployment-manifest"
 OUTPUT_FILE="${MANIFEST_DIR}/deployment.yml"
 
+source "${CI_DIR}/scripts/utils.sh"
+
 : "${ENV_METADATA:?}"
 : "${DEPLOYMENTS_DIR:?}"
 
