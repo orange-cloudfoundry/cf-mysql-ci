@@ -39,7 +39,7 @@ gobosh interpolate \
     -o ./cf-mysql-deployment/operations/latest-versions.yml \
     ${operations} \
     -l ./cf-mysql-deployment/bosh-lite/default-vars.yml \
-    -v cf_mysql_external_host="p-mysql.#{domain}" \
-    -v app_domains="[#{domain}]" \
-    -v cf_api_url="https://api.#{domain}" \
+    -v cf_mysql_external_host="p-mysql.${domain}" \
+    -v app_domains="[${domain}]" \
+    -v cf_api_url="https://api.${domain}" \
     > "${OUTPUT_FILE}"
