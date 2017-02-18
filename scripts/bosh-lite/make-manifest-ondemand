@@ -29,6 +29,7 @@ fi
 if ${ADD_BROKERS}; then
     operations="$operations -o ./cf-mysql-deployment/operations/add-broker.yml"
     operations="$operations -o ./cf-mysql-deployment/operations/register-proxy-route.yml"
+    operations="$operations -o ./cf-mysql-deployment/operations/disable-cross-deployment-links.yml"
 fi
 
 gobosh interpolate \
