@@ -396,16 +396,15 @@ jobs:
       inputs:
       - name: deployments-configuration
       - name: cf-mysql-ci
-      - name: cf-mysql-release
+      - name: cf-mysql-deployment
       - name: aws-environment
       outputs:
       - name: deployment-manifest
       params:
-        ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
         DEPLOYMENTS_DIR: deployments-configuration
       run:
-        path: cf-mysql-ci/scripts/bosh/make_manifest
+        path: cf-mysql-ci/scripts/bosh/make-manifest-gobosh
   - put: aws-deployment
     params:
       target_file: aws-environment/name
@@ -482,6 +481,7 @@ jobs:
         TEST_TYPE: acceptance
         PROXY_COUNT: 1
         NEW_STYLE_PROXY_URL: true
+        USE_SMALL_PLANS: true
       run:
         path: cf-mysql-ci/scripts/acceptance-tests
   - try:
