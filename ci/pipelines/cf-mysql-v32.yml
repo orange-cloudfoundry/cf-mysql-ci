@@ -14,6 +14,7 @@ resources:
   type: bosh-io-stemcell
   source:
     name: bosh-warden-boshlite-ubuntu-trusty-go_agent
+    version_family: 3312.latest
 
 - name: deployments-configuration
   type: git
