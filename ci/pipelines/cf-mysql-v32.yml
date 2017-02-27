@@ -9,6 +9,7 @@ resources:
   type: bosh-io-stemcell
   source:
     name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
+    version_family: 3312.latest
 
 - name: bosh-lite-stemcell
   type: bosh-io-stemcell
