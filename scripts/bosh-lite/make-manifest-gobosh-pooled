@@ -37,9 +37,9 @@ fi
 
 gobosh interpolate \
     ./cf-mysql-deployment/cf-mysql-deployment.yml \
-    -o ./cf-mysql-ci/operations/default-vcap-password.yml \
     -o ./cf-mysql-deployment/operations/latest-versions.yml \
     ${operations} \
+    -o ./cf-mysql-ci/operations/default-vcap-password.yml \
     -l ./cf-mysql-deployment/bosh-lite/default-vars.yml \
     -v cf_mysql_external_host="p-mysql.${domain}" \
     -v app_domains="[${domain}]" \

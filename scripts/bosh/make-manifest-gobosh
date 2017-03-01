@@ -23,10 +23,10 @@ VARS_FILE="${DEPLOYMENTS_DIR}/${ENV}/stubs/mysql/vars.yml"
 
 gobosh interpolate \
     ./cf-mysql-deployment/cf-mysql-deployment.yml \
-    -o ./cf-mysql-ci/operations/default-vcap-password.yml \
     -o ./cf-mysql-deployment/operations/latest-versions.yml \
     -o ./cf-mysql-deployment/operations/add-broker.yml \
     -o ./cf-mysql-deployment/operations/register-proxy-route.yml \
     -o ./cf-mysql-deployment/operations/disable-cross-deployment-links.yml \
+    -o ./cf-mysql-ci/operations/default-vcap-password.yml \
     -l ${VARS_FILE} \
     > "${OUTPUT_FILE}"
