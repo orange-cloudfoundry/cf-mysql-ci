@@ -621,6 +621,7 @@ jobs:
     file: cf-mysql-ci/ci/tasks/make-manifest-gobosh-pooled.yml
     params:
       ADD_BROKERS: true
+      DISABLE_CROSS_DEPLOYMENT_LINKS: false
   - &deploy-to-bosh-lite
     put: bosh-lite-deployment
     params:
