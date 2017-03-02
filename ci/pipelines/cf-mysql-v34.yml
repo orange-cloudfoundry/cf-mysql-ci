@@ -697,7 +697,7 @@ jobs:
         ENV_METADATA: bosh-lite-environment/metadata
         BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
       run:
-        path: cf-mysql-ci/scripts/failover/failover-test
+        path: cf-mysql-ci/scripts/failover/spiffless-failover-test
   - put: bosh-lite-environment
     params:
       release: bosh-lite-environment
