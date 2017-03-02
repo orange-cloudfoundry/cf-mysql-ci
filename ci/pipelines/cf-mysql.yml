@@ -1055,7 +1055,7 @@ jobs:
   - *ondemand-teardown
 
 ### VERIFY CLUSTER SCHEMAS
-- name: deploy-to-verify-cluster-schemas
+- name: test-verify-cluster-schemas
   plan:
   - *ondemand-setup
   - task: make-manifest
@@ -1094,7 +1094,7 @@ jobs:
       - test-full-bosh
       - test-scaling
       - test-failover
-      - deploy-to-verify-cluster-schemas
+      - test-verify-cluster-schemas
       - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
@@ -1107,7 +1107,7 @@ jobs:
       - test-full-bosh
       - test-scaling
       - test-failover
-      - deploy-to-verify-cluster-schemas
+      - test-verify-cluster-schemas
       - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
@@ -1127,7 +1127,7 @@ jobs:
       - test-full-bosh
       - test-scaling
       - test-failover
-      - deploy-to-verify-cluster-schemas
+      - test-verify-cluster-schemas
       - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
@@ -1142,7 +1142,7 @@ jobs:
       - test-full-bosh
       - test-scaling
       - test-failover
-      - deploy-to-verify-cluster-schemas
+      - test-verify-cluster-schemas
       - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
@@ -1154,7 +1154,7 @@ jobs:
       - test-full-bosh
       - test-scaling
       - test-failover
-      - deploy-to-verify-cluster-schemas
+      - test-verify-cluster-schemas
       - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
