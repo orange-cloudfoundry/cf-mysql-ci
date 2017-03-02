@@ -199,6 +199,13 @@ resources:
     key: version
     initial_version: 33.0.0
 
+- name: weekly-trigger
+  type: time
+  source:
+    days:
+    - Monday
+    interval: 24h
+
 - name: s3-resource-final-release
   type: s3
   source:
@@ -237,6 +244,8 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-ci
+    - get: weekly-trigger
+      trigger: true
     - get: cf-mysql-release
       trigger: true
     - get: cf-mysql-deployment
@@ -300,6 +309,8 @@ jobs:
       passed: [test-unit]
     - get: cf-mysql-ci
     - get: aws-bosh-stemcell
+    - get: weekly-trigger
+      trigger: true
     - get: version
       passed: [test-unit]
   - &create-release
@@ -349,6 +360,8 @@ jobs:
       params:
         acquire: true
     - get: cf-mysql-ci
+    - get: weekly-trigger
+      trigger: true
     - get: deployments-configuration
     - get: aws-bosh-stemcell
       passed: [create-and-compile-release]
@@ -445,6 +458,8 @@ jobs:
       trigger: true
     - get: cf-mysql-ci
     - get: deployments-configuration
+    - get: weekly-trigger
+      trigger: true
     - get: version
       passed: [deploy-to-full-bosh]
     - get: compiled-release-tarball
@@ -543,6 +558,8 @@ jobs:
         resource: bosh-lite-stemcell
       - get: version
         passed: [create-and-compile-release]
+      - get: weekly-trigger
+        trigger: true
     - aggregate:
       - task: make-manifest
         file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
@@ -671,6 +688,8 @@ jobs:
     - get: routing-release
     - get: version
       passed: [create-and-compile-release]
+    - get: weekly-trigger
+      trigger: true
   - try: &deregister-and-purge-instances-bosh-lite
       task: run-deregister-and-purge-instances
       config:
@@ -745,6 +764,8 @@ jobs:
       passed: [deploy-to-failover]
     - get: version
       passed: [deploy-to-failover]
+    - get: weekly-trigger
+      trigger: true
   - &smoke-tests-bosh-lite
     task: run-smoke-tests
     config:
@@ -808,6 +829,9 @@ jobs:
     - get: version
       passed: [create-and-compile-release]
     - get: cf-mysql-compiled-release
+    - get: weekly-trigger
+      trigger: true
+      passed: [create-and-compile-release]
   - aggregate:
     - task: make-manifest
       file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
@@ -1114,6 +1138,18 @@ jobs:
       - test-full-bosh
       - test-failover
     - get: version
+      passed:
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - deploy-to-verify-cluster-schemas
+      - test-interruptor-prevents-data-loss
+      - test-interruptor-can-be-disabled
+      - test-bootstrap-on-standalone
+      - test-upgrade-from-previous
+      - test-arb-to-full-scaling
+    - get: weekly-trigger
+      trigger: true
       passed:
       - test-full-bosh
       - test-scaling
