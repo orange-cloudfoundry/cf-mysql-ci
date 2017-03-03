@@ -852,6 +852,8 @@ jobs:
         params:
           acquire: true
       - *compile-release
+  - task: delete-stemcell
+    file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
 
   - *ondemand-deploy-manifest
 
