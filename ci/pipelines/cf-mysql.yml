@@ -557,6 +557,8 @@ jobs:
         NETWORK: {{gcp-bosh-lite-network}}
         SUBNETWORK: {{gcp-bosh-lite-subnetwork}}
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+    - task: delete-stemcell
+      file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
     - &ondemand-deploy-manifest
       put: bosh-2.0-bosh-lite-deployment
       params:
@@ -617,6 +619,7 @@ jobs:
             path: cf-mysql-ci/scripts/bosh/delete_deployment
       - task: destroy-bosh-lite
         file: cf-mysql-ci/ci/tasks/destroy-bosh-lite.yml
+        input_mapping: {bosh-lite-info: bosh-lite-info-stemcell-deleted}
       - task: destroy-terraform
         file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
         input_mapping: {deployments: deployments-terraformed}
