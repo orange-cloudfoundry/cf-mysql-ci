@@ -1283,8 +1283,6 @@ jobs:
           tag: output-release-dir/cf-mysql-tag
           body: output-release-dir/generated-release-notes
           commitish: output-release-dir/git-commit
-          globs:
-          - output-release-dir/release-artifacts/*.tgz
       - put: s3-resource-final-release
         params:
           file: output-release-dir/release-artifacts/*.tgz
