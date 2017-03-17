@@ -709,6 +709,7 @@ jobs:
     - get: cf-mysql-release-develop
       resource: cf-mysql-release
       trigger: true
+      passed: [create-and-compile-release]
     - get: weekly-trigger
       passed: [test-unit]
       trigger: true
