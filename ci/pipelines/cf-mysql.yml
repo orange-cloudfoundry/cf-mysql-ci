@@ -1097,7 +1097,7 @@ jobs:
       - test-scaling
       - test-failover
       - test-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
+#      - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
@@ -1110,7 +1110,7 @@ jobs:
       - test-scaling
       - test-failover
       - test-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
+#      - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
@@ -1130,7 +1130,7 @@ jobs:
       - test-scaling
       - test-failover
       - test-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
+#      - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
@@ -1145,7 +1145,7 @@ jobs:
       - test-scaling
       - test-failover
       - test-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
+#      - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
@@ -1157,7 +1157,7 @@ jobs:
       - test-scaling
       - test-failover
       - test-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
+#      - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
