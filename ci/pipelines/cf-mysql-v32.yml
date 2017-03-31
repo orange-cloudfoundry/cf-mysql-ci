@@ -732,7 +732,6 @@ jobs:
       passed: [create-and-compile-release]
     - get: cf-mysql-release
       resource: cf-mysql-current-v32
-      trigger: true
     - get: release-tarball
       resource: cf-mysql-release-final-v32
     - get: weekly-trigger
