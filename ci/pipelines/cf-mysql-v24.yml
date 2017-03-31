@@ -946,6 +946,11 @@ jobs:
       passed: [upload-rc-artifacts]
       params:
         bump: final
+    - get: next-version
+      resource: version
+      passed: [upload-rc-artifacts]
+      params:
+        bump: minor
   - task: create-mysql-release
     file: cf-mysql-ci/ci/tasks/create-release.yml
     input_mapping: {release-repo: cf-mysql-release}
@@ -972,6 +977,9 @@ jobs:
         OUTPUT_DIR: cf-mysql-committed
       run:
         path: cf-mysql-ci/scripts/publish/git-commit-changes
+  - put: version
+    params:
+      file: next-version/version
   - put: cf-mysql-release
     params:
       repository: cf-mysql-committed/cf-mysql-release-final
@@ -981,18 +989,3 @@ jobs:
   - put: cf-mysql-release-final-v24
     params:
       file: release-tarball/cf-mysql*.tgz
-  - put: version
-    params:
-      file: version/version
-
-- name: bump-minor
-  plan:
-  - aggregate:
-    - get: version
-      passed: [publish]
-      trigger: true
-      params:
-        bump: minor
-  - put: version
-    params:
-      file: version/version
