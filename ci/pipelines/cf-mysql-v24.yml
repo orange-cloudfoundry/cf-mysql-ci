@@ -942,7 +942,8 @@ jobs:
     - get: cf-mysql-release
       passed: [upload-rc-artifacts]
     - get: cf-mysql-ci
-    - get: version
+    - get: release-version
+      resource: version
       passed: [upload-rc-artifacts]
       params:
         bump: final
@@ -953,7 +954,7 @@ jobs:
         bump: minor
   - task: create-mysql-release
     file: cf-mysql-ci/ci/tasks/create-release.yml
-    input_mapping: {release-repo: cf-mysql-release}
+    input_mapping: {release-repo: cf-mysql-release, version: release-version}
     output_mapping: {release-repo-modified: cf-mysql-release-final}
     params:
       RELEASE_NAME: cf-mysql
@@ -984,7 +985,7 @@ jobs:
     params:
       repository: cf-mysql-committed/cf-mysql-release-final
       rebase: true
-      tag: version/version
+      tag: release-version/version
       tag_prefix: v
   - put: cf-mysql-release-final-v24
     params:
