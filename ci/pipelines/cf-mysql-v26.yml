@@ -190,7 +190,6 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      trigger: true
       passed:
         - test-unit
     - get: weekly-trigger
@@ -201,6 +200,7 @@ jobs:
     - get: aws-bosh-stemcell
     - get: version
       passed: [test-unit]
+      trigger: true
   - &create-release
     task: create-release
     file: cf-mysql-ci/ci/tasks/create-release.yml
@@ -243,7 +243,6 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
-      trigger: true
     - get: weekly-trigger
       passed: [test-unit]
       trigger: true
@@ -258,6 +257,7 @@ jobs:
       passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
+      trigger: true
   - try:
       task: run-deregister-and-purge-instances
       config:
@@ -413,7 +413,6 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
-      trigger: true
     - get: weekly-trigger
       passed: [test-unit]
       trigger: true
@@ -428,6 +427,7 @@ jobs:
       passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
+      trigger: true
   - &deregister-and-purge-instances-bosh-lite
     try:
       task: run-deregister-and-purge-instances
@@ -571,7 +571,6 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
-      trigger: true
     - get: weekly-trigger
       passed: [test-unit]
       trigger: true
@@ -586,6 +585,7 @@ jobs:
       passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
+      trigger: true
   - *deregister-and-purge-instances-bosh-lite
   - *delete-deployment-bosh-lite
   - &make-manifest-bosh-lite
@@ -647,7 +647,6 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
-      trigger: true
     - get: weekly-trigger
       passed: [test-unit]
       trigger: true
@@ -662,6 +661,7 @@ jobs:
       passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
+      trigger: true
   - *deregister-and-purge-instances-bosh-lite
   - *delete-deployment-bosh-lite
   - task: make-manifest
@@ -723,7 +723,6 @@ jobs:
     - get: cf-mysql-release-develop
       resource: cf-mysql-release
       passed: [create-and-compile-release]
-      trigger: true
     - get: cf-mysql-release
       resource: cf-mysql-current-v26
     - get: release-tarball
@@ -740,6 +739,7 @@ jobs:
     - get: aws-bosh-stemcell
     - get: version
       passed: [create-and-compile-release]
+      trigger: true
   - *deregister-and-purge-instances-bosh-lite
   - *delete-deployment-bosh-lite
   - aggregate:
@@ -861,7 +861,6 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
-      trigger: true
     - get: weekly-trigger
       passed: [test-unit]
       trigger: true
@@ -876,6 +875,7 @@ jobs:
       passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
+      trigger: true
   - *delete-deployment-bosh-lite
   - task: make-manifest
     config:
@@ -954,7 +954,6 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
-      trigger: true
     - get: weekly-trigger
       passed: [test-unit]
       trigger: true
@@ -969,6 +968,7 @@ jobs:
       passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
+      trigger: true
   - *deregister-and-purge-instances-bosh-lite
   - *delete-deployment-bosh-lite
   - task: make-manifest
@@ -1053,7 +1053,6 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
-      trigger: true
     - get: weekly-trigger
       passed: [test-unit]
       trigger: true
@@ -1068,6 +1067,7 @@ jobs:
       passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
+      trigger: true
   - *deregister-and-purge-instances-bosh-lite
   - *delete-deployment-bosh-lite
   - task: make-manifest
