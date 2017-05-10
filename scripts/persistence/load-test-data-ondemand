@@ -56,7 +56,6 @@ pushd ${SQL_QUERY_DIR}
     --port=${MYSQL_PORT} \
     --user=root \
     --password=password \
-    --local-infile \
     mysql_persistence_test \
     < insert-test-data.sql
 popd
