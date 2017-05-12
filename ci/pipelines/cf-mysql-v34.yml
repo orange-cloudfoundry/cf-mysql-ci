@@ -144,6 +144,7 @@ resources:
 ### JOBS
 jobs:
 - name: test-unit
+  serial_groups: [version-bumper]
   serial: true
   plan:
   - aggregate:
@@ -154,10 +155,7 @@ jobs:
     - get: cf-mysql-deployment
       trigger: true
     - get: cf-mysql-ci
-    - get: old_version
-      resource: version
-      params:
-        pre: rc
+    - get: version
   - aggregate:
     - task: test-unit
       file: cf-mysql-ci/ci/tasks/test-unit.yml
@@ -200,7 +198,7 @@ jobs:
           path: cf-mysql-release/scripts/test-sample-stubs
   - put: version
     params:
-      file: old_version/version
+      pre: rc
 
 - name: create-and-compile-release
   plan:
@@ -988,7 +986,7 @@ jobs:
       - test-scaling
       - test-failover
       - deploy-to-verify-cluster-schemas
-#      - test-interruptor-prevents-data-loss
+      - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
@@ -1001,7 +999,7 @@ jobs:
       - test-scaling
       - test-failover
       - deploy-to-verify-cluster-schemas
-#      - test-interruptor-prevents-data-loss
+      - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
@@ -1012,24 +1010,19 @@ jobs:
       file: release-tarball/cf-mysql*.tgz
 
 - name: publish
+  serial_groups: [version-bumper]
   plan:
   - aggregate:
     - get: cf-mysql-release
       passed: [upload-rc-artifacts]
     - get: cf-mysql-ci
-    - get: release-version
-      resource: version
+    - get: version
       passed: [upload-rc-artifacts]
       params:
         bump: final
-    - get: next-version
-      resource: version
-      passed: [upload-rc-artifacts]
-      params:
-        bump: minor
   - task: create-mysql-release
     file: cf-mysql-ci/ci/tasks/create-release.yml
-    input_mapping: {release-repo: cf-mysql-release, version: release-version}
+    input_mapping: {release-repo: cf-mysql-release}
     output_mapping: {release-repo-modified: cf-mysql-release-final}
     params:
       RELEASE_NAME: cf-mysql
@@ -1053,15 +1046,16 @@ jobs:
         OUTPUT_DIR: cf-mysql-committed
       run:
         path: cf-mysql-ci/scripts/publish/git-commit-changes
-  - put: version
-    params:
-      file: next-version/version
   - put: cf-mysql-release
     params:
       repository: cf-mysql-committed/cf-mysql-release-final
       rebase: true
-      tag: release-version/version
+      tag: version/version
       tag_prefix: v
+  - put: version
+    params:
+      bump: minor
+      pre: rc
   - put: cf-mysql-release-final-v34
     params:
       file: release-tarball/cf-mysql*.tgz

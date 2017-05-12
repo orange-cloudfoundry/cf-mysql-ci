@@ -240,6 +240,7 @@ jobs:
       build: cf-mysql-dockerfile/scripts/
 
 - name: test-unit
+  serial_groups: [version_bumper]
   serial: true
   plan:
   - aggregate:
@@ -250,10 +251,7 @@ jobs:
       trigger: true
     - get: cf-mysql-deployment
       trigger: true
-    - get: old_version
-      resource: version
-      params:
-        pre: rc
+    - get: version
   - aggregate:
     - task: test-unit
       file: cf-mysql-ci/ci/tasks/test-unit.yml
@@ -296,7 +294,7 @@ jobs:
           path: cf-mysql-release/scripts/test-sample-stubs
   - put: version
     params:
-      file: old_version/version
+      pre: rc
 
 - name: create-and-compile-release
   plan:
@@ -1097,7 +1095,7 @@ jobs:
       - test-scaling
       - test-failover
       - test-verify-cluster-schemas
-#      - test-interruptor-prevents-data-loss
+      - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
@@ -1110,7 +1108,7 @@ jobs:
       - test-scaling
       - test-failover
       - test-verify-cluster-schemas
-#      - test-interruptor-prevents-data-loss
+      - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
@@ -1130,7 +1128,7 @@ jobs:
       - test-scaling
       - test-failover
       - test-verify-cluster-schemas
-#      - test-interruptor-prevents-data-loss
+      - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
@@ -1145,7 +1143,7 @@ jobs:
       - test-scaling
       - test-failover
       - test-verify-cluster-schemas
-#      - test-interruptor-prevents-data-loss
+      - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
@@ -1157,7 +1155,7 @@ jobs:
       - test-scaling
       - test-failover
       - test-verify-cluster-schemas
-#      - test-interruptor-prevents-data-loss
+      - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
@@ -1227,6 +1225,7 @@ jobs:
         repository: cf-mysql-deployment
 
 - name: final-release
+  serial_groups: [version-bumper]
   plan:
     - aggregate:
       - get: cf-mysql-master
@@ -1268,9 +1267,6 @@ jobs:
           OUTPUT_REPO_DIRECTORY: output-repo
           RELEASE_ACCESS_KEY: {{cf-mysql-publish-blobs-aws-access-key-id}}
           RELEASE_SECRET_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
-    - put: version
-      params:
-        file: version/version
     - put: cf-mysql-deployment-master
       params:
         repository: cf-mysql-deployment-release-candidate
@@ -1279,6 +1275,10 @@ jobs:
       params:
         repository: output-repo/cf-mysql-release
         tag: output-release-dir/cf-mysql-tag
+    - put: version
+      params:
+        bump: major
+        pre: rc
     - put: s3-resource-final-release
       params:
         file: output-release-dir/release-artifacts/*.tgz
