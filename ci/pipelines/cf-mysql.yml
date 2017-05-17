@@ -399,16 +399,16 @@ jobs:
       inputs:
       - name: deployments-configuration
       - name: cf-mysql-ci
+      - name: cf-mysql-deployment
       - name: cf-mysql-release
       - name: aws-environment
       outputs:
       - name: deployment-manifest
       params:
-        ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
         DEPLOYMENTS_DIR: deployments-configuration
       run:
-        path: cf-mysql-ci/scripts/bosh/make_manifest
+        path: cf-mysql-ci/scripts/bosh/make-manifest-gobosh
   - put: aws-deployment
     params:
       target_file: aws-environment/name
