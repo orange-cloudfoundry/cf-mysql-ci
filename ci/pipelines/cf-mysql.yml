@@ -487,6 +487,7 @@ jobs:
         TEST_TYPE: acceptance
         PROXY_COUNT: 1
         NEW_STYLE_PROXY_URL: true
+        USE_SMALL_PLANS: true
       run:
         path: cf-mysql-ci/scripts/acceptance-tests
   - try:
