@@ -27,6 +27,13 @@ resources:
     branch: release-candidate
     private_key: {{git-writer-private-key}}
 
+- name: cf-mysql-deployment
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry/cf-mysql-deployment.git
+    branch: develop
+    private_key: {{git-writer-private-key}}
+
 - name: cf-mysql-rc-bucket
   type: s3
   source:
@@ -135,6 +142,7 @@ jobs:
       - get: cf-mysql-release
         resource: cf-mysql-release-rc
         passed: [delete-acceptance-deployment]
+      - get: cf-mysql-deployment
       - get: aws-bosh-stemcell
       - get: aws-acceptance-environment
         passed: [delete-acceptance-deployment]
@@ -149,18 +157,17 @@ jobs:
         image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
+        - name: cf-mysql-deployment
         - name: deployments-configuration
         - name: cf-mysql-release
         - name: aws-acceptance-environment
         outputs:
         - name: deployment-manifest
         params:
-          ENV_TARGET_FILE: aws-acceptance-environment/name
           ENV_METADATA: aws-acceptance-environment/metadata
           DEPLOYMENTS_DIR: deployments-configuration
-          MANIFEST_DIR: deployment-manifest
         run:
-          path: cf-mysql-ci/scripts/bosh/make_manifest
+          path: cf-mysql-ci/scripts/bosh/make-manifest-gobosh
     - put: compiled-packages-lock
       params:
         acquire: true
