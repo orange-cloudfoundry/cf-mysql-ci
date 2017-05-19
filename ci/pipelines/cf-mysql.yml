@@ -114,28 +114,12 @@ resources:
     deployment: cf-mysql
     ignore_ssl: true
 
-- name: integration-deployment
-  type: bosh-deployment
-  source:
-    username: {{integration_env_bosh_username}}
-    password: {{integration_env_bosh_password}}
-    deployment: cf-a1-mysql
-    ignore_ssl: true
-
 - name: aws-environment
   type: pool
   source:
     uri: &pool-uri git@github.com:pivotal-cf-experimental/core-services-oss-env-resource-pool
     branch: master
     pool: aws
-    private_key: {{git-writer-private-key}}
-
-- name: integration-environment
-  type: pool
-  source:
-    uri: *pool-uri
-    branch: master
-    pool: aws-integration
     private_key: {{git-writer-private-key}}
 
 - name: bosh-lite-environment
@@ -1075,123 +1059,33 @@ jobs:
         path: cf-mysql-ci/scripts/verify-cluster-schemas/force-divergent-schemas-test
   - *ondemand-teardown
 
-
-### INTEGRATION
-- name: deploy-to-integration
-  serial: true
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed:
-      # all bosh-lite pipelines
-      - test-full-bosh
-      - test-scaling
-      - test-failover
-      - test-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
-      - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
-      - test-upgrade-from-previous
-      - test-arb-to-full-scaling
-      trigger: true
-    - get: cf-mysql-deployment
-      passed:
-      # all bosh-lite pipelines
-      - test-full-bosh
-      - test-scaling
-      - test-failover
-      - test-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
-      - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
-      - test-upgrade-from-previous
-      - test-arb-to-full-scaling
-      trigger: true
-    - get: deployments-configuration
-    - get: cf-mysql-ci
-    - get: aws-bosh-stemcell
-      passed: [deploy-to-full-bosh]
-    - put: integration-environment
-      params:
-        acquire: true
-    - get: compiled-release-tarball
-      resource: cf-mysql-compiled-release
-      passed:
-      - test-full-bosh
-      - test-scaling
-      - test-failover
-      - test-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
-      - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
-      - test-upgrade-from-previous
-      - test-arb-to-full-scaling
-    - get: routing-release
-      passed:
-      - test-full-bosh
-      - test-failover
-    - get: version
-      passed:
-      - test-full-bosh
-      - test-scaling
-      - test-failover
-      - test-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
-      - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
-      - test-upgrade-from-previous
-      - test-arb-to-full-scaling
-    - get: weekly-trigger
-      trigger: true
-      passed:
-      - test-full-bosh
-      - test-scaling
-      - test-failover
-      - test-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
-      - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
-      - test-upgrade-from-previous
-      - test-arb-to-full-scaling
-  - task: make-manifest
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: deployments-configuration
-      - name: cf-mysql-ci
-      - name: cf-mysql-release
-      - name: integration-environment
-      outputs:
-        - name: deployment-manifest
-      params:
-        ENV_TARGET_FILE: integration-environment/name
-        ENV_METADATA: integration-environment/metadata
-        DEPLOYMENTS_DIR: deployments-configuration
-        USE_EXISTING_CF_MANIFEST: true
-      run:
-        path: cf-mysql-ci/scripts/bosh/make_manifest
-  - put: integration-deployment
-    params:
-      target_file: integration-environment/name
-      manifest: deployment-manifest/deployment.yml
-      releases:
-      - routing-release/*.tgz
-      - compiled-release-tarball/*.tgz
-      stemcells: [aws-bosh-stemcell/*.tgz]
-  - put: integration-environment
-    params:
-      release: integration-environment
-
 - name: upload-rc-artifacts
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [deploy-to-integration]
+      passed:
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - test-verify-cluster-schemas
+      - test-interruptor-prevents-data-loss
+      - test-interruptor-can-be-disabled
+      - test-bootstrap-on-standalone
+      - test-upgrade-from-previous
+      - test-arb-to-full-scaling
       trigger: true
     - get: cf-mysql-ci
     - get: version
-      passed: [deploy-to-integration]
+      passed:
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - test-verify-cluster-schemas
+      - test-interruptor-prevents-data-loss
+      - test-interruptor-can-be-disabled
+      - test-bootstrap-on-standalone
+      - test-upgrade-from-previous
+      - test-arb-to-full-scaling
   - *create-release
   - put: cf-mysql-rc-artifacts
     params:
@@ -1201,12 +1095,30 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [deploy-to-integration]
+      passed:
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - test-verify-cluster-schemas
+      - test-interruptor-prevents-data-loss
+      - test-interruptor-can-be-disabled
+      - test-bootstrap-on-standalone
+      - test-upgrade-from-previous
+      - test-arb-to-full-scaling
       trigger: true
       params:
         fetch: [release-candidate]
     - get: cf-mysql-deployment
-      passed: [deploy-to-integration]
+      passed:
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - test-verify-cluster-schemas
+      - test-interruptor-prevents-data-loss
+      - test-interruptor-can-be-disabled
+      - test-bootstrap-on-standalone
+      - test-upgrade-from-previous
+      - test-arb-to-full-scaling
       trigger: true
     - get: cf-mysql-ci
   - aggregate:
