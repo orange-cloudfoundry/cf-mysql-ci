@@ -203,14 +203,11 @@ jobs:
       trigger: true
       passed:
         - test-unit
-    - get: weekly-trigger
-      trigger: true
-      passed:
-        - test-unit
     - get: cf-mysql-ci
     - get: aws-bosh-stemcell
     - get: version
       passed: [test-unit]
+      trigger: true
   - &create-release
     task: create-release
     file: cf-mysql-ci/ci/tasks/create-release.yml
@@ -251,9 +248,6 @@ jobs:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
       trigger: true
-    - get: weekly-trigger
-      passed: [test-unit]
-      trigger: true
     - put: aws-environment
       params:
         acquire: true
@@ -264,6 +258,7 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+      trigger: true
     - get: version
       passed: [create-and-compile-release]
   - try:
@@ -423,9 +418,6 @@ jobs:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
       trigger: true
-    - get: weekly-trigger
-      passed: [test-unit]
-      trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
@@ -435,6 +427,7 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+      trigger: true
     - get: version
       passed: [create-and-compile-release]
   - try: &deregister-and-purge-instances-bosh-lite
@@ -579,9 +572,6 @@ jobs:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
       trigger: true
-    - get: weekly-trigger
-      passed: [test-unit]
-      trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
@@ -590,6 +580,7 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+      trigger: true
     - get: bosh-lite-repo
     - get: version
       passed: [create-and-compile-release]
@@ -654,9 +645,6 @@ jobs:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
       trigger: true
-    - get: weekly-trigger
-      passed: [test-unit]
-      trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
@@ -665,6 +653,7 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+      trigger: true
     - get: bosh-lite-repo
     - get: version
       passed: [create-and-compile-release]
@@ -734,14 +723,12 @@ jobs:
       resource: cf-mysql-current-v32
     - get: release-tarball
       resource: cf-mysql-release-final-v32
-    - get: weekly-trigger
-      passed: [test-unit]
-      trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
     - get: version
       passed: [create-and-compile-release]
+      trigger: true
     - get: cf-mysql-ci
     - get: bosh-lite-stemcell
     - get: aws-bosh-stemcell
@@ -868,9 +855,6 @@ jobs:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
       trigger: true
-    - get: weekly-trigger
-      passed: [test-unit]
-      trigger: true
     - put: bosh-lite-environment
       resource: bosh-lite-no-cf-environment
       params:
@@ -880,6 +864,7 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+      trigger: true
     - get: version
       passed: [create-and-compile-release]
   - *delete-deployment-bosh-lite
@@ -961,9 +946,6 @@ jobs:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
       trigger: true
-    - get: weekly-trigger
-      passed: [test-unit]
-      trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
@@ -972,6 +954,7 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+      trigger: true
     - get: bosh-lite-repo
     - get: version
       passed: [create-and-compile-release]
@@ -1051,9 +1034,6 @@ jobs:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
       trigger: true
-    - get: weekly-trigger
-      passed: [test-unit]
-      trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
@@ -1063,6 +1043,7 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+      trigger: true
     - get: version
       passed: [create-and-compile-release]
   - try: *deregister-and-purge-instances-bosh-lite
@@ -1158,9 +1139,6 @@ jobs:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
       trigger: true
-    - get: weekly-trigger
-      passed: [test-unit]
-      trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
@@ -1170,6 +1148,7 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
+      trigger: true
     - get: version
       passed: [create-and-compile-release]
   - try: *deregister-and-purge-instances-bosh-lite
