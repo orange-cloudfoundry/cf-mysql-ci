@@ -107,7 +107,7 @@ RUN \
 RUN gem install gorgeous
 
 # Install terraform
-RUN wget 'https://releases.hashicorp.com/terraform/0.7.13/terraform_0.7.13_linux_amd64.zip' \
+RUN wget 'https://releases.hashicorp.com/terraform/0.9.6/terraform_0.9.6_linux_amd64.zip' \
   --quiet \
   --output-document /tmp/terraform.zip && \
   unzip /tmp/terraform.zip -d /usr/local/bin/ && \
