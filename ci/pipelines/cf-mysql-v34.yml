@@ -708,6 +708,7 @@ jobs:
     - get: version
       passed: [create-and-compile-release]
     - get: cf-mysql-compiled-release
+      passed: [create-and-compile-release]
       trigger: true
   - aggregate:
     - task: make-manifest
