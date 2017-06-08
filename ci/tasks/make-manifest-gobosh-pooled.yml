@@ -22,3 +22,4 @@ params:
   DISABLE_INTERRUPTOR: false
   MINIMAL_MODE: false
   NO_ARBITRATOR: false
+  ENABLE_REMOTE_ADMIN_ACCESS: false

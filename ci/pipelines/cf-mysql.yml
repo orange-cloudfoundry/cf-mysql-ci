@@ -686,6 +686,7 @@ jobs:
     file: cf-mysql-ci/ci/tasks/make-manifest-gobosh-pooled.yml
     params:
       ADD_BROKERS: true
+      ENABLE_REMOTE_ADMIN_ACCESS: true
   - &deploy-to-bosh-lite
     put: bosh-lite-deployment
     params:

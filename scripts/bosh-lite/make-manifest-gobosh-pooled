@@ -8,6 +8,7 @@ set -eux
 : "${TINY_GCACHE:=false}"
 : "${ADD_BROKERS:=false}"
 : "${DISABLE_CROSS_DEPLOYMENT_LINKS:=true}"
+: "${ENABLE_REMOTE_ADMIN_ACCESS:=false}"
 
 operations=""
 
@@ -37,6 +38,10 @@ if ${ADD_BROKERS}; then
     if ${DISABLE_CROSS_DEPLOYMENT_LINKS}; then
         operations="$operations -o ./cf-mysql-deployment/operations/disable-cross-deployment-links.yml"
     fi
+fi
+
+if ${ENABLE_REMOTE_ADMIN_ACCESS}; then
+    operations="$operations -o ./cf-mysql-ci/operations/enable-remote-admin-access.yml"
 fi
 
 gobosh interpolate \
