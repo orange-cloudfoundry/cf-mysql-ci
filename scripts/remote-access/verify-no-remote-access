@@ -1,0 +1,30 @@
+#!/bin/bash
+set -eu
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CI_DIR="$( cd ${MY_DIR}/../../ && pwd )"
+WORKSPACE_DIR="$( cd ${MY_DIR}/../../.. && pwd )"
+MYSQL_CONFIG=${MY_DIR}/mysql.config
+
+source ${CI_DIR}/scripts/utils.sh
+
+: "${ENV_TARGET_FILE:?}"
+: "${BOSH_CLIENT}"
+: "${BOSH_CLIENT_SECRET}"
+
+director_ip="$(cat "${ENV_TARGET_FILE}")"
+
+DEPLOYMENT_NAME=${DEPLOYMENT_NAME:-${BOSH_DEPLOYMENT:-"cf-warden-mysql"}}
+SSH_KEY_FILE=${SSH_KEY_FILE:-""}
+MYSQL_TUNNEL_IP=127.0.0.1
+MYSQL_TUNNEL_PORT=3307
+MYSQL_TUNNEL_USERNAME=${MYSQL_TUNNEL_USERNAME:-ubuntu}
+MYSQL_VM_IP=10.244.7.2
+MYSQL_VM_PORT=3306
+
+write_mysql_config
+trap close-ssh-tunnels EXIT
+open_ssh_tunnel_to_bosh_lite
+
+mysql --defaults-extra-file=${MYSQL_CONFIG} \
+  -e "SELECT 1" 2>&1 | grep -q 'Access denied'

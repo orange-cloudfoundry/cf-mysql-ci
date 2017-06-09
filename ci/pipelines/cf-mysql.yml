@@ -1065,6 +1065,33 @@ jobs:
         path: cf-mysql-ci/scripts/verify-cluster-schemas/force-divergent-schemas-test
   - *ondemand-teardown
 
+### VERIFY NO REMOTE ACCESS
+- name: test-verify-no-remote-access
+  plan:
+  - *ondemand-setup
+  - task: make-manifest
+    file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+    params:
+      ENABLE_REMOTE_ADMIN_ACCESS: false
+  - *ondemand-deploy-manifest
+  - task: run-verify-no-remote-access
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+        - name: cf-mysql-ci
+        - name: bosh-lite-info
+      params:
+        MYSQL_TUNNEL_USERNAME: jumpbox
+        ENV_TARGET_FILE: bosh-lite-info/external-ip
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
+        BOSH_DEPLOYMENT: cf-mysql
+      run:
+        path: cf-mysql-ci/scripts/remote-access/verify-no-remote-access
+  - *ondemand-teardown
+
 - name: upload-rc-artifacts
   plan:
   - aggregate:
@@ -1079,6 +1106,7 @@ jobs:
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
+      - test-verify-no-remote-access
       trigger: true
     - get: cf-mysql-ci
     - get: version
@@ -1092,6 +1120,7 @@ jobs:
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
+      - test-verify-no-remote-access
   - *create-release
   - put: cf-mysql-rc-artifacts
     params:
@@ -1111,6 +1140,7 @@ jobs:
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
+      - test-verify-no-remote-access
       trigger: true
       params:
         fetch: [release-candidate]
@@ -1125,6 +1155,7 @@ jobs:
       - test-bootstrap-on-standalone
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
+      - test-verify-no-remote-access
       trigger: true
     - get: cf-mysql-ci
   - aggregate:

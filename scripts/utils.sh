@@ -52,3 +52,34 @@ release_name() {
     fi
     echo "${name}"
 }
+
+write_mysql_config() {
+  cat << EOF > ${MYSQL_CONFIG}
+[client]
+user = root
+password = password
+host = ${MYSQL_TUNNEL_IP}
+port = ${MYSQL_TUNNEL_PORT}
+EOF
+}
+
+open_ssh_tunnel_to_bosh_lite() {
+  if [[ -z "${SSH_KEY_FILE}" ]]; then
+      SSH_KEY_FILE="bosh-key"
+      echo "${BOSH_SSH_KEY}" > "${SSH_KEY_FILE}"
+      chmod 600 "${SSH_KEY_FILE}"
+  fi
+
+  ssh -L ${MYSQL_TUNNEL_PORT}:${MYSQL_VM_IP}:${MYSQL_VM_PORT} \
+    -L ${HEALTHCHECK_PORT}:${MYSQL_VM_IP}:${HEALTHCHECK_PORT} \
+    -nNTf \
+    -o StrictHostKeyChecking=no \
+    -i "${SSH_KEY_FILE}" \
+    ${MYSQL_TUNNEL_USERNAME}@${director_ip}
+}
+
+close-ssh-tunnels() {
+  echo "Closing SSH tunnels ..."
+  OLD_TUNNELS=`ps aux | grep "ssh" | grep "\-L $MYSQL_TUNNEL_PORT" | awk '{print $2}'`
+  [[ -z "${OLD_TUNNELS}" ]] || kill ${OLD_TUNNELS}
+}
