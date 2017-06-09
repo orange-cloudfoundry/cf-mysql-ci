@@ -13,6 +13,7 @@ WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
 : "${BOSH_DEPLOYMENT:?}"
 : "${BOSH_CLIENT:?}"
 : "${BOSH_CLIENT_SECRET:?}"
+: "${ENABLE_REMOTE_ADMIN_ACCESS:?}"
 
 export BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
 export BOSH_CA_CERT="${WORKSPACE_DIR}/bosh-lite-info/ca-cert"
