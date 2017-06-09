@@ -30,6 +30,6 @@ gobosh interpolate \
     -o ./cf-mysql-deployment/operations/disable-cross-deployment-links.yml \
     -o ./cf-mysql-ci/operations/default-vcap-password.yml \
     -o ./cf-mysql-ci/operations/default-vcap-password-broker.yml \
-    -o ./cf-mysql-ci/enable-remote-admin-access.yml \
+    -o ./cf-mysql-ci/operations/enable-remote-admin-access.yml \
     -l ${VARS_FILE} \
     > "${OUTPUT_FILE}"
