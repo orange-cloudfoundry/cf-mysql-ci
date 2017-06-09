@@ -534,6 +534,8 @@ jobs:
     - aggregate:
       - task: make-manifest
         file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+        params:
+          ENABLE_REMOTE_ADMIN_ACCESS: true
       - task: apply-terraform
         file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
     - task: create-bosh-lite
@@ -804,6 +806,8 @@ jobs:
   - aggregate:
     - task: make-manifest
       file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+      params:
+        ENABLE_REMOTE_ADMIN_ACCESS: true
     - do:
       - task: apply-terraform
         file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
@@ -848,6 +852,8 @@ jobs:
     file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
     input_mapping:
       cf-mysql-deployment: cf-mysql-deployment-develop
+    params:
+      ENABLE_REMOTE_ADMIN_ACCESS: true
 
   - put: bosh-2.0-bosh-lite-deployment
     params:
@@ -883,6 +889,8 @@ jobs:
   - *ondemand-setup
   - task: make-manifest-with-standalone
     file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+    params:
+      ENABLE_REMOTE_ADMIN_ACCESS: true
   - *ondemand-deploy-manifest
   - task: persistence-test-data-write
     config:
@@ -1007,6 +1015,7 @@ jobs:
     file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
     params:
       DISABLE_INTERRUPTOR: true
+      ENABLE_REMOTE_ADMIN_ACCESS: true
   - *ondemand-deploy-manifest
   - task: restart-broken-node
     attempts: 5
@@ -1033,6 +1042,7 @@ jobs:
     file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
     params:
       TINY_GCACHE: true #TODO: do we need this?
+      ENABLE_REMOTE_ADMIN_ACCESS: true
   - *ondemand-deploy-manifest
   - task: run-verify-cluster-schemas-tests
     config:

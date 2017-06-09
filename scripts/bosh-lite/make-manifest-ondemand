@@ -6,6 +6,7 @@ set -eux
 : "${DISABLE_INTERRUPTOR:=false}"
 : "${NO_ARBITRATOR:=false}"
 : "${TINY_GCACHE:=false}"
+: "${ENABLE_REMOTE_ADMIN_ACCESS:=false}"
 
 operations=""
 
@@ -23,6 +24,10 @@ fi
 
 if ${TINY_GCACHE}; then
     operations="$operations -o ./cf-mysql-ci/operations/tiny-gcache.yml"
+fi
+
+if ${ENABLE_REMOTE_ADMIN_ACCESS}; then
+    operations="$operations -o ./cf-mysql-ci/operations/enable-remote-admin-access.yml"
 fi
 
 gobosh interpolate \
