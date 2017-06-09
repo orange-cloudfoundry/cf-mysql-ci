@@ -1073,6 +1073,7 @@ jobs:
     file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
     params:
       ENABLE_REMOTE_ADMIN_ACCESS: false
+      MINIMAL_MODE: true
   - *ondemand-deploy-manifest
   - task: run-verify-no-remote-access
     config:
