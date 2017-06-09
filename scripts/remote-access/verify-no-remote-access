@@ -24,7 +24,7 @@ MYSQL_VM_PORT=3306
 
 write_mysql_config
 trap close-ssh-tunnels EXIT
-open_ssh_tunnel_to_bosh_lite
+open_ssh_tunnel_to_mysql
 
 mysql --defaults-extra-file=${MYSQL_CONFIG} \
   -e "SELECT 1" 2>&1 | grep -q 'Access denied'

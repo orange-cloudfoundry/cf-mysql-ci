@@ -63,7 +63,7 @@ port = ${MYSQL_TUNNEL_PORT}
 EOF
 }
 
-open_ssh_tunnel_to_bosh_lite() {
+open_ssh_tunnel_to_mysql() {
   if [[ -z "${SSH_KEY_FILE}" ]]; then
       SSH_KEY_FILE="bosh-key"
       echo "${BOSH_SSH_KEY}" > "${SSH_KEY_FILE}"
@@ -71,7 +71,6 @@ open_ssh_tunnel_to_bosh_lite() {
   fi
 
   ssh -L ${MYSQL_TUNNEL_PORT}:${MYSQL_VM_IP}:${MYSQL_VM_PORT} \
-    -L ${HEALTHCHECK_PORT}:${MYSQL_VM_IP}:${HEALTHCHECK_PORT} \
     -nNTf \
     -o StrictHostKeyChecking=no \
     -i "${SSH_KEY_FILE}" \

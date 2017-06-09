@@ -1068,12 +1068,46 @@ jobs:
 ### VERIFY NO REMOTE ACCESS
 - name: test-verify-no-remote-access
   plan:
-  - *ondemand-setup
-  - task: make-manifest
-    file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
-    params:
-      ENABLE_REMOTE_ADMIN_ACCESS: false
-      MINIMAL_MODE: true
+  - do:
+    - aggregate:
+      - get: cf-mysql-release
+        passed: [create-and-compile-release]
+        trigger: true
+      - get: cf-mysql-deployment
+        passed: [create-and-compile-release]
+        trigger: true
+      - get: cf-mysql-ci
+      - get: compiled-release-tarball
+        resource: cf-mysql-compiled-release
+        passed: [create-and-compile-release]
+        trigger: true
+      - get: bosh-deployment
+        resource: bosh-deployment-repo
+      - get: deployments
+        resource: deployments-configuration
+      - get: stemcell
+        resource: bosh-lite-stemcell
+      - get: version
+        passed: [create-and-compile-release]
+    - aggregate:
+      - task: make-manifest
+        file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+        params:
+          ENABLE_REMOTE_ADMIN_ACCESS: false
+          MINIMAL_MODE: true
+      - task: apply-terraform
+        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+    - task: create-bosh-lite
+      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+      input_mapping: {deployments: deployments-terraformed}
+      params:
+        PROJECT_ID: {{gcp-bosh-lite-project-id}}
+        ZONE: {{gcp-bosh-lite-zone}}
+        NETWORK: {{gcp-bosh-lite-network}}
+        SUBNETWORK: {{gcp-bosh-lite-subnetwork}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+    - task: delete-stemcell
+      file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
   - *ondemand-deploy-manifest
   - task: run-verify-no-remote-access
     config:
