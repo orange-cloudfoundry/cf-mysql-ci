@@ -589,6 +589,7 @@ jobs:
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         BOSH_DEPLOYMENT: cf-mysql
         ENV_TARGET_FILE: bosh-lite-info/director-url
+        ENABLE_REMOTE_ADMIN_ACCESS: true
       run:
         path: cf-mysql-ci/scripts/scaling/scaling-test-ondemand
   - &ondemand-teardown
@@ -634,6 +635,7 @@ jobs:
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         BOSH_DEPLOYMENT: cf-mysql
         ENV_TARGET_FILE: bosh-lite-info/director-url
+        ENABLE_REMOTE_ADMIN_ACCESS: true
       run:
         path: cf-mysql-ci/scripts/scaling/scaling-arb-to-full-test-ondemand
   - *ondemand-teardown
