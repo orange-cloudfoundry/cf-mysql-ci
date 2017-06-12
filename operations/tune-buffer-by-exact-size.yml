@@ -1,0 +1,7 @@
+---
+- type: replace
+  path: /properties/cf_mysql/mysql/innodb_buffer_pool_size?
+  value: "444M"
+- type: replace
+  path: /properties/cf_mysql/mysql/innodb_buffer_pool_size_percentage?
+  value: "10"

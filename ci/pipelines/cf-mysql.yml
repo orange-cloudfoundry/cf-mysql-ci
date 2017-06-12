@@ -1127,6 +1127,67 @@ jobs:
         path: cf-mysql-ci/scripts/remote-access/verify-no-remote-access
   - *ondemand-teardown
 
+### VERIFY TUNING WORKS
+- name: test-verify-tuning
+  plan:
+  - do:
+    - aggregate:
+      - get: cf-mysql-release
+        passed: [create-and-compile-release]
+        trigger: true
+      - get: cf-mysql-deployment
+        passed: [create-and-compile-release]
+        trigger: true
+      - get: cf-mysql-ci
+      - get: compiled-release-tarball
+        resource: cf-mysql-compiled-release
+        passed: [create-and-compile-release]
+        trigger: true
+      - get: bosh-deployment
+        resource: bosh-deployment-repo
+      - get: deployments
+        resource: deployments-configuration
+      - get: stemcell
+        resource: bosh-lite-stemcell
+      - get: version
+        passed: [create-and-compile-release]
+    - aggregate:
+      - task: make-manifest
+        file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+        params:
+          ENABLE_REMOTE_ADMIN_ACCESS: false
+      - task: apply-terraform
+        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+    - task: create-bosh-lite
+      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+      input_mapping: {deployments: deployments-terraformed}
+      params:
+        PROJECT_ID: {{gcp-bosh-lite-project-id}}
+        ZONE: {{gcp-bosh-lite-zone}}
+        NETWORK: {{gcp-bosh-lite-network}}
+        SUBNETWORK: {{gcp-bosh-lite-subnetwork}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+    - task: delete-stemcell
+      file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
+  - *ondemand-deploy-manifest
+  - task: run-verify-tuning
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+        - name: cf-mysql-ci
+        - name: bosh-lite-info
+      params:
+        MYSQL_TUNNEL_USERNAME: jumpbox
+        ENV_TARGET_FILE: bosh-lite-info/external-ip
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
+        BOSH_DEPLOYMENT: cf-mysql
+      run:
+        path: cf-mysql-ci/scripts/tuning/verify-tuning
+  - *ondemand-teardown
+
 - name: upload-rc-artifacts
   plan:
   - aggregate:

@@ -7,6 +7,8 @@ set -eux
 : "${NO_ARBITRATOR:=false}"
 : "${TINY_GCACHE:=false}"
 : "${ENABLE_REMOTE_ADMIN_ACCESS:=false}"
+: "${TUNE_BY_EXACT_SIZE:=false}"
+: "${TUNE_BY_PERCENTAGE:=false}"
 
 operations=""
 
@@ -28,6 +30,14 @@ fi
 
 if ${ENABLE_REMOTE_ADMIN_ACCESS}; then
     operations="$operations -o ./cf-mysql-ci/operations/enable-remote-admin-access.yml"
+fi
+
+if ${TUNE_BY_EXACT_SIZE}; then
+    operations="$operations -o ./cf-mysql-ci/operations/tune-buffer-by-exact-size.yml"
+fi
+
+if ${TUNE_BY_PERCENTAGE}; then
+    operations="$operations -o ./cf-mysql-ci/operations/tune-buffer-by-percentage.yml"
 fi
 
 gobosh interpolate \

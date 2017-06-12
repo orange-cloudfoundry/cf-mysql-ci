@@ -1,0 +1,79 @@
+#!/bin/bash
+
+set -eux
+
+tmpdir=$(mktemp -d /tmp/mysql_tuning.XXXXX)
+trap '{ rm -rf ${tmpdir}; }' EXIT
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CI_DIR="$( cd "${MY_DIR}/../../" && pwd )"
+WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
+
+source ${CI_DIR}/scripts/utils.sh
+
+: "${ENV_TARGET_FILE:?}"
+: "${BOSH_DEPLOYMENT:?}"
+: "${BOSH_CLIENT:?}"
+: "${BOSH_CLIENT_SECRET:?}"
+
+director_ip="$(cat "${ENV_TARGET_FILE}")"
+
+DEPLOYMENT_NAME=${DEPLOYMENT_NAME:-${BOSH_DEPLOYMENT:-"cf-warden-mysql"}}
+SSH_KEY_FILE=${SSH_KEY_FILE:-""}
+MYSQL_TUNNEL_IP=127.0.0.1
+MYSQL_TUNNEL_PORT=3307
+MYSQL_TUNNEL_USERNAME=${MYSQL_TUNNEL_USERNAME:-ubuntu}
+MYSQL_VM_IP=10.244.7.2
+MYSQL_VM_PORT=3306
+
+function deploy_with_exact_size() {
+  echo "Deploying with innodb_buffer_pool_size with exact size requirements"
+  MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
+
+  TUNE_BY_EXACT_SIZE=true \
+  OUTPUT_FILE="${MANIFEST_FILE}" \
+  ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
+
+  gobosh -n deploy $MANIFEST_FILE
+}
+
+function deploy_with_percentage() {
+  echo "Deploying with innodb_buffer_pool_size with size as percentage of total memory"
+  MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
+
+  TUNE_BY_PERCENTAGE=true \
+  OUTPUT_FILE="${MANIFEST_FILE}" \
+  ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
+
+  gobosh -n deploy $MANIFEST_FILE
+}
+
+deploy_with_exact_size
+
+# connect
+write_mysql_config
+trap close-ssh-tunnels EXIT
+open_ssh_tunnel_to_mysql
+
+# look at db to see that it is exact
+innodb_bp_size=$(mysql --defaults-extra-file=${MYSQL_CONFIG} \
+  -sse "SELECT @@innodb_buffer_pool_size")
+
+if [[ "${innodb_bp_size}" != "465567744" ]]; then
+  echo "Exact size did not render correctly, found ${innodb_bp_size}"
+  exit 1
+fi
+
+deploy_with_percentage
+
+# connect
+# look at db to see it is not the old exact value
+innodb_bp_size=$(mysql --defaults-extra-file=${MYSQL_CONFIG} \
+  -sse "SELECT @@innodb_buffer_pool_size")
+
+if [[ "${innodb_bp_size}" == "465567744" ]]; then
+  echo "Percentage accidentally rendered old exact value, found ${innodb_bp_size}"
+  exit 1
+fi
+
+echo "Tuning overriding works with exact and percentage"
