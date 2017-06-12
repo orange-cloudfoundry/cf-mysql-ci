@@ -75,6 +75,10 @@ if [ "${DISABLE_PARANOIA}" = "true" ]; then
   PROPERTY_OVERRIDES="$PROPERTY_OVERRIDES ${CI_DIR}/stubs/property-overrides-disable-paranoia.yml"
 fi
 
+if [ "${NOTIFICATIONS_DB}" = "true" ]; then
+  PROPERTY_OVERRIDES="$PROPERTY_OVERRIDES ${CI_DIR}/stubs/property-overrides-disable-paranoia.yml"
+fi
+
 CF_CREDENTIALS_STUB="${tmpdir}/cf-credentials-overrides.yml"
 cat > ${CF_CREDENTIALS_STUB} <<EOF
 director_uuid: $(bosh status --uuid)
