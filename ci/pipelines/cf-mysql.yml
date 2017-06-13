@@ -1155,7 +1155,8 @@ jobs:
       - task: make-manifest
         file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
         params:
-          ENABLE_REMOTE_ADMIN_ACCESS: false
+          ENABLE_REMOTE_ADMIN_ACCESS: true
+          MINIMAL_MODE: true
       - task: apply-terraform
         file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
     - task: create-bosh-lite
@@ -1185,6 +1186,8 @@ jobs:
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
         BOSH_DEPLOYMENT: cf-mysql
+        MINIMAL_MODE: true
+        ENABLE_REMOTE_ADMIN_ACCESS: true
       run:
         path: cf-mysql-ci/scripts/tuning/verify-tuning
   - *ondemand-teardown
