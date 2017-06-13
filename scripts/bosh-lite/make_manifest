@@ -77,7 +77,7 @@ if [ "${DISABLE_PARANOIA}" = "true" ]; then
 fi
 
 if [ "${NOTIFICATIONS_DB}" = "true" ]; then
-  PROPERTY_OVERRIDES="$PROPERTY_OVERRIDES ${CI_DIR}/stubs/property-overrides-disable-paranoia.yml"
+  PROPERTY_OVERRIDES="$PROPERTY_OVERRIDES ${CI_DIR}/stubs/notifications-db.yml"
 fi
 
 CF_CREDENTIALS_STUB="${tmpdir}/cf-credentials-overrides.yml"
