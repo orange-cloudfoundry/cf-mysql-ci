@@ -56,14 +56,12 @@ RUN ruby-install ruby ${DOCKER_RUBY_VERSION} -- --disable-install-rdoc
 # Add ruby to PATH
 ENV PATH $PATH:/home/root/.gem/ruby/${DOCKER_RUBY_VERSION}/bin:/opt/rubies/ruby-${DOCKER_RUBY_VERSION}/lib/ruby/gems/${DOCKER_RUBY_VERSION}/bin:/opt/rubies/ruby-${DOCKER_RUBY_VERSION}/bin
 
-# Install gems
-RUN /opt/rubies/ruby-${DOCKER_RUBY_VERSION}/bin/gem install bosh_cli --no-rdoc --no-ri && \
-          /opt/rubies/ruby-${DOCKER_RUBY_VERSION}/bin/gem install bundler --no-rdoc --no-ri
-
 # Install gobosh cli
 RUN \
   wget -q https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-2.0.23-linux-amd64 -O /usr/local/bin/gobosh && \
-  chmod +x /usr/local/bin/gobosh
+  chmod +x /usr/local/bin/gobosh && \
+  ln -s /usr/local/bin/gobosh /usr/local/bin/bosh && \
+  ln -s /usr/local/bin/gobosh /usr/local/bin/bosh2
 
 # Phantomjs is used by switchboard ui tests and dashboard acceptance tests
 RUN wget https://github.com/Pyppe/phantomjs2.0-ubuntu14.04x64/raw/master/bin/phantomjs && \
@@ -107,9 +105,13 @@ RUN \
 RUN gem install gorgeous
 
 # Install terraform
-RUN wget 'https://releases.hashicorp.com/terraform/0.9.6/terraform_0.9.6_linux_amd64.zip' \
+RUN wget 'https://releases.hashicorp.com/terraform/0.9.8/terraform_0.9.8_linux_amd64.zip' \
   --quiet \
   --output-document /tmp/terraform.zip && \
   unzip /tmp/terraform.zip -d /usr/local/bin/ && \
   chmod +x /usr/local/bin/terraform && \
   rm /tmp/terraform.zip
+
+RUN wget 'https://github.com/cloudfoundry/bosh-bootloader/releases/download/v3.2.4/bbl-v3.2.4_linux_x86-64' \
+      -O /usr/local/bin/bbl && \
+      chmod +x /usr/local/bin/bbl
