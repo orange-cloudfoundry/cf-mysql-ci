@@ -102,7 +102,7 @@ RUN \
   rm /tmp/consul_0.5.2_linux_amd64.zip
 
 #install gorgeous gem
-RUN gem install gorgeous
+RUN gem install bundler gorgeous --no-rdoc --no-ri
 
 # Install terraform
 RUN wget 'https://releases.hashicorp.com/terraform/0.9.8/terraform_0.9.8_linux_amd64.zip' \
