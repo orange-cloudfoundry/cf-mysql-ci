@@ -9,6 +9,7 @@ image_resource:
 inputs:
 - name: cf-mysql-ci
 - name: cf-deployment
+- name: url
 
 outputs:
 - name: cf-deployment-manifest
@@ -18,4 +19,4 @@ run:
 
 params:
   OUTPUT_FILE: deployment-manifest/cf.yml
-  DNS_NAME:
+  DNS_NAME: url/url
