@@ -51,7 +51,7 @@ if ${ADD_BROKERS}; then
         operations="$operations -o ./cf-mysql-deployment/operations/disable-cross-deployment-links.yml"
     fi
     cf_url="$(cat url/url)"
-    cf_admin_password="$(bosh2 int varstore/deployment-vars.yml --path=cf_admin_password)"
+    cf_admin_password="$(bosh2 int varstore/deployment-vars.yml --path=/cf_admin_password)"
     variables="$variables \
     -v cf_admin_username=admin \
     -v cf_admin_password=\"${cf_admin_password}\" \
