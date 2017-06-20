@@ -51,7 +51,7 @@ EOF
   bosh2 upload-stemcell *stemcell/*.tgz
   bosh2 -n -d ${DEPLOYMENT_NAME} deploy deployment.yml
 
-  bosh2 export-release ${name}/${version} ubuntu-trusty/${stemcell_version}
+  bosh2 -d ${DEPLOYMENT_NAME} export-release ${name}/${version} ubuntu-trusty/${stemcell_version}
 
   mv release*.tgz ${OUTPUT_DIR}/
 
