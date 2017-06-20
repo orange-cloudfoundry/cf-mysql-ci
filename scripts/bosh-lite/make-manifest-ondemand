@@ -13,6 +13,7 @@ set -eux
 : "${DISABLE_CROSS_DEPLOYMENT_LINKS:=true}"
 
 operations=""
+variables=""
 
 if ${MINIMAL_MODE}; then
     operations="$operations -o ./cf-mysql-ci/operations/minimal-mode.yml"
@@ -49,6 +50,14 @@ if ${ADD_BROKERS}; then
     if ${DISABLE_CROSS_DEPLOYMENT_LINKS}; then
         operations="$operations -o ./cf-mysql-deployment/operations/disable-cross-deployment-links.yml"
     fi
+    cf_url="$(cat url/url)"
+    cf_admin_password="$(bosh2 int varstore/deployment-vars.yml --path=cf_admin_password)"
+    variables="$variables \
+    -v cf_admin_username=admin \
+    -v cf_admin_password=\"${cf_admin_password}\" \
+    -v cf_api_url=\"api.${cf_url}\" \
+    -v apps_domain=\"${cf_url}\" \
+    -v cf_mysql_external_host=\"${cf_url}\""
 fi
 
 
@@ -58,4 +67,5 @@ gobosh interpolate \
     ${operations} \
     -o ./cf-mysql-ci/operations/default-vcap-password.yml \
     -l ./cf-mysql-deployment/bosh-lite/default-vars.yml \
+    ${variables} \
     > "${OUTPUT_FILE}"

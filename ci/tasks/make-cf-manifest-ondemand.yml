@@ -13,10 +13,11 @@ inputs:
 
 outputs:
 - name: cf-deployment-manifest
+- name: varstore
 
 run:
   path: cf-mysql-ci/scripts/bosh-lite/make-cf-manifest-ondemand
 
 params:
-  OUTPUT_FILE: deployment-manifest/cf.yml
+  OUTPUT_FILE: cf-deployment-manifest/cf.yml
   DNS_NAME: url/url

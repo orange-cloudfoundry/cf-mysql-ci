@@ -4,6 +4,8 @@ set -eux
 
 : "${DNS_NAME}"
 
+my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+workspace_dir="$( cd "${my_dir}/../../../" && pwd )"
 # : "${PRECOMPILED_RELEASES:=true}"
 
 operations=""
@@ -13,9 +15,9 @@ operations=""
 # fi
 
 bosh2 int \
-    ~/workspace/cf-deployment/cf-deployment.yml \
-    --vars-store ~/workspace/cf-deployment/deployment-vars.yml \
+    ${workspace_dir}/cf-deployment/cf-deployment.yml \
+    --vars-store ${workspace_dir}/varstore/deployment-vars.yml \
     $operations \
-    -o ~/workspace/cf-deployment/operations/bosh-lite.yml \
-    -v system_domain="$DNS_NAME" \
+    -o ${workspace_dir}/cf-deployment/operations/bosh-lite.yml \
+    -v system_domain="$(cat "$DNS_NAME")" \
     -o local-security-groups.yml
