@@ -22,3 +22,4 @@ params:
   MINIMAL_MODE: false
   NO_ARBITRATOR: false
   ENABLE_REMOTE_ADMIN_ACCESS: false
+  ADD_BROKER: false
