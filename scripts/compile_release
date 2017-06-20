@@ -29,8 +29,6 @@ pushd "${WORKSPACE_DIR}"
 ---
 name: ${DEPLOYMENT_NAME}
 
-director_uuid: 8797c2a6-c620-4192-a1b8-fc71dec6e995
-
 releases:
 - name: ${name}
   version: "${version}"
@@ -41,7 +39,7 @@ stemcells:
   os: ubuntu-trusty
   version: "${stemcell_version}"
 
-jobs: []
+instance_groups: []
 
 update:
   canaries: 1
@@ -50,19 +48,12 @@ update:
   update_watch_time: 1000-90000
 EOF
 
-  echo "Targeting ${BOSH_ENVIRONMENT}"
-  set +x
-    bosh -u ${BOSH_CLIENT} -p ${BOSH_CLIENT_SECRET} target ${BOSH_ENVIRONMENT}
-    bosh login ${BOSH_CLIENT} ${BOSH_CLIENT_SECRET}
-  set -x
+  bosh2 upload-stemcell *stemcell/*.tgz --skip-if-exists
+  bosh2 -d ${DEPLOYMENT_NAME} deploy deployment.yml
 
-  bosh deployment deployment.yml
-  bosh upload stemcell *stemcell/*.tgz --skip-if-exists
-  bosh -n deploy
-
-  bosh export release ${name}/${version} ubuntu-trusty/${stemcell_version}
+  bosh2 export-release ${name}/${version} ubuntu-trusty/${stemcell_version}
 
   mv release*.tgz ${OUTPUT_DIR}/
 
-  bosh -n delete deployment ${DEPLOYMENT_NAME}
+  bosh2 -d ${DEPLOYMENT_NAME} -n delete-deployment
 popd
