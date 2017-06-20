@@ -15,5 +15,4 @@ run:
   path: sh
   args:
   - |
-    BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")" \
     bosh2 -n update-cloud-config "${cf-deployment}/bosh-lite/cloud-config.yml"
