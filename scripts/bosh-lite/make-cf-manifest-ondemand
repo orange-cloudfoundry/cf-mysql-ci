@@ -6,7 +6,7 @@ set -eux
 
 # : "${PRECOMPILED_RELEASES:=true}"
 
-# operations=""
+operations=""
 
 # if ${PRECOMPILED_RELEASES}; then
 #     operations="$operations -o ./*cf deployment repo here*"
