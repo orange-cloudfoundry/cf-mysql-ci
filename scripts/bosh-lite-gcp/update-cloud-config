@@ -1,0 +1,4 @@
+#!/bin/bash
+set -eux
+
+bosh2 -n update-cloud-config "${CLOUD_CONFIG}"
