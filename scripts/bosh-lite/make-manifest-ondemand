@@ -9,6 +9,8 @@ set -eux
 : "${ENABLE_REMOTE_ADMIN_ACCESS:=false}"
 : "${TUNE_BY_EXACT_SIZE:=false}"
 : "${TUNE_BY_PERCENTAGE:=false}"
+: "${ADD_BROKERS:=false}"
+: "${DISABLE_CROSS_DEPLOYMENT_LINKS:=true}"
 
 operations=""
 
@@ -39,6 +41,16 @@ fi
 if ${TUNE_BY_PERCENTAGE}; then
     operations="$operations -o ./cf-mysql-ci/operations/tune-buffer-by-percentage.yml"
 fi
+
+if ${ADD_BROKERS}; then
+    operations="$operations -o ./cf-mysql-deployment/operations/add-broker.yml"
+    operations="$operations -o ./cf-mysql-deployment/operations/register-proxy-route.yml"
+    operations="$operations -o ./cf-mysql-ci/operations/default-vcap-password-broker.yml"
+    if ${DISABLE_CROSS_DEPLOYMENT_LINKS}; then
+        operations="$operations -o ./cf-mysql-deployment/operations/disable-cross-deployment-links.yml"
+    fi
+fi
+
 
 gobosh interpolate \
     ./cf-mysql-deployment/cf-mysql-deployment.yml \
