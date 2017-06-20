@@ -15,4 +15,4 @@ run:
   path: sh
   args:
   - |
-    bosh2 -n update-cloud-config "${cf-deployment}/bosh-lite/cloud-config.yml"
+    bosh2 -n update-cloud-config "cf-deployment/bosh-lite/cloud-config.yml"
