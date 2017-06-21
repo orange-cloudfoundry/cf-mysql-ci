@@ -2,7 +2,7 @@
 
 set -eux
 
-function close-ssh-tunnels() {
+function close-all-ssh-tunnels() {
   echo "Closing SSH tunnels ..."
   OLD_TUNNELS=`ps aux | grep "ssh" | \
     grep "\-L 43306\|\-L 43307\|\-L 43308" | \
@@ -32,7 +32,7 @@ function setup_infrastructure_variables() {
       TUNNEL_PORTS[$i-1]=$(( BASE_TUNNEL_PORT++ ))
     done
 
-    trap close-ssh-tunnels EXIT
+    trap close-all-ssh-tunnels EXIT
     for i in `seq 1 $num_ips`; do
       PORT=${TUNNEL_PORTS[$i-1]}
       MYSQL_IP=${MYSQL_IPS[$i-1]}
