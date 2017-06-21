@@ -296,7 +296,9 @@ jobs:
       inputs:
       - name: cf-mysql-ci
       - name: aws-environment
+      - name: deployments-configuration
       params:
+        ENV_REPO: deployments-configuration
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
         BOSH_DEPLOYMENT: cf-mysql
@@ -418,7 +420,9 @@ jobs:
       inputs:
       - name: cf-mysql-ci
       - name: aws-environment
+      - name: deployments-configuration
       params:
+        ENV_REPO: deployments-configuration
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
         BOSH_DEPLOYMENT: cf-mysql
@@ -517,6 +521,7 @@ jobs:
           - name: cf-mysql-ci
           - name: bosh-lite-info
           params:
+            BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
             BOSH_CLIENT: {{bosh-lite-username}}
             BOSH_CLIENT_SECRET: {{bosh-lite-password}}
             BOSH_DEPLOYMENT: cf-mysql

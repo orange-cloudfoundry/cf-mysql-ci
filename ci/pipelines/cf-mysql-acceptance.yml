@@ -126,6 +126,7 @@ jobs:
           - name: deployments-configuration
           - name: aws-acceptance-environment
         params:
+          ENV_REPO: deployments-configuration
           ENV_TARGET_FILE: aws-acceptance-environment/name
           ENV_METADATA: aws-acceptance-environment/metadata
           DEPLOYMENT_NAME: cf-mysql
