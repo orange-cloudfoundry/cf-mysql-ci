@@ -24,16 +24,16 @@ function close-ssh-tunnels() {
 }
 
 function bosh-ip() {
-  bosh -n vms ${DEPLOYMENT_NAME} | grep $1 | awk '{ print $11 }'
+  bosh -n vms ${DEPLOYMENT_NAME} | grep $1 | grep $2 | awk '{ print $4 }'
 }
 
 BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
 BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
 BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
-export BROKER_0_REMOTE_IP=$(bosh-ip broker/0)
-export BROKER_1_REMOTE_IP=$(bosh-ip broker/1)
-export MYSQL_NODE_0_REMOTE_IP=$(bosh-ip mysql/0)
+export BROKER_0_REMOTE_IP=$(bosh-ip broker z1)
+export BROKER_1_REMOTE_IP=$(bosh-ip broker z2)
+export MYSQL_NODE_0_REMOTE_IP=$(bosh-ip mysql z1)
 
 # assumes we are running against a remote bosh-lite
 export BROKER_0_LOCAL_PORT="43306"
