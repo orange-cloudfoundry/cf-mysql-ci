@@ -53,6 +53,9 @@ vm_types:
 - name: default
   cloud_properties:
     machine_type: n1-standard-1
+- name: t2.small
+  cloud_properties:
+    machine_type: n1-standard-1
 - name: m3.medium
   cloud_properties:
     machine_type: n1-standard-1
@@ -65,8 +68,16 @@ vm_types:
 - name: m3.2xlarge
   cloud_properties:
     machine_type: n1-standard-8
+- name: c3.large
+  cloud_properties:
+    machine_type: n1-highcpu-2
+- name: r3.xlarge
+  cloud_properties:
+    machine_type: n1-highmem-4
 - name: n1-standard-1
 - name: n1-standard-2
 - name: n1-standard-4
 - name: n1-standard-8
 - name: n1-standard-16
+- name: n1-highcpu-2
+- name: n1-highmem-4
