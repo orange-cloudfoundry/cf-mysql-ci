@@ -27,12 +27,9 @@ function bosh-ip() {
   bosh -n vms ${DEPLOYMENT_NAME} | grep $1 | awk '{ print $11 }'
 }
 
-BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
+BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
 BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
 BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
-
-bosh -n target "${BOSH_TARGET}"
-bosh -n login "${BOSH_CLIENT}" "${BOSH_CLIENT_SECRET}"
 
 export BROKER_0_REMOTE_IP=$(bosh-ip broker/0)
 export BROKER_1_REMOTE_IP=$(bosh-ip broker/1)
