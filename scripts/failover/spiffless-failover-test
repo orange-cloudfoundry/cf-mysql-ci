@@ -48,19 +48,19 @@ ssh -L ${BROKER_0_LOCAL_PORT}:${BROKER_0_REMOTE_IP}:22 \
   -NnTf \
   -i "${BOSH_LITE_KEY_FILE}" \
   -o StrictHostKeyChecking=no \
-  "ubuntu@${BOSH_TARGET}"
+  "ubuntu@${BOSH_ENVIRONMENT}"
 
 ssh -L ${BROKER_1_LOCAL_PORT}:${BROKER_1_REMOTE_IP}:22 \
   -NnTf \
   -i "${BOSH_LITE_KEY_FILE}" \
   -o StrictHostKeyChecking=no \
-   "ubuntu@${BOSH_TARGET}"
+   "ubuntu@${BOSH_ENVIRONMENT}"
 
 ssh  -L ${MYSQL_NODE_0_LOCAL_PORT}:${MYSQL_NODE_0_REMOTE_IP}:22 \
   -NnTf \
   -i "${BOSH_LITE_KEY_FILE}" \
   -o StrictHostKeyChecking=no \
-  "ubuntu@${BOSH_TARGET}"
+  "ubuntu@${BOSH_ENVIRONMENT}"
 
 export CONFIG_LOCATION="${CI_DIR}/integration_config.json"
 export BOSH_LITE_METADATA
