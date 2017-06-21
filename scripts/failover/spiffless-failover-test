@@ -24,12 +24,12 @@ function close-ssh-tunnels() {
 }
 
 function bosh-ip() {
-  bosh vms | grep $1 | grep $2 | awk '{ print $4 }'
+  bosh2 vms | grep $1 | grep $2 | awk '{ print $4 }'
 }
 
-BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
-BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
-BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
+export BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
+export BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
+export BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
 export BROKER_0_REMOTE_IP=$(bosh-ip broker z1)
 export BROKER_1_REMOTE_IP=$(bosh-ip broker z2)
