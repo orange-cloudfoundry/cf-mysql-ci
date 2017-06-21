@@ -20,4 +20,5 @@ bosh2 int \
     $operations \
     -o ${workspace_dir}/cf-deployment/operations/bosh-lite.yml \
     -v system_domain="$(cat "$DNS_NAME")" \
-    -o ${workspace_dir}/cf-mysql-ci/operations/cf-allow-apps-access-to-mysql.yml
+    -o ${workspace_dir}/cf-mysql-ci/operations/cf-allow-apps-access-to-mysql.yml \
+    > "${OUTPUT_FILE}"
