@@ -237,9 +237,10 @@ jobs:
       outputs:
       - name: compiled-release-tarball
       params:
-        BOSH_CLIENT: {{bosh_compilation_username}}
-        BOSH_CLIENT_SECRET: {{bosh_compilation_password}}
-        BOSH_ENVIRONMENT: {{bosh_compilation_director}}
+        BOSH_CLIENT: ((concourse-compilation-credentials/Username))
+        BOSH_CLIENT_SECRET: ((concourse-compilation-credentials/Password))
+        BOSH_ENVIRONMENT: ((concourse-compilation-credentials/URL))
+        BOSH_CA_CERT: ((concourse-compilation-credentials/Notes))
       run:
         path: cf-mysql-ci/scripts/compile_release
     ensure:
