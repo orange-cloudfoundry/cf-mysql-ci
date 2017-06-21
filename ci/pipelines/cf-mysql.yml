@@ -70,12 +70,12 @@ resources:
     branch: master
     private_key: {{git-writer-private-key}}
 
-- name: cf-mysql-deployment-release-candidate
-  type: git
-  source:
-    uri: git@github.com:cloudfoundry/cf-mysql-deployment.git
-    branch: release-candidate
-    private_key: {{git-writer-private-key}}
+#- name: cf-mysql-deployment-release-candidate
+#  type: git
+#  source:
+#    uri: git@github.com:cloudfoundry/cf-mysql-deployment.git
+#    branch: release-candidate
+#    private_key: {{git-writer-private-key}}
 
 - name: cf-mysql-release
   type: git
@@ -91,28 +91,20 @@ resources:
     branch: master
     private_key: {{git-writer-private-key}}
 
-- name: cf-mysql-release-candidate
-  type: git
-  source:
-    uri: git@github.com:cloudfoundry/cf-mysql-release.git
-    branch: release-candidate
-    private_key: {{git-writer-private-key}}
+#- name: cf-mysql-release-candidate
+#  type: git
+#  source:
+#    uri: git@github.com:cloudfoundry/cf-mysql-release.git
+#    branch: release-candidate
+#    private_key: {{git-writer-private-key}}
 
-- name: aws-deployment
-  type: bosh-deployment
-  source:
-    username: {{aws_bosh_username}}
-    password: {{aws_bosh_password}}
-    deployment: cf-mysql
-    ignore_ssl: true
-
-- name: bosh-lite-deployment
-  type: bosh-deployment
-  source:
-    username: {{bosh-lite-username}}
-    password: {{bosh-lite-password}}
-    deployment: cf-mysql
-    ignore_ssl: true
+#- name: aws-deployment
+#  type: bosh-deployment
+#  source:
+#    username: {{aws_bosh_username}}
+#    password: {{aws_bosh_password}}
+#    deployment: cf-mysql
+#    ignore_ssl: true
 
 - name: aws-environment
   type: pool
@@ -133,18 +125,18 @@ resources:
 - name: compiled-packages-lock
   type: pool
   source:
-    uri: *pool-uri
+    uri: git@github.com:pivotal-cf-experimental/core-services-oss-env-resource-pool
     branch: master
     pool: compiled-packages
     private_key: {{git-writer-private-key}}
 
-- name: cf-mysql-rc-artifacts
-  type: s3
-  source:
-    bucket: cf-mysql-releases
-    regexp: release-candidate/cf-mysql-(.*-rc.*)\.tgz
-    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
-    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
+#- name: cf-mysql-rc-artifacts
+#  type: s3
+#  source:
+#    bucket: cf-mysql-releases
+#    regexp: release-candidate/cf-mysql-(.*-rc.*)\.tgz
+#    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
+#    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
 
 - name: cf-mysql-compiled-release
   type: s3
@@ -154,7 +146,7 @@ resources:
     secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
     versioned_file: compiled-releases/cf-mysql-ubuntu-trusty-develop.tgz
 
-- name: bosh-2.0-bosh-lite-deployment
+- name: cf-mysql-deployment-bosh-lite
   type: bosh-deployment
   source:
     username: {{bosh-lite-username}}
@@ -162,11 +154,21 @@ resources:
     deployment: cf-mysql
     ignore_ssl: true
 
-- name: bosh-lite-repo
-  type: git
+- name: cf-deployment-bosh-lite
+  type: bosh-deployment
   source:
-    uri: https://github.com/cloudfoundry/bosh-lite.git
-    branch: master
+    username: {{bosh-lite-username}}
+    password: {{bosh-lite-password}}
+    deployment: cf
+    ignore_ssl: true
+
+- name: bosh-2.0-bosh-lite-deployment
+  type: bosh-deployment
+  source:
+    username: {{bosh-lite-username}}
+    password: {{bosh-lite-password}}
+    deployment: cf-mysql
+    ignore_ssl: true
 
 - name: bosh-deployment-repo
   type: git
@@ -198,20 +200,20 @@ resources:
     access_key_id: {{cf-mysql-ci-aws-access-key-id}}
     secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
 
-- name: publish-github-release
-  type: github-release
-  source:
-    user: cloudfoundry
-    repository: cf-mysql-release
-    access_token: {{git-writer-github-access-token}}
+#- name: publish-github-release
+#  type: github-release
+#  source:
+#    user: cloudfoundry
+#    repository: cf-mysql-release
+#    access_token: {{git-writer-github-access-token}}
 
-- name: release-notes
-  type: s3
-  source:
-    bucket: cf-mysql-release-notes
-    regexp: RELEASE_NOTES_v(\d+)
-    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
-    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
+#- name: release-notes
+#  type: s3
+#  source:
+#    bucket: cf-mysql-release-notes
+#    regexp: RELEASE_NOTES_v(\d+)
+#    access_key_id: {{cf-mysql-ci-aws-access-key-id}}
+#    secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
 
 ### JOBS
 jobs:
@@ -419,97 +421,97 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
 
-- name: test-full-bosh
-  plan:
-  - aggregate:
-    - get: aws-environment
-      passed: [deploy-to-full-bosh]
-      trigger: true
-      version: every
-    - get: cf-mysql-release
-      passed: [deploy-to-full-bosh]
-    - get: cf-mysql-deployment
-      passed: [deploy-to-full-bosh]
-      trigger: true
-    - get: cf-mysql-ci
-    - get: deployments-configuration
-    - get: version
-      passed: [deploy-to-full-bosh]
-    - get: compiled-release-tarball
-      resource: cf-mysql-compiled-release
-      passed: [deploy-to-full-bosh]
-      trigger: true
-    - get: routing-release
-      passed: [deploy-to-full-bosh]
-  - task: run-smoke-tests
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: cf-mysql-ci
-        - name: aws-environment
-        - name: deployments-configuration
-      params:
-        ENV_REPO: deployments-configuration
-        ENV_TARGET_FILE: aws-environment/name
-        ENV_METADATA: aws-environment/metadata
-        ERRAND: smoke-tests
-        BOSH_DEPLOYMENT: cf-mysql
-      run:
-        path: cf-mysql-ci/scripts/bosh/run_errand
-  - task: acceptance-test
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-        - name: cf-mysql-release
-        - name: cf-mysql-ci
-        - name: aws-environment
-      params:
-        ENV_TARGET_FILE: aws-environment/name
-        ENV_METADATA: aws-environment/metadata
-        TEST_TYPE: acceptance
-        PROXY_COUNT: 1
-        NEW_STYLE_PROXY_URL: true
-        USE_SMALL_PLANS: true
-      run:
-        path: cf-mysql-ci/scripts/acceptance-tests
-  - try:
-      task: run-deregister-and-purge-instances
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-        - name: cf-mysql-ci
-        - name: aws-environment
-        - name: deployments-configuration
-        params:
-          ENV_REPO: deployments-configuration
-          ENV_TARGET_FILE: aws-environment/name
-          ENV_METADATA: aws-environment/metadata
-          ERRAND: deregister-and-purge-instances
-          SKIP_IF_NO_DEPLOYMENT: true
-          BOSH_DEPLOYMENT: cf-mysql
-        run:
-          path: cf-mysql-ci/scripts/bosh/run_errand
-  - task: delete-aws-deployment
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-ci
-      - name: aws-environment
-      - name: deployments-configuration
-      params:
-        ENV_REPO: deployments-configuration
-        ENV_TARGET_FILE: aws-environment/name
-        ENV_METADATA: aws-environment/metadata
-        BOSH_DEPLOYMENT: cf-mysql
-      run:
-        path: cf-mysql-ci/scripts/bosh/delete_deployment
-  - put: aws-environment
-    params:
-      release: aws-environment
+#- name: test-full-bosh
+#  plan:
+#  - aggregate:
+#    - get: aws-environment
+#      passed: [deploy-to-full-bosh]
+#      trigger: true
+#      version: every
+#    - get: cf-mysql-release
+#      passed: [deploy-to-full-bosh]
+#    - get: cf-mysql-deployment
+#      passed: [deploy-to-full-bosh]
+#      trigger: true
+#    - get: cf-mysql-ci
+#    - get: deployments-configuration
+#    - get: version
+#      passed: [deploy-to-full-bosh]
+#    - get: compiled-release-tarball
+#      resource: cf-mysql-compiled-release
+#      passed: [deploy-to-full-bosh]
+#      trigger: true
+#    - get: routing-release
+#      passed: [deploy-to-full-bosh]
+#  - task: run-smoke-tests
+#    config:
+#      platform: *platform
+#      image_resource: *image_resource
+#      inputs:
+#        - name: cf-mysql-ci
+#        - name: aws-environment
+#        - name: deployments-configuration
+#      params:
+#        ENV_REPO: deployments-configuration
+#        ENV_TARGET_FILE: aws-environment/name
+#        ENV_METADATA: aws-environment/metadata
+#        ERRAND: smoke-tests
+#        BOSH_DEPLOYMENT: cf-mysql
+#      run:
+#        path: cf-mysql-ci/scripts/bosh/run_errand
+#  - task: acceptance-test
+#    config:
+#      platform: *platform
+#      image_resource: *image_resource
+#      inputs:
+#        - name: cf-mysql-release
+#        - name: cf-mysql-ci
+#        - name: aws-environment
+#      params:
+#        ENV_TARGET_FILE: aws-environment/name
+#        ENV_METADATA: aws-environment/metadata
+#        TEST_TYPE: acceptance
+#        PROXY_COUNT: 1
+#        NEW_STYLE_PROXY_URL: true
+#        USE_SMALL_PLANS: true
+#      run:
+#        path: cf-mysql-ci/scripts/acceptance-tests
+#  - try:
+#      task: run-deregister-and-purge-instances
+#      config:
+#        platform: *platform
+#        image_resource: *image_resource
+#        inputs:
+#        - name: cf-mysql-ci
+#        - name: aws-environment
+#        - name: deployments-configuration
+#        params:
+#          ENV_REPO: deployments-configuration
+#          ENV_TARGET_FILE: aws-environment/name
+#          ENV_METADATA: aws-environment/metadata
+#          ERRAND: deregister-and-purge-instances
+#          SKIP_IF_NO_DEPLOYMENT: true
+#          BOSH_DEPLOYMENT: cf-mysql
+#        run:
+#          path: cf-mysql-ci/scripts/bosh/run_errand
+#  - task: delete-aws-deployment
+#    config:
+#      platform: *platform
+#      image_resource: *image_resource
+#      inputs:
+#      - name: cf-mysql-ci
+#      - name: aws-environment
+#      - name: deployments-configuration
+#      params:
+#        ENV_REPO: deployments-configuration
+#        ENV_TARGET_FILE: aws-environment/name
+#        ENV_METADATA: aws-environment/metadata
+#        BOSH_DEPLOYMENT: cf-mysql
+#      run:
+#        path: cf-mysql-ci/scripts/bosh/delete_deployment
+#  - put: aws-environment
+#    params:
+#      release: aws-environment
 
 ### SCALING
 - name: test-scaling
@@ -648,16 +650,36 @@ jobs:
 
 ### FAILOVER
 # This requires CF; the failover test pushes an app
-- name: deploy-to-failover
+- name: test-failover
   plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed: [create-and-compile-release]
-      trigger: true
-    - get: cf-mysql-deployment
-      passed: [create-and-compile-release]
-      trigger: true
-    - put: bosh-lite-environment
+  - do:
+    - aggregate:
+      - get: cf-mysql-release
+        passed: [create-and-compile-release]
+        trigger: true
+      - get: cf-mysql-deployment
+        passed: [create-and-compile-release]
+        trigger: true
+      - get: cf-mysql-ci
+      - get: compiled-release-tarball
+        resource: cf-mysql-compiled-release
+        passed: [create-and-compile-release]
+        trigger: true
+      - get: bosh-deployment
+        resource: bosh-deployment-repo
+      - get: deployments
+        resource: deployments-configuration
+      - get: stemcell
+        resource: bosh-lite-stemcell
+      - get: version
+        passed: [create-and-compile-release]
+      - get: routing-release
+      - get: cf-deployment
+    - task: apply-terraform
+      file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+    - task: create-bosh-lite
+      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+      input_mapping: {deployments: deployments-terraformed}
       params:
         acquire: true
     - get: cf-mysql-ci
@@ -676,27 +698,59 @@ jobs:
         platform: *platform
         image_resource: *image_resource
         inputs:
-          - name: bosh-lite-environment
-          - name: bosh-lite-repo
-          - name: cf-mysql-ci
-        params:
-          BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
-          ENV_TARGET_FILE: bosh-lite-environment/name
-          ENV_METADATA: bosh-lite-environment/metadata
-          ERRAND: deregister-and-purge-instances
-          BOSH_DEPLOYMENT: cf-mysql
+        - name: cf-mysql-ci
+        - name: bosh-lite-info
+        - name: deployments
+          path: deployments-core-services
+        outputs:
+        - name: url
         run:
-          path: cf-mysql-ci/scripts/bosh/run_errand
-  - task: delete-cf-mysql-deployment
-    config:
-      platform: *platform
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-ci
-      - name: bosh-lite-environment
-      - name: bosh-lite-repo
-      run:
-        path: cf-mysql-ci/scripts/bosh/delete_deployment
+          path: cf-mysql-ci/scripts/bosh-lite-gcp/create-dns
+    - aggregate:
+      - task: make-cf-manifest
+        file: cf-mysql-ci/ci/tasks/make-cf-manifest-ondemand.yml
+      - task: delete-stemcell
+        file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
+      - task: update-cloud-config
+        config:
+          platform: linux
+          image_resource: *image_resource
+          inputs:
+          - name: cf-mysql-ci
+          - name: cf-deployment
+          params:
+            BOSH_CLIENT: ((concourse-compilation-credentials/Username))
+            BOSH_CLIENT_SECRET: ((concourse-compilation-credentials/Password))
+            BOSH_ENVIRONMENT: ((concourse-compilation-credentials/URL))
+            BOSH_CA_CERT: ((concourse-compilation-credentials/Notes))
+            CLOUD_CONFIG: cf-mysql-ci/gcp-cloud-config.yml
+          run:
+            path: cf-mysql-ci/scripts/bosh-lite-gcp/update-cloud-config
+    - task: make-manifest
+      config:
+        platform: linux
+        image_resource: *image_resource
+        inputs:
+        - name: varstore
+        - name: cf-mysql-ci
+        - name: cf-mysql-deployment
+        - name: url
+        outputs:
+        - name: deployment-manifest
+        params:
+          OUTPUT_FILE: deployment-manifest/deployment.yml
+          ADD_BROKERS: true
+          ENABLE_REMOTE_ADMIN_ACCESS: true
+        run:
+          path: cf-mysql-ci/scripts/bosh-lite/make-manifest-ondemand
+    - put: cf-deployment-bosh-lite
+      params:
+        manifest: cf-deployment-manifest/cf.yml
+        releases: []
+        stemcells:
+        - stemcell/*.tgz
+        target_file: bosh-lite-info/external-ip
+    - put: cf-mysql-deployment-bosh-lite
       params:
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
@@ -787,10 +841,35 @@ jobs:
         ENV_METADATA: bosh-lite-environment/metadata
         BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
       run:
-        path: cf-mysql-ci/scripts/failover/spiffless-failover-test
-  - put: bosh-lite-environment
-    params:
-      release: bosh-lite-environment
+        path: cf-mysql-ci/scripts/failover/failover-test-ondemand
+  - task: delete-deployment
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: bosh-lite-info
+      params:
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        BOSH_DEPLOYMENT: cf
+        ENV_TARGET_FILE: bosh-lite-info/external-ip
+      run:
+        path: cf-mysql-ci/scripts/bosh/delete_deployment
+  - aggregate:
+    - *ondemand-teardown
+    - task: delete-dns
+      config:
+        platform: *platform
+        image_resource: *image_resource
+        inputs:
+        - name: cf-mysql-ci
+        - name: bosh-lite-info
+        - name: url
+        - name: deployments
+          path: deployments-core-services
+        run:
+          path: cf-mysql-ci/scripts/bosh-lite-gcp/delete-dns
 
 ### UPGRADE
 - name: test-upgrade-from-previous
@@ -1210,145 +1289,6 @@ jobs:
         path: cf-mysql-ci/scripts/tuning/verify-tuning
   - *ondemand-teardown
 
-- name: upload-rc-artifacts
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed:
-      - test-full-bosh
-      - test-scaling
-      - test-failover
-      - test-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
-      - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
-      - test-upgrade-from-previous
-      - test-arb-to-full-scaling
-      - test-verify-no-remote-access
-      trigger: true
-    - get: cf-mysql-ci
-    - get: version
-      passed:
-      - test-full-bosh
-      - test-scaling
-      - test-failover
-      - test-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
-      - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
-      - test-upgrade-from-previous
-      - test-arb-to-full-scaling
-      - test-verify-no-remote-access
-  - *create-release
-  - put: cf-mysql-rc-artifacts
-    params:
-      file: release-tarball/cf-mysql*.tgz
-
-- name: promote-to-rc
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed:
-      - test-full-bosh
-      - test-scaling
-      - test-failover
-      - test-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
-      - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
-      - test-upgrade-from-previous
-      - test-arb-to-full-scaling
-      - test-verify-no-remote-access
-      trigger: true
-      params:
-        fetch: [release-candidate]
-    - get: cf-mysql-deployment
-      passed:
-      - test-full-bosh
-      - test-scaling
-      - test-failover
-      - test-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
-      - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
-      - test-upgrade-from-previous
-      - test-arb-to-full-scaling
-      - test-verify-no-remote-access
-      trigger: true
-    - get: cf-mysql-ci
-  - aggregate:
-    - put: cf-mysql-release-candidate
-      params:
-        repository: cf-mysql-release
-    - put: cf-mysql-deployment-release-candidate
-      params:
-        repository: cf-mysql-deployment
-
-- name: final-release
-  serial_groups: [version-bumper]
-  plan:
-    - aggregate:
-      - get: cf-mysql-master
-        params:
-          fetch:
-          - develop
-          - release-candidate
-          submodules: none
-      - get: cf-mysql-deployment-release-candidate
-        passed: [promote-to-rc]
-      - get: cf-mysql-deployment-master
-      - get: cf-mysql-ci
-      - get: deployments-configuration
-      - get: release-notes
-        trigger: true
-      - get: version
-        params:
-          bump: final
-    - task: final-release
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-        - name: cf-mysql-ci
-        - name: cf-mysql-master
-          path: cf-mysql-release
-        - name: release-notes
-        outputs:
-          - name: output-release-dir
-          - name: output-repo
-        run:
-          path: cf-mysql-ci/scripts/publish/cut-final-release
-        params:
-          RELEASE_NOTES_DIRECTORY: release-notes
-          OUTPUT_RELEASE_ARTIFACTS: output-release-dir/release-artifacts
-          OUTPUT_RELEASE_TAG: output-release-dir/cf-mysql-tag
-          OUTPUT_RELEASE_NOTES: output-release-dir/generated-release-notes
-          OUTPUT_RELEASE_COMMIT: output-release-dir/git-commit
-          OUTPUT_REPO_DIRECTORY: output-repo
-          RELEASE_ACCESS_KEY: {{cf-mysql-publish-blobs-aws-access-key-id}}
-          RELEASE_SECRET_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
-    - put: cf-mysql-deployment-master
-      params:
-        repository: cf-mysql-deployment-release-candidate
-        tag: output-release-dir/cf-mysql-tag
-    - put: cf-mysql-master
-      params:
-        repository: output-repo/cf-mysql-release
-        tag: output-release-dir/cf-mysql-tag
-    - put: version
-      params:
-        bump: major
-        pre: rc
-    - put: s3-resource-final-release
-      params:
-        file: output-release-dir/release-artifacts/*.tgz
-    - put: publish-github-release
-      params:
-        name: output-release-dir/cf-mysql-tag
-        tag: output-release-dir/cf-mysql-tag
-        body: output-release-dir/generated-release-notes
-        commitish: output-release-dir/git-commit
-
 - name: merge-master-into-develop
   plan:
   - aggregate:
@@ -1376,23 +1316,3 @@ jobs:
         SOURCE_BRANCH: develop
         BRANCH_TO_MERGE: master
         GIT_PRIVATE_KEY: {{git-writer-private-key}}
-
-- name: bump-minor
-  plan:
-  - aggregate:
-    - get: version
-      params:
-        bump: minor
-  - put: version
-    params:
-      file: version/version
-
-- name: bump-major
-  plan:
-  - aggregate:
-    - get: version
-      params:
-        bump: major
-  - put: version
-    params:
-      file: version/version
