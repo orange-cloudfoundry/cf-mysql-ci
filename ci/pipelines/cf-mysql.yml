@@ -508,10 +508,10 @@ jobs:
           - name: cf-mysql-ci
           - name: cf-deployment
           params:
-            BOSH_CLIENT: ((concourse-compilation-credentials/Username))
-            BOSH_CLIENT_SECRET: ((concourse-compilation-credentials/Password))
-            BOSH_ENVIRONMENT: ((concourse-compilation-credentials/URL))
-            BOSH_CA_CERT: ((concourse-compilation-credentials/Notes))
+            BOSH_CLIENT: {{bosh-lite-username}}
+            BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+            ENV_TARGET_FILE: bosh-lite-info/director-url
+            BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
             CLOUD_CONFIG: cf-mysql-ci/gcp-cloud-config.yml
           run:
             path: cf-mysql-ci/scripts/bosh-lite-gcp/update-cloud-config
