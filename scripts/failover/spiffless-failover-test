@@ -27,7 +27,8 @@ function bosh-ip() {
   bosh2 vms | grep $1 | grep $2 | awk '{ print $4 }'
 }
 
-export BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
+export bosh_ip="$(cat "${ENV_TARGET_FILE}")"
+export BOSH_ENVIRONMENT="$(sslip_from_ip "${bosh_ip}")"
 export BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
 export BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
@@ -48,19 +49,19 @@ ssh -L ${BROKER_0_LOCAL_PORT}:${BROKER_0_REMOTE_IP}:22 \
   -NnTf \
   -i "${BOSH_LITE_KEY_FILE}" \
   -o StrictHostKeyChecking=no \
-  "ubuntu@${BOSH_ENVIRONMENT}"
+  "ubuntu@${bosh_ip}"
 
 ssh -L ${BROKER_1_LOCAL_PORT}:${BROKER_1_REMOTE_IP}:22 \
   -NnTf \
   -i "${BOSH_LITE_KEY_FILE}" \
   -o StrictHostKeyChecking=no \
-   "ubuntu@${BOSH_ENVIRONMENT}"
+   "ubuntu@${bosh_ip}"
 
 ssh  -L ${MYSQL_NODE_0_LOCAL_PORT}:${MYSQL_NODE_0_REMOTE_IP}:22 \
   -NnTf \
   -i "${BOSH_LITE_KEY_FILE}" \
   -o StrictHostKeyChecking=no \
-  "ubuntu@${BOSH_ENVIRONMENT}"
+  "ubuntu@${bosh_ip}"
 
 export CONFIG_LOCATION="${CI_DIR}/integration_config.json"
 export BOSH_LITE_METADATA
