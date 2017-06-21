@@ -13,7 +13,9 @@ source ${CI_DIR}/scripts/utils.sh
 # accepts either for now
 DEPLOYMENT_NAME=${DEPLOYMENT_NAME:-"${BOSH_DEPLOYMENT}"}
 
-BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
+BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
+BOSH_ENVIRONMENT="$(sslip_from_ip "${BOSH_ENVIRONMENT}")"
+export BOSH_ENVIRONMENT
 
 BOSH_CLIENT=${BOSH_CLIENT:-"$(jq_val "bosh_user" "${ENV_METADATA}")"}
 export BOSH_CLIENT
