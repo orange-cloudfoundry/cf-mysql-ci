@@ -499,7 +499,9 @@ jobs:
       inputs:
       - name: cf-mysql-ci
       - name: aws-environment
+      - name: deployments-configuration
       params:
+        ENV_REPO: deployments-configuration
         ENV_TARGET_FILE: aws-environment/name
         ENV_METADATA: aws-environment/metadata
         BOSH_DEPLOYMENT: cf-mysql
@@ -608,7 +610,8 @@ jobs:
             BOSH_CLIENT: {{bosh-lite-username}}
             BOSH_CLIENT_SECRET: {{bosh-lite-password}}
             BOSH_DEPLOYMENT: cf-mysql
-            ENV_TARGET_FILE: bosh-lite-info/external-ip
+            ENV_TARGET_FILE: bosh-lite-info/director-url
+            BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
           run:
             path: cf-mysql-ci/scripts/bosh/delete_deployment
       - task: destroy-bosh-lite
@@ -1064,6 +1067,7 @@ jobs:
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
         BOSH_DEPLOYMENT: cf-mysql
+        BOSH_CA_CERT: bosh-lite-info/ca-cert
       run:
         path: cf-mysql-ci/scripts/verify-cluster-schemas/force-divergent-schemas-test
   - *ondemand-teardown

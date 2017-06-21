@@ -41,12 +41,7 @@ function open_ssh_tunnel_to_bosh_lite() {
 }
 
 function verify_schemas() {
-  bosh -n target "${director_ip}"
-  bosh -n login "${BOSH_CLIENT}" "${BOSH_CLIENT_SECRET}"
-  bosh -n download manifest ${DEPLOYMENT_NAME} ${DEPLOYMENT_NAME}.yml
-  bosh deployment ${DEPLOYMENT_NAME}.yml
-
-  output="$(bosh run errand verify-cluster-schemas --keep-alive)"
+  output="$(bosh2 run-errand verify-cluster-schemas --keep-alive)"
   echo $output
 }
 
