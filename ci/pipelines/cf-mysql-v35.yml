@@ -528,7 +528,7 @@ jobs:
             BOSH_CLIENT: {{bosh-lite-username}}
             BOSH_CLIENT_SECRET: {{bosh-lite-password}}
             BOSH_DEPLOYMENT: cf-mysql
-            ENV_TARGET_FILE: bosh-lite-info/external-ip
+            ENV_TARGET_FILE: bosh-lite-info/director-url
           run:
             path: cf-mysql-ci/scripts/bosh/delete_deployment
       - task: destroy-bosh-lite
@@ -602,9 +602,20 @@ jobs:
         run:
           path: cf-mysql-ci/scripts/bosh/run_errand
   - task: delete-cf-mysql-deployment
-    file: cf-mysql-ci/ci/tasks/delete-deployment.yml
-    params:
-      BOSH_DEPLOYMENT: cf-mysql
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: bosh-lite-environment
+      - name: bosh-lite-repo
+      run:
+        path: cf-mysql-ci/scripts/bosh/delete_deployment
+      params:
+        ENV_TARGET_FILE: bosh-lite-environment/name
+        ENV_METADATA: bosh-lite-environment/metadata
+        BOSH_CA_CERT_PATH: bosh-lite-repo/ca/certs/ca.crt
+        BOSH_DEPLOYMENT: cf-mysql
   - &make-manifest-bosh-lite
     task: make-manifest
     file: cf-mysql-ci/ci/tasks/make-manifest-gobosh-pooled.yml
@@ -682,10 +693,12 @@ jobs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
         - name: cf-mysql-release
+        - name: bosh-lite-repo
       params:
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
       run:
         path: cf-mysql-ci/scripts/failover/spiffless-failover-test
   - put: bosh-lite-environment
@@ -962,6 +975,7 @@ jobs:
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
         BOSH_DEPLOYMENT: cf-mysql
+        BOSH_CA_CERT: bosh-lite-info/ca-cert
       run:
         path: cf-mysql-ci/scripts/verify-cluster-schemas/force-divergent-schemas-test
   - *ondemand-teardown
