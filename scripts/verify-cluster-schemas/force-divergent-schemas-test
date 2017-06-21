@@ -14,7 +14,7 @@ source ${CI_DIR}/scripts/utils.sh
 
 director_ip="$(cat "${ENV_TARGET_FILE}")"
 
-BOSH_ENVIRONMENT="${director_ip}"
+export BOSH_ENVIRONMENT="${director_ip}"
 DEPLOYMENT_NAME=${DEPLOYMENT_NAME:-${BOSH_DEPLOYMENT:-"cf-mysql"}}
 SSH_KEY_FILE=${SSH_KEY_FILE:-""}
 MYSQL_TUNNEL_IP=127.0.0.1

@@ -689,6 +689,8 @@ jobs:
           path: cf-mysql-ci/scripts/bosh/run_errand
   - task: delete-cf-mysql-deployment
     config:
+      platform: *platform
+      image_resource: *image_resource
       inputs:
       - name: cf-mysql-ci
       - name: bosh-lite-environment
