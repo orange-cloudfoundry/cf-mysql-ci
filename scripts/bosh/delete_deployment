@@ -21,8 +21,11 @@ export BOSH_CLIENT
 BOSH_CLIENT_SECRET=${BOSH_CLIENT_SECRET:-"$(jq_val "bosh_password" "${ENV_METADATA}")"}
 export BOSH_CLIENT_SECRET
 
-bosh -n target "${BOSH_TARGET}"
-bosh -n login "${BOSH_CLIENT}" "${BOSH_CLIENT_SECRET}"
+BOSH_CA_CERT=${BOSH_CA_CERT_PATH:-"${WORKSPACE_DIR}/${ENV_REPO}/$(jq_val "env" "${ENV_METADATA}")/certs/rootCA.pem"}
+export BOSH_CA_CERT
+
+BOSH_DEPLOYMENT=${BOSH_DEPLOYMENT:-"${DEPLOYMENT_NAME}"}
+export BOSH_DEPLOYMENT
 
 set +e
 check_if_deployment_exists ${DEPLOYMENT_NAME}
@@ -32,9 +35,9 @@ set -e
 # A value of 0 indicates grep matched successfully,
 # and hence the deployment exists
 if [ ${DEPLOYMENT_GREP_RESULT} -eq 0 ]; then
-  bosh -n delete deployment ${DEPLOYMENT_NAME} --force
+  bosh2 -n delete-deployment --force
 else
   echo "deployment ${DEPLOYMENT_NAME} not found - nothing to delete"
 fi
 
-bosh -n cleanup --all
+bosh2 -n clean-up --all

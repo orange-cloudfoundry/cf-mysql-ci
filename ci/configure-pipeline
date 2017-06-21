@@ -23,7 +23,7 @@ set_pipeline_name() {
 }
 
 fly_pipeline() {
-  fly -t concourse set-pipeline \
+  reconfigure-pipeline -t concourse set-pipeline \
         -p "${PIPELINE_NAME}" \
         -c "${PIPELINE_PATH}" \
         -l "${CREDENTIALS_FILE}"
