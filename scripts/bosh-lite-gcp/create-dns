@@ -13,12 +13,14 @@ zone="bosh-lite"
 
 domain="bosh-lite.gcp.core-services.cf-app.com"
 host=$(date +"%s")
-url="*.${host}.${domain}"
+url="${host}.${domain}"
+wildcard_url="*.${host}.${domain}"
 
 ip_address=$(cat "${workspace_dir}/bosh-lite-info/external-ip")
 
 gcloud dns record-sets transaction start --zone bosh-lite
-gcloud dns record-sets transaction add --zone bosh-lite --name "${url}" --ttl 300 --type A "${ip_address}"
+gcloud dns record-sets transaction add --zone bosh-lite --name "${wildcard_url}" --ttl 300 --type A "${ip_address}"
 gcloud dns record-sets transaction execute --zone bosh-lite
 
 echo "${url}" > "${workspace_dir}/url/url"
+echo "${wildcard_url}" > "${workspace_dir}/url/wildcard_url"
