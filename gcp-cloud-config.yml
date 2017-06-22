@@ -52,7 +52,8 @@ vm_extensions:
 vm_types:
 - name: default
   cloud_properties:
-    machine_type: n1-standard-1
+    # fairly certain the recommended default is -2, https://github.com/cloudfoundry/bosh-deployment/blob/master/gcp/cloud-config.yml#L15
+    machine_type: n1-standard-2
 - name: t2.small
   cloud_properties:
     machine_type: n1-standard-1
