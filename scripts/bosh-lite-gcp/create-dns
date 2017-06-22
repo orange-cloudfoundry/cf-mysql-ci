@@ -13,7 +13,7 @@ zone="bosh-lite"
 
 domain="bosh-lite.gcp.core-services.cf-app.com"
 host=$(date +"%s")
-url="${host}.${domain}"
+url="*.${host}.${domain}"
 
 ip_address=$(cat "${workspace_dir}/bosh-lite-info/external-ip")
 

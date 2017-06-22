@@ -529,6 +529,7 @@ jobs:
           OUTPUT_FILE: deployment-manifest/deployment.yml
           ADD_BROKERS: true
           ENABLE_REMOTE_ADMIN_ACCESS: true
+          DISABLE_CROSS_DEPLOYMENT_LINKS: false
         run:
           path: cf-mysql-ci/scripts/bosh-lite/make-manifest-ondemand
     - put: cf-deployment-bosh-lite
