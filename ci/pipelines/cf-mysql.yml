@@ -486,19 +486,22 @@ jobs:
         NETWORK: {{gcp-bosh-lite-network}}
         SUBNETWORK: {{gcp-bosh-lite-subnetwork}}
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
-    - task: create-dns
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-        - name: cf-mysql-ci
-        - name: bosh-lite-info
-        - name: deployments
-          path: deployments-core-services
-        outputs:
-        - name: url
-        run:
-          path: cf-mysql-ci/scripts/bosh-lite-gcp/create-dns
+    - aggregate:
+      - task: create-dns
+        config:
+          platform: *platform
+          image_resource: *image_resource
+          inputs:
+          - name: cf-mysql-ci
+          - name: bosh-lite-info
+          - name: deployments
+            path: deployments-core-services
+          outputs:
+          - name: url
+          run:
+            path: cf-mysql-ci/scripts/bosh-lite-gcp/create-dns
+      - task: delete-stemcell
+        file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
     - aggregate:
       - task: make-cf-manifest
         file: cf-mysql-ci/ci/tasks/make-cf-manifest-ondemand.yml
@@ -618,8 +621,6 @@ jobs:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
   - aggregate:
     - *ondemand-teardown
-    - task: delete-stemcell
-      file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
     - task: delete-dns
       config:
         platform: *platform

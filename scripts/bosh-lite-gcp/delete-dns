@@ -11,7 +11,7 @@ gcloud config set project cf-core-services
 
 zone="bosh-lite"
 
-url=$(cat "${workspace_dir}/url/url")
+url=$(cat "${workspace_dir}/url/wildcard_url")
 
 ip_address=$(cat "${workspace_dir}/bosh-lite-info/external-ip")
 
