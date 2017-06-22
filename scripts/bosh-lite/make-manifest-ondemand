@@ -55,7 +55,7 @@ if ${ADD_BROKERS}; then
     variables="$variables \
     -v cf_admin_username=admin \
     -v cf_admin_password=\"${cf_admin_password}\" \
-    -v cf_api_url=\"api.${cf_url}\" \
+    -v cf_api_url=\"https://api.${cf_url}\" \
     -v apps_domain=\"${cf_url}\" \
     -v cf_mysql_external_host=\"${cf_url}\""
 fi
