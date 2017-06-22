@@ -1,0 +1,30 @@
+#!/bin/bash
+
+set -eux
+
+my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ci_dir="$( cd "${my_dir}/../../" && pwd )"
+WORKSPACE_DIR="$( cd "${ci_dir}/../" && pwd )"
+
+source "${ci_dir}/scripts/utils.sh"
+
+: "${ENV_TARGET_FILE:?}"
+: "${ERRAND:?}"
+
+BOSH_ENVIRONMENT=$(jq_val "target" "${ENV_METADATA}")
+export BOSH_ENVIRONMENT
+
+BOSH_CLIENT=${BOSH_CLIENT:-"$(jq_val "client" "${ENV_METADATA}")"}
+export BOSH_CLIENT
+
+BOSH_CLIENT_SECRET=${BOSH_CLIENT_SECRET:-"$(jq_val "client_secret" "${ENV_METADATA}")"}
+export BOSH_CLIENT_SECRET
+
+BOSH_CA_CERT=$(jq_val "ca_cert" "${ENV_METADATA}")
+export BOSH_CA_CERT
+
+gobosh \
+    -n \
+    run-errand \
+    "${ERRAND}"
+

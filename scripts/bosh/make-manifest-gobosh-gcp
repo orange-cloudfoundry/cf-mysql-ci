@@ -1,0 +1,46 @@
+#!/bin/bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CI_DIR="$( cd "${MY_DIR}/../.." && pwd )"
+WORKSPACE_DIR="$( cd "${CI_DIR}/.." && pwd )"
+MANIFEST_DIR="${WORKSPACE_DIR}/deployment-manifest"
+OUTPUT_FILE="${MANIFEST_DIR}/deployment.yml"
+
+source "${CI_DIR}/scripts/utils.sh"
+
+: "${ENV_METADATA:?}"
+: "${DEPLOYMENTS_DIR:?}"
+
+# ensure DEPLOYMENTS_DIR is an absolute path
+if [[ "${DEPLOYMENTS_DIR}" != /* ]]; then
+  DEPLOYMENTS_DIR="${WORKSPACE_DIR}/${DEPLOYMENTS_DIR}"
+fi
+
+
+ENV="$(cat ${ENV_NAME_FILE})"
+ENV_DIR="${DEPLOYMENTS_DIR}/${ENV}/"
+CF_ADMIN_PASSWORD=$(bosh2 int "${ENV_DIR}/cf-deployment-vars.yml" --path /cf_admin_password)
+ENV_DOMAIN=$(bosh2 int ${ENV_METADATA} --path /domain)
+
+
+bosh2 interpolate \
+    ./cf-mysql-deployment/cf-mysql-deployment.yml \
+    -o ./cf-mysql-deployment/operations/latest-versions.yml \
+    -o ./cf-mysql-deployment/operations/add-broker.yml \
+    -o ./cf-mysql-deployment/operations/proxy-elb.yml \
+    -o ./cf-mysql-deployment/operations/register-proxy-route.yml \
+    -o ./cf-mysql-ci/operations/default-vcap-password.yml \
+    -o ./cf-mysql-ci/operations/default-vcap-password-broker.yml \
+    -o ./cf-mysql-ci/operations/enable-remote-admin-access.yml \
+    -v cf_admin_password="${CF_ADMIN_PASSWORD}" \
+    -v cf_admin_username="admin" \
+    -v proxy_vm_extension="p-mysql-proxy-lb" \
+    -v cf_skip_ssl_validation="true" \
+    -v cf_api_url="https://api.${ENV_DOMAIN}" \
+    -v cf_mysql_external_host="p-mysql.${ENV_DOMAIN}" \
+    -v cf_mysql_host="proxy-p-mysql.${ENV_DOMAIN}" \
+    --vars-store ${MANIFEST_DIR}/vars.yml
+    > "${OUTPUT_FILE}"
+
