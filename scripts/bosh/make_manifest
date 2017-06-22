@@ -23,10 +23,11 @@ if [[ "${DEPLOYMENTS_DIR}" != /* ]]; then
   DEPLOYMENTS_DIR="${WORKSPACE_DIR}/${DEPLOYMENTS_DIR}"
 fi
 
-BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
+BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
 ENV="$(jq_val "env" "${ENV_METADATA}")"
-BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
-BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
+export BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
+export BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
+export BOSH_CA_CERT="${WORKSPACE_DIR}/${DEPLOYMENTS_DIR}/${ENV}//certs/rootCA.pem"
 
 
 : "${PROPERTY_OVERRIDES_FILE:=${ENV}/stubs/mysql/property_overrides.yml}"
@@ -41,9 +42,6 @@ IAAS_SETTINGS_FILE="${DEPLOYMENTS_DIR}/${IAAS_SETTINGS_FILE}"
 INSTANCE_COUNT_OVERRIDES_FILE="${DEPLOYMENTS_DIR}/${INSTANCE_COUNT_OVERRIDES_FILE}"
 PROPERTY_OVERRIDES_FILE="${DEPLOYMENTS_DIR}/${PROPERTY_OVERRIDES_FILE}"
 CF_MANIFEST="${DEPLOYMENTS_DIR}/${ENV}/stubs/cf/cf-manifest.yml"
-
-bosh -n target "${BOSH_TARGET}"
-bosh -n login "${BOSH_CLIENT}" "${BOSH_CLIENT_SECRET}"
 
 echo "args: $*"
 
@@ -67,7 +65,7 @@ EOF
 fi
 
 if [ "${USE_EXISTING_CF_MANIFEST}" = false ]; then
-  bosh download manifest "${CF_DEPLOYMENT_NAME}" "${tmpdir}/cf-manifest.yml"
+  bosh2 -d ${CF_DEPLOYMENT_NAME} manifest > "${tmpdir}/cf-manifest.yml"
   CF_MANIFEST=${tmpdir}/cf-manifest.yml
 fi
 
