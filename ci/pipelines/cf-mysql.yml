@@ -502,8 +502,6 @@ jobs:
     - aggregate:
       - task: make-cf-manifest
         file: cf-mysql-ci/ci/tasks/make-cf-manifest-ondemand.yml
-      - task: delete-stemcell
-        file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
       - task: update-cloud-config
         config:
           platform: linux
@@ -511,6 +509,7 @@ jobs:
           inputs:
           - name: cf-mysql-ci
           - name: cf-deployment
+          - name: bosh-lite-info
           params:
             BOSH_CLIENT: {{bosh-lite-username}}
             BOSH_CLIENT_SECRET: {{bosh-lite-password}}
@@ -618,6 +617,8 @@ jobs:
         path: cf-mysql-ci/scripts/bosh/delete_deployment
   - aggregate:
     - *ondemand-teardown
+    - task: delete-stemcell
+      file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
     - task: delete-dns
       config:
         platform: *platform
