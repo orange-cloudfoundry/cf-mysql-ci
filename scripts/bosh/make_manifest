@@ -27,7 +27,7 @@ export BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
 ENV="$(jq_val "env" "${ENV_METADATA}")"
 export BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
 export BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
-export BOSH_CA_CERT="${WORKSPACE_DIR}/${DEPLOYMENTS_DIR}/${ENV}//certs/rootCA.pem"
+export BOSH_CA_CERT="${DEPLOYMENTS_DIR}/${ENV}/certs/rootCA.pem"
 
 
 : "${PROPERTY_OVERRIDES_FILE:=${ENV}/stubs/mysql/property_overrides.yml}"
