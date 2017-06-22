@@ -79,7 +79,6 @@ pushd ${RELEASE_DIR}
     > deployment.yml
   cp deployment.yml ${MANIFEST_DIR}/deployment.yml
   # Leaving a copy in the workspace dir so that a task can expose it as an output
-  bosh deployment deployment.yml
   if [ ${CAT_MANIFEST} = true ]; then
     cat deployment.yml
   fi
