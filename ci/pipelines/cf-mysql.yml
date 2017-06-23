@@ -562,7 +562,6 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-info
-        - name: bosh-lite-repo
       params:
         BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
         BOSH_CLIENT: {{bosh-lite-username}}
@@ -579,7 +578,6 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-info
-        - name: bosh-lite-repo
       params:
         BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
         BOSH_CLIENT: {{bosh-lite-username}}
