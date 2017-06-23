@@ -8,11 +8,10 @@ WORKSPACE_DIR="$( cd ${MY_DIR}/../../.. && pwd )"
 : "${BOSH_SSH_KEY:?}"
 : "${ENV_TARGET_FILE:?}"
 : "${ENV_METADATA:?}"
-: "${DEPLOYMENT_NAME:?}"
 
 source ${CI_DIR}/scripts/utils.sh
 
-BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
+DIRECTOR_IP="$(cat "${ENV_TARGET_FILE}")"
 
 export BOSH_ENVIRONMENT="$(sslip_from_ip "${DIRECTOR_IP}")"
 export BOSH_DEPLOYMENT="cf-mysql"
@@ -41,7 +40,7 @@ function open_ssh_tunnel_to_bosh_lite() {
     -nNTf \
     -o StrictHostKeyChecking=no \
     -i "${SSH_KEY_FILE}" \
-    ${MYSQL_TUNNEL_USERNAME}@${BOSH_TARGET}
+    ${MYSQL_TUNNEL_USERNAME}@${DIRECTOR_IP}
 }
 
 function stop_mysql_z2_0() {
