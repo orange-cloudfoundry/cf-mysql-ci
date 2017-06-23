@@ -15,16 +15,13 @@ WORKSPACE_DIR="$( cd ${MY_DIR}/../../.. && pwd )"
 
 source ${CI_DIR}/scripts/utils.sh
 
-BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
-ENV="$(jq_val "env" "${ENV_METADATA}")"
-BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
-BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
+director_ip="$(cat "${ENV_TARGET_FILE}")"
+export BOSH_ENVIRONMENT="$(sslip_from_ip "${director_ip}")"
+export BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
+export BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
 function start_mysql_z2_0() {
-  bosh -n target "${BOSH_TARGET}"
-  bosh -n login "${BOSH_CLIENT}" "${BOSH_CLIENT_SECRET}"
-  bosh deployment ${DEPLOYMENT_MANIFEST}
-  bosh -n start mysql_z2 0 --force
+  bosh -n start mysql_z2/0
 }
 
 start_mysql_z2_0
