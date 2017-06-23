@@ -13,9 +13,11 @@ WORKSPACE_DIR="$( cd ${MY_DIR}/../../.. && pwd )"
 source ${CI_DIR}/scripts/utils.sh
 
 BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
-ENV="$(jq_val "env" "${ENV_METADATA}")"
-BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
-BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
+
+export BOSH_ENVIRONMENT="$(sslip_from_ip "${DIRECTOR_IP}")"
+export BOSH_DEPLOYMENT="cf-mysql"
+export BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
+export BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
 MYSQL_TUNNEL_IP=127.0.0.1
 MYSQL_TUNNEL_PORT=3307
@@ -43,11 +45,7 @@ function open_ssh_tunnel_to_bosh_lite() {
 }
 
 function stop_mysql_z2_0() {
-  bosh -n target "${BOSH_TARGET}"
-  bosh -n login "${BOSH_CLIENT}" "${BOSH_CLIENT_SECRET}"
-  bosh -n download manifest ${DEPLOYMENT_NAME} ${DEPLOYMENT_NAME}.yml
-  bosh deployment ${DEPLOYMENT_NAME}.yml
-  bosh -n stop mysql_z2 0
+  bosh2 -n stop mysql_z2/0
 }
 
 function write_data_to_overflow_gcache() {
@@ -72,7 +70,7 @@ function write_data_to_overflow_gcache() {
 
 function attempt_to_start_mysql_z2_0() {
   set +e
-  bosh -n start mysql_z2 0
+  bosh2 -n start mysql_z2/0
   set -e
 }
 

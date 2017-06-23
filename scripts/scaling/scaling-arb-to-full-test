@@ -17,9 +17,6 @@ pushd "${MY_DIR}"
   bundle install
 popd
 
-bosh -n target "${DIRECTOR_IP}"
-bosh -n login "${BOSH_CLIENT}" "${BOSH_CLIENT_SECRET}"
-
 clear_data
 write_some_data 1000
 

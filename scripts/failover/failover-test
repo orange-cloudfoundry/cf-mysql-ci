@@ -32,9 +32,9 @@ export BOSH_ENVIRONMENT="$(sslip_from_ip "${DIRECTOR_IP}")"
 export BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
 export BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
-export BROKER_0_REMOTE_IP=$(bosh-ip cf-mysql-broker_z1/0)
-export BROKER_1_REMOTE_IP=$(bosh-ip cf-mysql-broker_z2/0)
-export MYSQL_NODE_0_REMOTE_IP=$(bosh-ip mysql_z1/0)
+export BROKER_0_REMOTE_IP=$(bosh-ip cf-mysql-broker_z1)
+export BROKER_1_REMOTE_IP=$(bosh-ip cf-mysql-broker_z2)
+export MYSQL_NODE_0_REMOTE_IP=$(bosh-ip mysql_z1)
 
 # assumes we are running against a remote bosh-lite
 export BROKER_0_LOCAL_PORT="43306"
