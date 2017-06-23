@@ -19,9 +19,10 @@ function setup_infrastructure_variables() {
     : "${BOSH_LITE_SSH_KEY:?}"
 
     DIRECTOR_IP=$(cat "${ENV_TARGET_FILE}")
-    BOSH_ENVIRONMENT="$(sslip_from_ip "${DIRECTOR_IP}")"
-    BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
-    BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
+    export BOSH_ENVIRONMENT="$(sslip_from_ip "${DIRECTOR_IP}")"
+    export BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
+    export BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
+    export BOSH_DEPLOYMENT=cf-mysql
     BOSH_LITE_SSH_KEY_FILE="/tmp/id_rsa"
     echo "${BOSH_LITE_SSH_KEY}" > "${BOSH_LITE_SSH_KEY_FILE}"
     chmod 600 "${BOSH_LITE_SSH_KEY_FILE}"
@@ -73,8 +74,7 @@ function scale_down_to_minimal() {
     OUTPUT_FILE="${MANIFEST_FILE}" \
     ${CI_DIR}/scripts/bosh-lite/make_manifest
 
-  bosh deployment "${MANIFEST_FILE}"
-  bosh -n deploy
+  bosh2 -n deploy "${MANIFEST_FILE}"
 }
 
 function scale_up_to_default() {
@@ -85,8 +85,7 @@ function scale_up_to_default() {
   OUTPUT_FILE="${MANIFEST_FILE}" \
     ${CI_DIR}/scripts/bosh-lite/make_manifest
 
-  bosh deployment "${MANIFEST_FILE}"
-  bosh -n deploy
+  bosh2 -n deploy "${MANIFEST_FILE}"
 }
 
 function deploy_full_cluster_with_arb() {
@@ -97,8 +96,7 @@ function deploy_full_cluster_with_arb() {
   OUTPUT_FILE="${MANIFEST_FILE}" \
     ${CI_DIR}/scripts/bosh-lite/make_manifest
 
-  bosh deployment "${MANIFEST_FILE}"
-  bosh -n deploy
+  bosh2 -n deploy "${MANIFEST_FILE}"
 }
 
 function deploy_full_cluster() {
@@ -109,8 +107,7 @@ function deploy_full_cluster() {
   OUTPUT_FILE="${MANIFEST_FILE}" \
     ${CI_DIR}/scripts/bosh-lite/make_manifest
 
-  bosh deployment "${MANIFEST_FILE}"
-  bosh -n deploy
+  bosh2 -n deploy "${MANIFEST_FILE}"
 }
 
 function write_some_data() {

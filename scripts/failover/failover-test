@@ -13,7 +13,7 @@ source "${CI_DIR}/scripts/utils.sh"
 : "${ENV_TARGET_FILE:?}"
 : "${ENV_METADATA:?}"
 
-BOSH_DEPLOYMENT=${DEPLOYMENT_NAME:-cf-mysql}
+export BOSH_DEPLOYMENT=${DEPLOYMENT_NAME:-cf-mysql}
 
 function close-ssh-tunnels() {
   echo "Closing SSH tunnels ..."
@@ -28,9 +28,9 @@ function bosh-ip() {
 }
 
 DIRECTOR_IP="$(cat "${ENV_TARGET_FILE}")"
-BOSH_ENVIRONMENT="$(sslip_from_ip "${DIRECTOR_IP}")"
-BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
-BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
+export BOSH_ENVIRONMENT="$(sslip_from_ip "${DIRECTOR_IP}")"
+export BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
+export BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
 export BROKER_0_REMOTE_IP=$(bosh-ip cf-mysql-broker_z1/0)
 export BROKER_1_REMOTE_IP=$(bosh-ip cf-mysql-broker_z2/0)
