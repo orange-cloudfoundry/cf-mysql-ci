@@ -16,6 +16,7 @@ WORKSPACE_DIR="$( cd ${MY_DIR}/../../.. && pwd )"
 source ${CI_DIR}/scripts/utils.sh
 
 director_ip="$(cat "${ENV_TARGET_FILE}")"
+export BOSH_DEPLOYMENT="cf-mysql"
 export BOSH_ENVIRONMENT="$(sslip_from_ip "${director_ip}")"
 export BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
 export BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
