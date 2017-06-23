@@ -22,7 +22,8 @@ export BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
 export BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
 
 function start_mysql_z2_0() {
-  bosh -n start mysql_z2/0
+  bosh2 -n deploy "${DEPLOYMENT_MANIFEST}"
+  bosh2 -n start mysql_z2/0
 }
 
 start_mysql_z2_0
