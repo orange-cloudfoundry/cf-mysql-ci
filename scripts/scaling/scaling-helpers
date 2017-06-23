@@ -19,6 +19,7 @@ function setup_infrastructure_variables() {
     : "${BOSH_LITE_SSH_KEY:?}"
 
     DIRECTOR_IP=$(cat "${ENV_TARGET_FILE}")
+    BOSH_ENVIRONMENT="$(sslip_from_ip "${DIRECTOR_IP}")"
     BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
     BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
     BOSH_LITE_SSH_KEY_FILE="/tmp/id_rsa"

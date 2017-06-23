@@ -13,7 +13,7 @@ source "${CI_DIR}/scripts/utils.sh"
 : "${ENV_TARGET_FILE:?}"
 : "${ENV_METADATA:?}"
 
-DEPLOYMENT_NAME=${DEPLOYMENT_NAME:-cf-mysql}
+BOSH_DEPLOYMENT=${DEPLOYMENT_NAME:-cf-mysql}
 
 function close-ssh-tunnels() {
   echo "Closing SSH tunnels ..."
@@ -24,15 +24,13 @@ function close-ssh-tunnels() {
 }
 
 function bosh-ip() {
-  bosh -n vms ${DEPLOYMENT_NAME} | grep $1 | awk '{ print $11 }'
+  bosh2 vms | grep $1 | awk '{ print $4 }'
 }
 
-BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
+DIRECTOR_IP="$(cat "${ENV_TARGET_FILE}")"
+BOSH_ENVIRONMENT="$(sslip_from_ip "${DIRECTOR_IP}")"
 BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
 BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
-
-bosh -n target "${BOSH_TARGET}"
-bosh -n login "${BOSH_CLIENT}" "${BOSH_CLIENT_SECRET}"
 
 export BROKER_0_REMOTE_IP=$(bosh-ip cf-mysql-broker_z1/0)
 export BROKER_1_REMOTE_IP=$(bosh-ip cf-mysql-broker_z2/0)
@@ -51,19 +49,19 @@ ssh -L ${BROKER_0_LOCAL_PORT}:${BROKER_0_REMOTE_IP}:22 \
   -NnTf \
   -i "${BOSH_LITE_KEY_FILE}" \
   -o StrictHostKeyChecking=no \
-  "ubuntu@${BOSH_TARGET}"
+  "ubuntu@${DIRECTOR_IP}"
 
 ssh -L ${BROKER_1_LOCAL_PORT}:${BROKER_1_REMOTE_IP}:22 \
   -NnTf \
   -i "${BOSH_LITE_KEY_FILE}" \
   -o StrictHostKeyChecking=no \
-   "ubuntu@${BOSH_TARGET}"
+   "ubuntu@${DIRECTOR_IP}"
 
 ssh  -L ${MYSQL_NODE_0_LOCAL_PORT}:${MYSQL_NODE_0_REMOTE_IP}:22 \
   -NnTf \
   -i "${BOSH_LITE_KEY_FILE}" \
   -o StrictHostKeyChecking=no \
-  "ubuntu@${BOSH_TARGET}"
+  "ubuntu@${DIRECTOR_IP}"
 
 export CONFIG_LOCATION="${CI_DIR}/integration_config.json"
 export BOSH_LITE_METADATA
