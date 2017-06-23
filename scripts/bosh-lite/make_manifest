@@ -31,10 +31,15 @@ if [[ "${OUTPUT_FILE}" != /* ]]; then
 fi
 
 pushd "${WORKSPACE_DIR}"
-  DIRECTOR_IP=$(cat "${ENV_TARGET_FILE}")
+  BOSH_ENVIRONMENT=$(cat "${ENV_TARGET_FILE}")
+  BOSH_ENVIRONMENT="$(sslip_from_ip "${BOSH_ENVIRONMENT}")"
+  export BOSH_ENVIRONMENT
 
   BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
+  export BOSH_CLIENT
+
   BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
+  export BOSH_CLIENT_SECRET
 
   CF_API_USER="$(jq_val "cf_api_user" "${ENV_METADATA}")"
   CF_API_PASSWORD="$(jq_val "cf_api_password" "${ENV_METADATA}")"
@@ -42,10 +47,7 @@ popd
 
 CF_MANIFEST="${tmpdir}/cf-warden.yml"
 if [ "${STANDALONE_MODE}" = false ] ; then
-  bosh -n target "${DIRECTOR_IP}"
-  bosh -n login "${BOSH_CLIENT}" "${BOSH_CLIENT_SECRET}"
-
-  bosh -n download manifest cf-warden "${CF_MANIFEST}"
+  bosh2 -d cf-warden manifest > "${CF_MANIFEST}"
 else
   sed -e "s/REPLACE_WITH_DIRECTOR_UUID/~/g" \
     -e "s/REPLACE_WITH_CF_DEPLOYMENT_NAME/cf-warden/g" \
@@ -82,7 +84,6 @@ fi
 
 CF_CREDENTIALS_STUB="${tmpdir}/cf-credentials-overrides.yml"
 cat > ${CF_CREDENTIALS_STUB} <<EOF
-director_uuid: $(bosh status --uuid)
 property_overrides:
   cf:
     admin_username: ${CF_API_USER}

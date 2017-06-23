@@ -492,9 +492,11 @@ jobs:
       - name: cf-mysql-ci
       - name: cf-mysql-release
       - name: bosh-lite-environment
+      - name: bosh-lite-repo
       outputs:
-        - name: deployment-manifest
+      - name: deployment-manifest
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         OUTPUT_FILE: deployment-manifest/deployment.yml
         MINIMAL_MODE: true
         ENV_TARGET_FILE: bosh-lite-environment/name
@@ -604,9 +606,11 @@ jobs:
       - name: cf-mysql-ci
       - name: cf-mysql-release
       - name: bosh-lite-environment
+      - name: bosh-lite-repo
       outputs:
-        - name: deployment-manifest
+      - name: deployment-manifest
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         OUTPUT_FILE: deployment-manifest/deployment.yml
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
@@ -677,9 +681,11 @@ jobs:
       - name: cf-mysql-ci
       - name: cf-mysql-release
       - name: bosh-lite-environment
+      - name: bosh-lite-repo
       outputs:
-        - name: deployment-manifest
+      - name: deployment-manifest
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         OUTPUT_FILE: deployment-manifest/deployment.yml
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
@@ -753,9 +759,11 @@ jobs:
         - name: cf-mysql-release
         - name: cf-mysql-ci
         - name: bosh-lite-environment
+        - name: bosh-lite-repo
         outputs:
         - name: deployment-manifest
         params:
+          BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
           OUTPUT_FILE: deployment-manifest/deployment.yml
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
@@ -810,9 +818,11 @@ jobs:
       - name: cf-mysql-ci
       - name: cf-mysql-release
       - name: bosh-lite-environment
+      - name: bosh-lite-repo
       outputs:
-        - name: deployment-manifest
+      - name: deployment-manifest
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         OUTPUT_FILE: deployment-manifest/deployment.yml
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
@@ -885,9 +895,11 @@ jobs:
       - name: cf-mysql-ci
       - name: cf-mysql-release
       - name: bosh-lite-environment
+      - name: bosh-lite-repo
       outputs:
-        - name: deployment-manifest
+      - name: deployment-manifest
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         OUTPUT_FILE: deployment-manifest/deployment.yml
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
@@ -977,9 +989,11 @@ jobs:
       - name: cf-mysql-ci
       - name: cf-mysql-release
       - name: bosh-lite-environment
+      - name: bosh-lite-repo
       outputs:
-        - name: deployment-manifest
+      - name: deployment-manifest
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         OUTPUT_FILE: deployment-manifest/deployment.yml
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
@@ -1065,9 +1079,11 @@ jobs:
       - name: cf-mysql-ci
       - name: cf-mysql-release
       - name: bosh-lite-environment
+      - name: bosh-lite-repo
       outputs:
-        - name: deployment-manifest
+      - name: deployment-manifest
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         OUTPUT_FILE: deployment-manifest/deployment.yml
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
@@ -1111,9 +1127,11 @@ jobs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
         - name: bosh-lite-environment
+        - name: bosh-lite-repo
         outputs:
-          - name: deployment-manifest
+        - name: deployment-manifest
         params:
+          BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
           OUTPUT_FILE: deployment-manifest/deployment.yml
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
@@ -1170,9 +1188,11 @@ jobs:
       - name: cf-mysql-ci
       - name: cf-mysql-release
       - name: bosh-lite-environment
+      - name: bosh-lite-repo
       outputs:
-        - name: deployment-manifest
+      - name: deployment-manifest
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         OUTPUT_FILE: deployment-manifest/deployment.yml
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
