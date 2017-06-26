@@ -46,22 +46,23 @@ fi
 if ${ADD_BROKERS}; then
     operations="$operations -o ./cf-mysql-deployment/operations/add-broker.yml"
     operations="$operations -o ./cf-mysql-deployment/operations/register-proxy-route.yml"
+    operations="$operations -o ./cf-mysql-ci/operations/add-proxy-and-broker-load-balancers.yml"
     operations="$operations -o ./cf-mysql-ci/operations/default-vcap-password-broker.yml"
     if ${DISABLE_CROSS_DEPLOYMENT_LINKS}; then
         operations="$operations -o ./cf-mysql-deployment/operations/disable-cross-deployment-links.yml"
     fi
     cf_url="$(cat url/url)"
-    cf_admin_password="$(bosh2 int varstore/deployment-vars.yml --path=/cf_admin_password)"
+    cf_admin_password="$(bosh int varstore/deployment-vars.yml --path=/cf_admin_password)"
     variables="$variables \
     -v cf_admin_username=admin \
     -v cf_admin_password=\"${cf_admin_password}\" \
     -v cf_api_url=\"https://api.${cf_url}\" \
-    -v apps_domain=\"${cf_url}\" \
-    -v cf_mysql_external_host=\"${cf_url}\""
+    -v 'app_domains=[${cf_url}]' \
+    -v cf_mysql_external_host=\"p-mysql.${cf_url}\""
 fi
 
 
-gobosh interpolate \
+bosh interpolate \
     ./cf-mysql-deployment/cf-mysql-deployment.yml \
     -o ./cf-mysql-deployment/operations/latest-versions.yml \
     ${operations} \
