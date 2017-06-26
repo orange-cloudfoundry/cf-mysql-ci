@@ -24,22 +24,18 @@ function close-ssh-tunnels() {
   [[ -z "${OLD_TUNNELS}" ]] || kill ${OLD_TUNNELS}
 }
 
-bosh_ip=$(echo "${BOSH_ENVIRONMENT}" | sed 's$https://$$g')
-
-# function bosh-ip() {
-#   bosh -n vms ${DEPLOYMENT_NAME} | grep $1 | awk '{ print $11 }'
-# }
-
-BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
-BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
-BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
+export BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
+export BOSH_CA_CERT="$WORKSPACE_DIR/bosh-lite-info/ca-cert"
 SSH_KEY_FILE="${WORKSPACE_DIR}/bosh-lite-info/jumpbox-private-key"
 
-gobosh -n login "${BOSH_CLIENT}" "${BOSH_CLIENT_SECRET}"
+bosh_ip=$(cat $WORKSPACE_DIR/bosh-lite-info/external-ip)
+broker_0_ip=$(bosh instances --column instance --column ips | awk '/broker\// {print $2}' | head -1)
+broker_1_ip=$(bosh instances --column instance --column ips | awk '/broker\// {print $2}' | tail -1)
+mysql_0_ip=$(bosh instances --column instance --column ips | awk '/mysql\// {print $2}' | head -1)
 
-export BROKER_0_REMOTE_IP="$bosh_ip broker/0"
-export BROKER_1_REMOTE_IP="$bosh_ip broker/1"
-export MYSQL_NODE_0_REMOTE_IP="$bosh_ip mysql/0"
+export BROKER_0_REMOTE_IP=$broker_0_ip
+export BROKER_1_REMOTE_IP=$broker_1_ip
+export MYSQL_NODE_0_REMOTE_IP=$mysql_0_ip
 
 # assumes we are running against a remote bosh-lite
 export BROKER_0_LOCAL_PORT="43306"
@@ -51,19 +47,19 @@ ssh -L ${BROKER_0_LOCAL_PORT}:${BROKER_0_REMOTE_IP}:22 \
   -NnTf \
   -i "${SSH_KEY_FILE}" \
   -o StrictHostKeyChecking=no \
-  "jumpbox@${BOSH_ENVIRONMENT}"
+  "jumpbox@${bosh_ip}"
 
 ssh -L ${BROKER_1_LOCAL_PORT}:${BROKER_1_REMOTE_IP}:22 \
   -NnTf \
   -i "${SSH_KEY_FILE}" \
   -o StrictHostKeyChecking=no \
-   "jumpbox@${BOSH_ENVIRONMENT}"
+   "jumpbox@${bosh_ip}"
 
 ssh -L ${MYSQL_NODE_0_LOCAL_PORT}:${MYSQL_NODE_0_REMOTE_IP}:22 \
   -NnTf \
   -i "${SSH_KEY_FILE}" \
   -o StrictHostKeyChecking=no \
-  "jumpbox@${BOSH_ENVIRONMENT}"
+  "jumpbox@${bosh_ip}"
 
 export CONFIG_LOCATION="${CI_DIR}/integration_config.json"
 export BOSH_LITE_METADATA
