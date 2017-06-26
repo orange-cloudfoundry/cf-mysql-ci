@@ -1075,7 +1075,7 @@ jobs:
         - name: cf-mysql-release
       params:
         MYSQL_TUNNEL_USERNAME: jumpbox
-        ENV_TARGET_FILE: bosh-lite-info/external-ip
+        ENV_TARGET_FILE: bosh-lite-info/director-url
         BOSH_CLIENT: {{bosh-lite-username}}
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
