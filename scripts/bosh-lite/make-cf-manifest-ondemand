@@ -14,7 +14,7 @@ operations=""
 #     operations="$operations -o ./*cf deployment repo here*"
 # fi
 
-bosh2 int \
+bosh int \
     ${workspace_dir}/cf-deployment/cf-deployment.yml \
     --vars-store ${workspace_dir}/varstore/deployment-vars.yml \
     $operations \

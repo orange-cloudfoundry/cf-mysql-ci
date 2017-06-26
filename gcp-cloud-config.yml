@@ -49,6 +49,15 @@ vm_extensions:
   cloud_properties:
     ports:
     - host: 1024-1123
+- cloud_properties:
+    ports:
+    - host: 443
+  name: p-mysql-broker-lb
+- cloud_properties:
+    ports:
+    - host: 8080 # is this necessary?
+    - host: 3306
+  name: p-mysql-proxy-lb
 vm_types:
 - name: default
 - name: m3.medium

@@ -1,0 +1,8 @@
+---
+- type: replace
+  path: /instance_groups/name=proxy/vm_extensions?/-
+  value: p-mysql-proxy-lb
+
+- type: replace
+  path: /instance_groups/name=broker/vm_extensions?/-
+  value: p-mysql-broker-lb
