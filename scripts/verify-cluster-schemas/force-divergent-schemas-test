@@ -12,9 +12,10 @@ MYSQL_CONFIG=${MY_DIR}/mysql.config
 
 source ${CI_DIR}/scripts/utils.sh
 
-director_ip="$(cat "${ENV_TARGET_FILE}")"
+director_url="$(cat "${ENV_TARGET_FILE}")"
+director_ip="$(cat "${DIRECTOR_IP}")"
 
-export BOSH_ENVIRONMENT="$(sslip_from_ip "${director_ip}")"
+export BOSH_ENVIRONMENT="$(sslip_from_ip "${director_url}")"
 export BOSH_DEPLOYMENT="cf-mysql"
 SSH_KEY_FILE=${SSH_KEY_FILE:-""}
 MYSQL_TUNNEL_IP=127.0.0.1
