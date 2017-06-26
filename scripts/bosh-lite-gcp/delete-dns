@@ -11,12 +11,10 @@ gcloud config set project cf-core-services
 
 zone="bosh-lite"
 
-url=$(cat "${workspace_dir}/url/url")
 wildcard_url=$(cat "${workspace_dir}/url/wildcard_url")
 
 ip_address=$(cat "${workspace_dir}/bosh-lite-info/external-ip")
 
 gcloud dns record-sets transaction start --zone bosh-lite
-gcloud dns record-sets transaction remove --zone bosh-lite --name "${url}" --ttl 300 --type A "${ip_address}"
 gcloud dns record-sets transaction remove --zone bosh-lite --name "${wildcard_url}" --ttl 300 --type A "${ip_address}"
 gcloud dns record-sets transaction execute --zone bosh-lite
