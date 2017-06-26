@@ -465,9 +465,11 @@ jobs:
       - name: cf-mysql-ci
       - name: cf-mysql-release
       - name: bosh-lite-environment
+      - name: bosh-lite-repo
       outputs:
         - name: deployment-manifest
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         OUTPUT_FILE: deployment-manifest/deployment.yml
         MINIMAL_MODE: true
         ENV_TARGET_FILE: bosh-lite-environment/name
@@ -537,7 +539,9 @@ jobs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
         - name: cf-mysql-release
+        - name: bosh-lite-repo
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
@@ -575,9 +579,11 @@ jobs:
       - name: cf-mysql-ci
       - name: cf-mysql-release
       - name: bosh-lite-environment
+      - name: bosh-lite-repo
       outputs:
         - name: deployment-manifest
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         OUTPUT_FILE: deployment-manifest/deployment.yml
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
@@ -607,8 +613,10 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
+        - name: bosh-lite-repo
         - name: cf-mysql-release
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
@@ -646,9 +654,11 @@ jobs:
       - name: cf-mysql-ci
       - name: cf-mysql-release
       - name: bosh-lite-environment
+      - name: bosh-lite-repo
       outputs:
         - name: deployment-manifest
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         OUTPUT_FILE: deployment-manifest/deployment.yml
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
@@ -677,11 +687,12 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
+        - name: bosh-lite-repo
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
+        BOSH_SSH_KEY: {{bosh-lite-private-key}}
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
-        BOSH_SSH_KEY: {{bosh-lite-private-key}}
-        DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/data-loss/force-sst-test
   - task: wait-for-monit
@@ -742,9 +753,11 @@ jobs:
       - name: cf-mysql-ci
       - name: cf-mysql-release
       - name: bosh-lite-environment
+      - name: bosh-lite-repo
       outputs:
         - name: deployment-manifest
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         OUTPUT_FILE: deployment-manifest/deployment.yml
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
@@ -763,6 +776,7 @@ jobs:
       passed: [deploy-to-disable-auto-sst]
       trigger: true
       version: every
+    - get: bosh-lite-repo
     - get: version
       passed: [deploy-to-disable-auto-sst]
   - aggregate:
@@ -771,13 +785,14 @@ jobs:
         platform: *platform
         image_resource: *image_resource
         inputs:
-          - name: cf-mysql-ci
           - name: bosh-lite-environment
+          - name: bosh-lite-repo
+          - name: cf-mysql-ci
         params:
+          BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
+          BOSH_SSH_KEY: {{bosh-lite-private-key}}
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
-          BOSH_SSH_KEY: {{bosh-lite-private-key}}
-          DEPLOYMENT_NAME: cf-mysql
         run:
           path: cf-mysql-ci/scripts/data-loss/force-sst-test
     - task: make-manifest
@@ -788,9 +803,11 @@ jobs:
         - name: cf-mysql-ci
         - name: cf-mysql-release
         - name: bosh-lite-environment
+        - name: bosh-lite-repo
         outputs:
           - name: deployment-manifest
         params:
+          BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
           OUTPUT_FILE: deployment-manifest/deployment.yml
           ENV_TARGET_FILE: bosh-lite-environment/name
           ENV_METADATA: bosh-lite-environment/metadata
@@ -814,8 +831,10 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-environment
+        - name: bosh-lite-repo
         - name: deployment-manifest
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
         BOSH_SSH_KEY: {{bosh-lite-private-key}}
@@ -854,9 +873,11 @@ jobs:
       - name: cf-mysql-ci
       - name: cf-mysql-release
       - name: bosh-lite-environment
+      - name: bosh-lite-repo
       outputs:
         - name: deployment-manifest
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         OUTPUT_FILE: deployment-manifest/deployment.yml
         ENV_TARGET_FILE: bosh-lite-environment/name
         ENV_METADATA: bosh-lite-environment/metadata
@@ -875,6 +896,7 @@ jobs:
       passed: [deploy-to-verify-cluster-schemas]
       trigger: true
       version: every
+    - get: bosh-lite-repo
     - get: version
       passed: [deploy-to-verify-cluster-schemas]
   - task: run-verify-cluster-schemas-tests
@@ -882,16 +904,17 @@ jobs:
       platform: *platform
       image_resource: *image_resource
       inputs:
-        - name: cf-mysql-ci
         - name: bosh-lite-environment
+        - name: bosh-lite-repo
+        - name: cf-mysql-ci
         - name: cf-mysql-release
       params:
+        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
         ENV_TARGET_FILE: bosh-lite-environment/name
         DIRECTOR_IP: bosh-lite-environment/name
         BOSH_CLIENT: {{bosh-lite-username}}
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         BOSH_SSH_KEY: {{bosh-lite-private-key}}
-        DEPLOYMENT_NAME: cf-mysql
       run:
         path: cf-mysql-ci/scripts/verify-cluster-schemas/force-divergent-schemas-test
   - put: bosh-lite-environment
