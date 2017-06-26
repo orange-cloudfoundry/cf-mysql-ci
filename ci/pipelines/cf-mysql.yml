@@ -598,7 +598,7 @@ jobs:
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         ENV_TARGET_FILE: bosh-lite-info/director-url
         BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
-        BOSH_CA_CERT: bosh-lite-repo/ca/certs/ca.crt
+        BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/failover/failover-test-ondemand
   - task: delete-deployment
