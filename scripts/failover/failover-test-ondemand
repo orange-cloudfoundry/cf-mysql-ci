@@ -61,6 +61,20 @@ ssh -L ${MYSQL_NODE_0_LOCAL_PORT}:${MYSQL_NODE_0_REMOTE_IP}:22 \
   -o StrictHostKeyChecking=no \
   "jumpbox@${bosh_ip}"
 
+bosh manifest > /tmp/manifest.yml
+
+cat <<EOF > /tmp/env_metadata.json
+{
+  "cf_api_user": "$(bosh int /tmp/manifest.yml --path /instance_groups/name=broker/jobs/name=cf-mysql-broker/properties/cf/admin_username)",
+  "cf_api_password": "$(bosh int /tmp/manifest.yml --path /instance_groups/name=broker/jobs/name=cf-mysql-broker/properties/cf/admin_password)",
+  "proxy_api_user": "proxy",
+  "proxy_api_password": "$(bosh int /tmp/manifest.yml --path /instance_groups/name=proxy/jobs/name=proxy/properties/cf_mysql/proxy/api_password)",
+  "domain": "$(bosh int /tmp/manifest.yml --path /instance_groups/name=broker/jobs/name=cf-mysql-broker/properties/cf/app_domains/0)"
+}
+EOF
+
+export ENV_METADATA=/tmp/env_metadata.json
+
 export CONFIG_LOCATION="${CI_DIR}/integration_config.json"
 export BOSH_LITE_METADATA
 ${CI_DIR}/scripts/bosh/create_integration_test_config
