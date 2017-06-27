@@ -1,0 +1,6 @@
+#!/bin/bash -eux
+
+export BOSH_ENVIRONMENT=$(cat $ENV_TARGET_FILE)
+
+bosh -n delete-deployment
+bosh -n clean-up --all
