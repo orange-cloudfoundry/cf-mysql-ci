@@ -605,7 +605,22 @@ jobs:
         BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/failover/failover-test-ondemand
-  - task: delete-deployment
+  - task: delete-cf-mysql-deployment
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: bosh-lite-info
+      params:
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        BOSH_CA_CERT: bosh-lite-info/ca-cert
+        BOSH_DEPLOYMENT: cf-mysql
+        ENV_TARGET_FILE: bosh-lite-info/external-ip
+      run:
+        path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
+  - task: delete-cf-deployment
     config:
       platform: *platform
       image_resource: *image_resource
@@ -620,7 +635,12 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-info/external-ip
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
-  - *ondemand-teardown
+  - task: destroy-bosh-lite
+    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite.yml
+    input_mapping: {bosh-lite-info: bosh-lite-info-stemcell-deleted}
+  - task: destroy-terraform
+    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
+    input_mapping: {deployments: deployments-terraformed}
   - task: delete-dns
     config:
       platform: *platform
