@@ -61,6 +61,10 @@ ssh -L ${MYSQL_NODE_0_LOCAL_PORT}:${MYSQL_NODE_0_REMOTE_IP}:22 \
   -o StrictHostKeyChecking=no \
   "jumpbox@${bosh_ip}"
 
+
+# turn off the resurrector so that `scan-and-fix` tasks don't collide with our tests
+bosh update-resurrection off
+
 bosh manifest > /tmp/manifest.yml
 
 cat <<EOF > /tmp/env_metadata.json
