@@ -620,20 +620,19 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-info/external-ip
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
-  - aggregate:
-    - *ondemand-teardown
-    - task: delete-dns
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-        - name: cf-mysql-ci
-        - name: bosh-lite-info
-        - name: url
-        - name: deployments
-          path: deployments-core-services
-        run:
-          path: cf-mysql-ci/scripts/bosh-lite-gcp/delete-dns
+  - *ondemand-teardown
+  - task: delete-dns
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: bosh-lite-info
+      - name: url
+      - name: deployments
+        path: deployments-core-services
+      run:
+        path: cf-mysql-ci/scripts/bosh-lite-gcp/delete-dns
 
 ### UPGRADE
 - name: test-upgrade-from-previous
