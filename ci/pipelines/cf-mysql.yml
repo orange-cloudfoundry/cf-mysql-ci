@@ -59,7 +59,7 @@ resources:
 - name: cf-mysql-deployment
   type: git
   source:
-    uri: https://github.com/cloudfoundry/cf-mysql-deployment.git
+    uri: git@github.com:cloudfoundry/cf-mysql-deployment.git
     branch: develop
     private_key: {{git-writer-private-key}}
 
@@ -1351,6 +1351,15 @@ jobs:
         tag: output-release-dir/cf-mysql-tag
         body: output-release-dir/generated-release-notes
         commitish: output-release-dir/git-commit
+
+- name: merge-cf-mysql-deployment-master-into-develop
+  plan:
+  - get: cf-mysql-deployment-master
+    trigger: true
+  - put: cf-mysql-deployment
+    params:
+      repository: cf-mysql-deployment-master
+      merge: true
 
 - name: merge-master-into-develop
   plan:
