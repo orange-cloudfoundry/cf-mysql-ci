@@ -808,7 +808,6 @@ jobs:
       passed: [create-and-compile-release]
     - get: cf-mysql-deployment
       resource: cf-mysql-deployment-master
-      trigger: true
     - get: cf-mysql-ci
     - get: release-tarball
       resource: s3-resource-final-release
