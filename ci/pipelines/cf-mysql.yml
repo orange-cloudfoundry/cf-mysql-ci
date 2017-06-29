@@ -1363,31 +1363,12 @@ jobs:
 
 - name: merge-master-into-develop
   plan:
-  - aggregate:
-    - get: cf-mysql-master
-      trigger: true
-      params:
-        submodules: none
-    - get: cf-mysql-develop
-      resource: cf-mysql-release
-      params:
-        fetch:
-        - master
-    - get: cf-mysql-ci
-  - task: merge-master-into-develop
-    config:
-      platform: linux
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-ci
-      - name: cf-mysql-develop
-        path: cf-mysql-release
-      run:
-        path: cf-mysql-ci/scripts/publish/merge-and-push
-      params:
-        SOURCE_BRANCH: develop
-        BRANCH_TO_MERGE: master
-        GIT_PRIVATE_KEY: {{git-writer-private-key}}
+  - get: cf-mysql-master
+    trigger: true
+  - put: cf-mysql-release
+    params:
+      repository: cf-mysql-master
+      merge: true
 
 - name: bump-minor
   plan:
