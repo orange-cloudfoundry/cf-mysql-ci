@@ -1211,6 +1211,7 @@ jobs:
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
       - test-verify-no-remote-access
+      - test-verify-tuning
       trigger: true
     - get: cf-mysql-ci
     - get: version
@@ -1225,6 +1226,7 @@ jobs:
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
       - test-verify-no-remote-access
+      - test-verify-tuning
   - *create-release
   - put: cf-mysql-rc-artifacts
     params:
@@ -1245,6 +1247,7 @@ jobs:
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
       - test-verify-no-remote-access
+      - test-verify-tuning
       trigger: true
       params:
         fetch: [release-candidate]
@@ -1260,6 +1263,7 @@ jobs:
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
       - test-verify-no-remote-access
+      - test-verify-tuning
       trigger: true
     - get: cf-mysql-ci
   - aggregate:
