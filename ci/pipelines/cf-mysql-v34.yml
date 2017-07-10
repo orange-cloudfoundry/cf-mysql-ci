@@ -88,14 +88,6 @@ resources:
     - Monday
     interval: 24h
 
-- name: pcf-mysql-rc-artifacts
-  type: s3
-  source:
-    bucket: pcf-mysql-releases
-    access_key_id: {{pcf-mysql-ci-aws-access-key-id}}
-    secret_access_key: {{pcf-mysql-ci-aws-secret-access-key}}
-    regexp: releases-34/tested/cf-mysql-(.*).tgz
-
 - name: cf-mysql-compiled-release
   type: s3
   source:
@@ -975,47 +967,33 @@ jobs:
   - *ondemand-teardown
 
 ### Promote
-- name: upload-rc-artifacts
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed:
-      - test-full-bosh
-      - test-scaling
-      - test-failover
-      - deploy-to-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
-      - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
-      - test-upgrade-from-previous
-      - test-arb-to-full-scaling
-      trigger: true
-    - get: cf-mysql-ci
-    - get: version
-      passed:
-      - test-full-bosh
-      - test-scaling
-      - test-failover
-      - deploy-to-verify-cluster-schemas
-      - test-interruptor-prevents-data-loss
-      - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
-      - test-upgrade-from-previous
-      - test-arb-to-full-scaling
-  - *create-release
-  - put: pcf-mysql-rc-artifacts
-    params:
-      file: release-tarball/cf-mysql*.tgz
-
 - name: publish
   serial_groups: [version-bumper]
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [upload-rc-artifacts]
+      passed:
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - deploy-to-verify-cluster-schemas
+      - test-interruptor-prevents-data-loss
+      - test-interruptor-can-be-disabled
+      - test-bootstrap-on-standalone
+      - test-upgrade-from-previous
+      - test-arb-to-full-scaling
     - get: cf-mysql-ci
     - get: version
-      passed: [upload-rc-artifacts]
+      passed:
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - deploy-to-verify-cluster-schemas
+      - test-interruptor-prevents-data-loss
+      - test-interruptor-can-be-disabled
+      - test-bootstrap-on-standalone
+      - test-upgrade-from-previous
+      - test-arb-to-full-scaling
       params:
         bump: final
   - task: create-mysql-release

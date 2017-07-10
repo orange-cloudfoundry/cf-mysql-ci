@@ -97,14 +97,6 @@ resources:
     - Monday
     interval: 24h
 
-- name: pcf-mysql-rc-artifacts
-  type: s3
-  source:
-    bucket: pcf-mysql-releases
-    access_key_id: {{pcf-mysql-ci-aws-access-key-id}}
-    secret_access_key: {{pcf-mysql-ci-aws-secret-access-key}}
-    regexp: releases-32/tested/cf-mysql-(.*).tgz
-
 - name: cf-mysql-compiled-release
   type: s3
   source:
@@ -1249,52 +1241,47 @@ jobs:
       release: bosh-lite-environment
 
 ### Promote
-- name: upload-rc-artifacts
-  plan:
-  - aggregate:
-    - get: cf-mysql-release
-      passed:
-      - test-full-bosh
-      - test-scaling
-      - test-failover
-      - test-verify-cluster-schemas
-      - test-disable-auto-sst
-      - test-data-loss
-      - test-bootstrap-on-standalone
-      - test-arb-to-full-scaling
-      - test-persistence-after-upgrade
-      trigger: true
-    - get: cf-mysql-ci
-    - get: version
-      passed:
-      - test-full-bosh
-      - test-scaling
-      - test-failover
-      - test-verify-cluster-schemas
-      - test-disable-auto-sst
-      - test-data-loss
-      - test-bootstrap-on-standalone
-      - test-arb-to-full-scaling
-      - test-persistence-after-upgrade
-  - *create-release
-  - put: pcf-mysql-rc-artifacts
-    params:
-      file: release-tarball/cf-mysql*.tgz
-
 - name: publish
   plan:
   - aggregate:
     - get: cf-mysql-release
-      passed: [upload-rc-artifacts]
+      passed:
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - test-verify-cluster-schemas
+      - test-disable-auto-sst
+      - test-data-loss
+      - test-bootstrap-on-standalone
+      - test-arb-to-full-scaling
+      - test-persistence-after-upgrade
     - get: cf-mysql-ci
     - get: release-version
       resource: version
-      passed: [upload-rc-artifacts]
+      passed:
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - test-verify-cluster-schemas
+      - test-disable-auto-sst
+      - test-data-loss
+      - test-bootstrap-on-standalone
+      - test-arb-to-full-scaling
+      - test-persistence-after-upgrade
       params:
         bump: final
     - get: next-version
       resource: version
-      passed: [upload-rc-artifacts]
+      passed:
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - test-verify-cluster-schemas
+      - test-disable-auto-sst
+      - test-data-loss
+      - test-bootstrap-on-standalone
+      - test-arb-to-full-scaling
+      - test-persistence-after-upgrade
       params:
         bump: minor
   - task: create-mysql-release
