@@ -273,10 +273,8 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-release
-      trigger: true
       passed: [test-unit]
     - get: cf-mysql-deployment
-      trigger: true
       passed: [test-unit]
     - get: cf-mysql-ci
     - get: aws-bosh-stemcell
@@ -326,10 +324,8 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
-      trigger: true
     - get: cf-mysql-deployment
       passed: [create-and-compile-release]
-      trigger: true
     - put: aws-environment
       params:
         acquire: true
@@ -340,10 +336,10 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
-      trigger: true
     - get: routing-release
     - get: version
       passed: [create-and-compile-release]
+      trigger: true
   - try:
       task: run-deregister-and-purge-instances
       config:
@@ -430,15 +426,14 @@ jobs:
       passed: [deploy-to-full-bosh]
     - get: cf-mysql-deployment
       passed: [deploy-to-full-bosh]
-      trigger: true
     - get: cf-mysql-ci
     - get: deployments-configuration
     - get: version
       passed: [deploy-to-full-bosh]
+      trigger: true
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [deploy-to-full-bosh]
-      trigger: true
     - get: routing-release
       passed: [deploy-to-full-bosh]
   - task: run-smoke-tests
@@ -519,15 +514,12 @@ jobs:
     - aggregate:
       - get: cf-mysql-release
         passed: [create-and-compile-release]
-        trigger: true
       - get: cf-mysql-deployment
         passed: [create-and-compile-release]
-        trigger: true
       - get: cf-mysql-ci
       - get: compiled-release-tarball
         resource: cf-mysql-compiled-release
         passed: [create-and-compile-release]
-        trigger: true
       - get: bosh-deployment
         resource: bosh-deployment-repo
       - get: deployments
@@ -536,6 +528,7 @@ jobs:
         resource: bosh-lite-stemcell
       - get: version
         passed: [create-and-compile-release]
+        trigger: true
     - aggregate:
       - task: make-manifest
         file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
@@ -653,10 +646,8 @@ jobs:
   - aggregate:
     - get: cf-mysql-release
       passed: [create-and-compile-release]
-      trigger: true
     - get: cf-mysql-deployment
       passed: [create-and-compile-release]
-      trigger: true
     - put: bosh-lite-environment
       params:
         acquire: true
@@ -666,10 +657,10 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [create-and-compile-release]
-      trigger: true
     - get: routing-release
     - get: version
       passed: [create-and-compile-release]
+      trigger: true
   - try: &deregister-and-purge-instances-bosh-lite
       task: run-deregister-and-purge-instances
       config:
@@ -743,7 +734,6 @@ jobs:
       passed: [deploy-to-failover]
     - get: cf-mysql-deployment
       passed: [deploy-to-failover]
-      trigger: true
     - get: bosh-lite-environment
       passed: [deploy-to-failover]
       trigger: true
@@ -752,11 +742,11 @@ jobs:
     - get: compiled-release-tarball
       resource: cf-mysql-compiled-release
       passed: [deploy-to-failover]
-      trigger: true
     - get: routing-release
       passed: [deploy-to-failover]
     - get: version
       passed: [deploy-to-failover]
+      trigger: true
   - &smoke-tests-bosh-lite
     task: run-smoke-tests
     config:
@@ -800,11 +790,9 @@ jobs:
   - aggregate:
     - get: cf-mysql-release-develop
       resource: cf-mysql-release
-      trigger: true
       passed: [create-and-compile-release]
     - get: cf-mysql-deployment-develop
       resource: cf-mysql-deployment
-      trigger: true
       passed: [create-and-compile-release]
     - get: cf-mysql-deployment
       resource: cf-mysql-deployment-master
@@ -820,9 +808,9 @@ jobs:
     - get: aws-bosh-stemcell
     - get: version
       passed: [create-and-compile-release]
+      trigger: true
     - get: cf-mysql-compiled-release
       passed: [create-and-compile-release]
-      trigger: true
   - aggregate:
     - task: make-manifest
       file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
@@ -1092,15 +1080,12 @@ jobs:
     - aggregate:
       - get: cf-mysql-release
         passed: [create-and-compile-release]
-        trigger: true
       - get: cf-mysql-deployment
         passed: [create-and-compile-release]
-        trigger: true
       - get: cf-mysql-ci
       - get: compiled-release-tarball
         resource: cf-mysql-compiled-release
         passed: [create-and-compile-release]
-        trigger: true
       - get: bosh-deployment
         resource: bosh-deployment-repo
       - get: deployments
@@ -1109,6 +1094,7 @@ jobs:
         resource: bosh-lite-stemcell
       - get: version
         passed: [create-and-compile-release]
+        trigger: true
     - aggregate:
       - task: make-manifest
         file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
@@ -1154,15 +1140,12 @@ jobs:
     - aggregate:
       - get: cf-mysql-release
         passed: [create-and-compile-release]
-        trigger: true
       - get: cf-mysql-deployment
         passed: [create-and-compile-release]
-        trigger: true
       - get: cf-mysql-ci
       - get: compiled-release-tarball
         resource: cf-mysql-compiled-release
         passed: [create-and-compile-release]
-        trigger: true
       - get: bosh-deployment
         resource: bosh-deployment-repo
       - get: deployments
@@ -1171,6 +1154,7 @@ jobs:
         resource: bosh-lite-stemcell
       - get: version
         passed: [create-and-compile-release]
+        trigger: true
     - aggregate:
       - task: make-manifest
         file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
