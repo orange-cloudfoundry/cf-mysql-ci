@@ -10,7 +10,6 @@ workspace_dir="$( cd "${my_dir}/../../../" && pwd )"
 bosh int \
     ${workspace_dir}/cf-deployment/cf-deployment.yml \
     --vars-store ${workspace_dir}/varstore/deployment-vars.yml \
-    $operations \
     -o ${workspace_dir}/cf-deployment/operations/use-latest-stemcell.yml \
     -o ${workspace_dir}/cf-deployment/operations/use-compiled-releases.yml \
     -o ${workspace_dir}/cf-deployment/operations/bosh-lite.yml \
