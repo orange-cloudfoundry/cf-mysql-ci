@@ -14,8 +14,6 @@ source "${CI_DIR}/scripts/utils.sh"
 : "${BOSH_CLIENT:?}"
 : "${BOSH_CLIENT_SECRET:?}"
 
-DEPLOYMENT_NAME=${DEPLOYMENT_NAME:-cf-mysql}
-
 function close-ssh-tunnels() {
   echo "Closing SSH tunnels ..."
   OLD_TUNNELS=`ps aux | grep "ssh" | \
@@ -65,15 +63,20 @@ ssh -L ${MYSQL_NODE_0_LOCAL_PORT}:${MYSQL_NODE_0_REMOTE_IP}:22 \
 # turn off the resurrector so that `scan-and-fix` tasks don't collide with our tests
 bosh update-resurrection off
 
-bosh manifest > /tmp/manifest.yml
+bosh manifest > /tmp/mysql-manifest.yml
+PROXY_API_PASSWORD=$(bosh int /tmp/mysql-manifest.yml --path /instance_groups/name=proxy/jobs/name=proxy/properties/cf_mysql/proxy/api_password)
+
+bosh -d cf manifest > /tmp/cf-manifest.yml
+CF_API_PASSWORD=$(bosh int /tmp/cf-manifest.yml --path /instance_groups/name=uaa/jobs/name=uaa/properties/uaa/scim/users/name=admin/password)
+DOMAIN=$(bosh int /tmp/cf-manifest.yml --path /instance_groups/name=api/jobs/name=cloud_controller_ng/properties/app_domains/0)
 
 cat <<EOF > /tmp/env_metadata.json
 {
-  "cf_api_user": "$(bosh int /tmp/manifest.yml --path /instance_groups/name=broker/jobs/name=cf-mysql-broker/properties/cf/admin_username)",
-  "cf_api_password": "$(bosh int /tmp/manifest.yml --path /instance_groups/name=broker/jobs/name=cf-mysql-broker/properties/cf/admin_password)",
+  "cf_api_user": "admin",
+  "cf_api_password": "${CF_API_PASSWORD}",
   "proxy_api_user": "proxy",
-  "proxy_api_password": "$(bosh int /tmp/manifest.yml --path /instance_groups/name=proxy/jobs/name=proxy/properties/cf_mysql/proxy/api_password)",
-  "domain": "$(bosh int /tmp/manifest.yml --path /instance_groups/name=broker/jobs/name=cf-mysql-broker/properties/cf/app_domains/0)"
+  "proxy_api_password": "${PROXY_API_PASSWORD}",
+  "domain": "${DOMAIN}"
 }
 EOF
 
