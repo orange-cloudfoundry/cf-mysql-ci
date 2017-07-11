@@ -6,19 +6,13 @@ set -eux
 
 my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 workspace_dir="$( cd "${my_dir}/../../../" && pwd )"
-# : "${PRECOMPILED_RELEASES:=true}"
-
-operations=""
-
-# if ${PRECOMPILED_RELEASES}; then
-#     operations="$operations -o ./*cf deployment repo here*"
-# fi
 
 bosh int \
     ${workspace_dir}/cf-deployment/cf-deployment.yml \
     --vars-store ${workspace_dir}/varstore/deployment-vars.yml \
     $operations \
     -o ${workspace_dir}/cf-deployment/operations/use-latest-stemcell.yml \
+    -o ${workspace_dir}/cf-deployment/operations/use-compiled-releases.yml \
     -o ${workspace_dir}/cf-deployment/operations/bosh-lite.yml \
     -v system_domain="$(cat "$DNS_NAME")" \
     -o ${workspace_dir}/cf-mysql-ci/operations/cf-allow-apps-access-to-mysql.yml \
