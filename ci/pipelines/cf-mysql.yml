@@ -49,7 +49,7 @@ resources:
   type: git
   source:
     uri: https://github.com/cloudfoundry-incubator/cf-mysql-ci.git
-    branch: cf-ondemand
+    branch: master
 
 - name: routing-release
   type: bosh-io-release
@@ -1290,7 +1290,8 @@ jobs:
         - name: cf-mysql-release
       params:
         MYSQL_TUNNEL_USERNAME: jumpbox
-        ENV_TARGET_FILE: bosh-lite-info/external-ip
+        ENV_TARGET_FILE: bosh-lite-info/director-url
+        DIRECTOR_IP: bosh-lite-info/external-ip
         BOSH_CLIENT: {{bosh-lite-username}}
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
