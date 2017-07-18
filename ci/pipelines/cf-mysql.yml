@@ -396,10 +396,11 @@ jobs:
       outputs:
       - name: deployment-manifest
       params:
+        ENV_NAME_FILE: full-bosh-environment/name
         ENV_METADATA: full-bosh-environment/metadata
         DEPLOYMENTS_DIR: deployments-configuration
       run:
-        path: cf-mysql-ci/scripts/bosh/make-manifest-gobosh
+        path: cf-mysql-ci/scripts/bosh/make-manifest-gobosh-gcp
   - put: cf-mysql-bosh-deployment
     params:
       source_file: full-bosh-environment/metadata
@@ -725,7 +726,7 @@ jobs:
         releases: []
         stemcells:
         - stemcell/*.tgz
-        target_file: bosh-lite-info/external-ip
+        target_file: bosh-lite-info/director-url
     - put: cf-mysql-deployment-bosh-lite
       params:
         manifest: deployment-manifest/deployment.yml

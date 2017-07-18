@@ -41,6 +41,6 @@ bosh2 interpolate \
     -v cf_api_url="https://api.${ENV_DOMAIN}" \
     -v cf_mysql_external_host="p-mysql.${ENV_DOMAIN}" \
     -v cf_mysql_host="proxy-p-mysql.${ENV_DOMAIN}" \
-    --vars-store ${MANIFEST_DIR}/vars.yml
+    --vars-store ${MANIFEST_DIR}/vars.yml \
     > "${OUTPUT_FILE}"
 
