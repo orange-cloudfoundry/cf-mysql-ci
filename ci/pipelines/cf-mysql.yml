@@ -117,11 +117,6 @@ resources:
     branch: release-candidate
     private_key: {{git-writer-private-key}}
 
-- name: cf-mysql-bosh-deployment
-  type: bosh-deployment
-  source:
-    deployment: cf-mysql
-
 - name: full-bosh-environment
   type: pool
   source:
@@ -154,23 +149,15 @@ resources:
     secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
     versioned_file: compiled-releases/cf-mysql-ubuntu-trusty-develop.tgz
 
-- name: cf-mysql-deployment-bosh-lite
+- name: cf-mysql-bosh-deployment
   type: bosh-deployment
   source:
     deployment: cf-mysql
 
-- name: cf-deployment-bosh-lite
+- name: cf-bosh-deployment
   type: bosh-deployment
   source:
     deployment: cf
-
-- name: bosh-2.0-bosh-lite-deployment
-  type: bosh-deployment
-  source:
-    ca_cert: bosh-lite-info/ca-cert
-    client: {{bosh-lite-username}}
-    client_secret: {{bosh-lite-password}}
-    deployment: cf-mysql
 
 - name: bosh-deployment-repo
   type: git
@@ -534,14 +521,14 @@ jobs:
     - task: delete-stemcell
       file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
     - &ondemand-deploy-manifest
-      put: bosh-2.0-bosh-lite-deployment
+      put: cf-mysql-bosh-deployment
       params:
         manifest: deployment-manifest/deployment.yml
         releases:
         - compiled-release-tarball/*.tgz
         stemcells:
         - stemcell/*.tgz
-        target_file: bosh-lite-info/external-ip
+        source_file: bosh-lite-info/bosh-deployment-resource-source-file
   - &run-smoke-tests-ondemand
     task: run-smoke-tests
     config:
@@ -715,14 +702,14 @@ jobs:
           DISABLE_CROSS_DEPLOYMENT_LINKS: false
         run:
           path: cf-mysql-ci/scripts/bosh-lite/make-manifest-ondemand
-    - put: cf-deployment-bosh-lite
+    - put: cf-bosh-deployment
       params:
         manifest: cf-deployment-manifest/cf.yml
         releases: []
         stemcells:
         - stemcell/*.tgz
         source_file: bosh-lite-info/bosh-deployment-resource-source-file
-    - put: cf-mysql-deployment-bosh-lite
+    - put: cf-mysql-bosh-deployment
       params:
         manifest: deployment-manifest/deployment.yml
         releases:
@@ -908,14 +895,14 @@ jobs:
     params:
       ENABLE_REMOTE_ADMIN_ACCESS: true
 
-  - put: bosh-2.0-bosh-lite-deployment
+  - put: cf-mysql-bosh-deployment
     params:
       manifest: deployment-manifest/deployment.yml
       releases:
       - cf-mysql-compiled-release/*.tgz
       stemcells:
       - stemcell/*.tgz
-      target_file: bosh-lite-info/external-ip
+      source_file: bosh-lite-info/bosh-deployment-resource-source-file
 
   - task: persistence-test-data-read
     config:

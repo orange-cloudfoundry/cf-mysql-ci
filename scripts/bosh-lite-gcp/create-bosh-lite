@@ -79,7 +79,7 @@ cat <<HEREDOC > "${OUTPUT_DIR}/bosh-deployment-resource-source-file"
 {
   client: "admin",
   client_secret: "${BOSH_CLIENT_SECRET}",
-  target: "${director-url}",
+  target: "${director_url}",
   ca_cert: "$(cat ${OUTPUT_DIR}/ca-cert | sed ':a;N;$!ba;s/\n/\\n/g')"
 }
 HEREDOC
