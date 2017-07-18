@@ -73,11 +73,13 @@ director_url="https://$(cat "${OUTPUT_DIR}/external-ip")"
 # Adding https: escapes the regex that would otherwise convert to sslip
 echo ${director_url} > "${OUTPUT_DIR}/director-url"
 
+# Replacing newlines with \n is hard apparently
+# https://stackoverflow.com/questions/1251999/how-can-i-replace-a-newline-n-using-sed
 cat <<HEREDOC > "${OUTPUT_DIR}/bosh-deployment-resource-source-file"
 {
   client: "admin",
   client_secret: "${BOSH_CLIENT_SECRET}",
   target: "${director-url}",
-  ca_cert: "$(cat ${OUTPUT_DIR}/ca-cert)"
+  ca_cert: "$(cat ${OUTPUT_DIR}/ca-cert | sed ':a;N;$!ba;s/\n/\\n/g')"
 }
 HEREDOC
