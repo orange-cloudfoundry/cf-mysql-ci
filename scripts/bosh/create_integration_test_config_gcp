@@ -34,7 +34,7 @@ source ${CI_DIR}/scripts/utils.sh
 echo -e "Creating config file at ${INFO_COLOR}${CONFIG_LOCATION}${NO_COLOR}..."
 
 ENV_NAME=$(cat ${WORKSPACE_DIR}/${ENV_TARGET_FILE})
-CF_DEPLOYMENT_VARS="${WORKSPACE_DIR}/${ENV_NAME}/cf-deployment-vars.yml"
+CF_DEPLOYMENT_VARS="${WORKSPACE_DIR}/deployments-configuration/${ENV_NAME}/cf-deployment-vars.yml"
 CF_MYSQL_VARS="${WORKSPACE_DIR}/deployment-manifest/vars.yml"
 
 CF_API_USER="admin"
