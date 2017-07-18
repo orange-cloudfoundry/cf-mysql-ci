@@ -68,5 +68,16 @@ gobosh -n update-cloud-config "${cf_mysql_deployment_dir}/bosh-lite/cloud-config
   --client-secret "${BOSH_CLIENT_SECRET}" \
   --ca-cert "${OUTPUT_DIR}/ca-cert"
 
+director_url="https://$(cat "${OUTPUT_DIR}/external-ip")"
+
 # Adding https: escapes the regex that would otherwise convert to sslip
-echo "https://$(cat "${OUTPUT_DIR}/external-ip")" > "${OUTPUT_DIR}/director-url"
+echo ${director_url} > "${OUTPUT_DIR}/director-url"
+
+echo <<HEREDOC > "${OUTPUT_DIR}/bosh-deployment-resource-source-file"
+{
+  client: "admin",
+  client_secret: "${BOSH_CLIENT_SECRET}",
+  target: "${director-url}",
+  ca_cert: "$(cat ${OUTPUT_DIR}/ca-cert)"
+}
+HEREDOC

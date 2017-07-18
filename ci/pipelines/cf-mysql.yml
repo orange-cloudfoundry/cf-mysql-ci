@@ -157,16 +157,11 @@ resources:
 - name: cf-mysql-deployment-bosh-lite
   type: bosh-deployment
   source:
-    client: {{bosh-lite-username}}
-    client_secret: {{bosh-lite-password}}
     deployment: cf-mysql
 
 - name: cf-deployment-bosh-lite
   type: bosh-deployment
   source:
-    ca_cert: bosh-lite-info/ca-cert
-    client: {{bosh-lite-username}}
-    client_secret: {{bosh-lite-password}}
     deployment: cf
 
 - name: bosh-2.0-bosh-lite-deployment
@@ -408,7 +403,7 @@ jobs:
       releases:
       - routing-release/*.tgz
       - compiled-release-tarball/*.tgz
-      stemcells: [aws-bosh-stemcell/*.tgz]
+      stemcells: [gcp-bosh-stemcell/*.tgz]
   - task: run-broker-registrar
     config:
       platform: *platform
@@ -726,7 +721,7 @@ jobs:
         releases: []
         stemcells:
         - stemcell/*.tgz
-        target_file: bosh-lite-info/director-url
+        source_file: bosh-lite-info/bosh-deployment-resource-source-file
     - put: cf-mysql-deployment-bosh-lite
       params:
         manifest: deployment-manifest/deployment.yml
@@ -735,7 +730,7 @@ jobs:
         - routing-release/*.tgz
         stemcells:
         - stemcell/*.tgz
-        target_file: bosh-lite-info/external-ip
+        source_file: bosh-lite-info/bosh-deployment-resource-source-file
   - task: run-broker-registrar
     config:
       platform: *platform
