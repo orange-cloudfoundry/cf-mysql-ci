@@ -73,7 +73,7 @@ director_url="https://$(cat "${OUTPUT_DIR}/external-ip")"
 # Adding https: escapes the regex that would otherwise convert to sslip
 echo ${director_url} > "${OUTPUT_DIR}/director-url"
 
-echo <<HEREDOC > "${OUTPUT_DIR}/bosh-deployment-resource-source-file"
+cat <<HEREDOC > "${OUTPUT_DIR}/bosh-deployment-resource-source-file"
 {
   client: "admin",
   client_secret: "${BOSH_CLIENT_SECRET}",
