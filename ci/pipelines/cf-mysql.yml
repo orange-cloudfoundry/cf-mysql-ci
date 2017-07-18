@@ -130,14 +130,6 @@ resources:
     pool: full-bosh
     private_key: {{git-writer-private-key}}
 
-- name: bosh-lite-environment
-  type: pool
-  source:
-    uri: *pool-uri
-    branch: master
-    pool: bosh-lites-working
-    private_key: {{git-writer-private-key}}
-
 - name: compiled-packages-lock
   type: pool
   source:
@@ -184,12 +176,6 @@ resources:
     client: {{bosh-lite-username}}
     client_secret: {{bosh-lite-password}}
     deployment: cf-mysql
-
-- name: bosh-lite-repo
-  type: git
-  source:
-    uri: https://github.com/cloudfoundry/bosh-lite.git
-    branch: master
 
 - name: bosh-deployment-repo
   type: git
@@ -343,7 +329,7 @@ jobs:
     params:
       file: compiled-release-tarball/*.tgz
 
-- name: deploy-to-full-bosh
+- name: test-full-bosh
   plan:
   - aggregate:
     - get: cf-mysql-release
