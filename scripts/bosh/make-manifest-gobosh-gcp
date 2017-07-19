@@ -45,6 +45,7 @@ bosh2 interpolate \
     -v proxy_vm_extension="p-mysql-proxy-lb" \
     -v cf_skip_ssl_validation="true" \
     -v cf_api_url="https://api.${ENV_DOMAIN}" \
+    -v app_domains="[${ENV_DOMAIN}]"
     -v cf_mysql_external_host="p-mysql.${ENV_DOMAIN}" \
     -v cf_mysql_host="proxy-p-mysql.${ENV_DOMAIN}" \
     --vars-store ${MANIFEST_DIR}/vars.yml \
