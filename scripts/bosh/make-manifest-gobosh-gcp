@@ -12,12 +12,18 @@ source "${CI_DIR}/scripts/utils.sh"
 
 : "${ENV_METADATA:?}"
 : "${DEPLOYMENTS_DIR:?}"
+: "${VARS_FILE:=}"
 
 # ensure DEPLOYMENTS_DIR is an absolute path
 if [[ "${DEPLOYMENTS_DIR}" != /* ]]; then
   DEPLOYMENTS_DIR="${WORKSPACE_DIR}/${DEPLOYMENTS_DIR}"
 fi
 
+
+VARS_FILE_OPTION=''
+if [[ ! -z "${VARS_FILE}" ]]; then
+  VARS_FILE_OPTION="-l ${VARS_FILE}"
+fi
 
 ENV="$(cat ${ENV_NAME_FILE})"
 ENV_DIR="${DEPLOYMENTS_DIR}/${ENV}/"
@@ -33,6 +39,7 @@ bosh2 interpolate \
     -o ./cf-mysql-ci/operations/default-vcap-password.yml \
     -o ./cf-mysql-ci/operations/default-vcap-password-broker.yml \
     -o ./cf-mysql-ci/operations/enable-remote-admin-access.yml \
+    ${VARS_FILE_OPTION} \
     -v cf_admin_password="${CF_ADMIN_PASSWORD}" \
     -v cf_admin_username="admin" \
     -v proxy_vm_extension="p-mysql-proxy-lb" \

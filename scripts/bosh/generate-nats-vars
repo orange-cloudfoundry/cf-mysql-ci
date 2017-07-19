@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CI_DIR="$( cd "${MY_DIR}/../.." && pwd )"
+WORKSPACE_DIR="$( cd "${CI_DIR}/.." && pwd )"
+OUTPUT_FILE="${WORKSPACE_DIR}/nats-vars/nats.yml"
+
+ENV_NAME="$(cat full-bosh-environment/name)"
+
+ENV_DIR="deployments-configuration/${ENV_NAME}/"
+BOSH_CA_CERT=${ENV_NAME}.cert
+bosh2 int full-bosh-environment/metadata --path /ca_cert > $BOSH_CA_CERT
+BOSH_ENVIRONMENT=$(bosh2 int full-bosh-environment/metadata --path /target)
+BOSH_CLIENT=$(bosh2 int full-bosh-environment/metadata --path /client)
+BOSH_CLIENT_SECRET=$(bosh2 int full-bosh-environment/metadata --path /client_secret)
+
+NATS_MACHINES="[$(bosh2 -d cf is | grep nats | awk '{print $4}')]"
+NATS_PASSWORD=$(bosh2 int "${ENV_DIR}/cf-deployment-vars.yml" --path /nats_password)
+NATS_USER="nats"
+NATS_PORT="4222"
+
+cat <<HEREDOC > ${OUTPUT_FILE}
+---
+nats:
+  machines: ${NATS_MACHINES}
+  user: ${NATS_USER}
+  password: ${NATS_PASSWORD}
+  port: ${NATS_PORT}
+HEREDOC
