@@ -64,7 +64,6 @@ fi
 
 bosh interpolate \
     ./cf-mysql-deployment/cf-mysql-deployment.yml \
-    -o ./cf-mysql-deployment/operations/latest-versions.yml \
     ${operations} \
     -o ./cf-mysql-ci/operations/default-vcap-password.yml \
     -l ./cf-mysql-deployment/bosh-lite/default-vars.yml \
