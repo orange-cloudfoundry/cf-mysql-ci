@@ -1,0 +1,27 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: cloudfoundry/cf-mysql-ci
+
+inputs:
+- name: cf-mysql-ci
+- name: cf-mysql-deployment
+- name: url
+
+outputs:
+- name: deployment-manifest
+
+run:
+  path: cf-mysql-ci/scripts/bosh-lite/make-manifest-ondemand
+
+params:
+  OUTPUT_FILE: deployment-manifest/deployment.yml
+  DISABLE_INTERRUPTOR: false
+  MINIMAL_MODE: false
+  NO_ARBITRATOR: false
+  ENABLE_REMOTE_ADMIN_ACCESS: false
+  ADD_BROKER: false
+  SET_CF_MYSQL_HOST: true
