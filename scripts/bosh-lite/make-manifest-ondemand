@@ -11,6 +11,7 @@ set -eux
 : "${TUNE_BY_PERCENTAGE:=false}"
 : "${ADD_BROKERS:=false}"
 : "${DISABLE_CROSS_DEPLOYMENT_LINKS:=true}"
+: "${SET_CF_MYSQL_HOST:=false}"
 
 operations=""
 variables=""
@@ -61,6 +62,10 @@ if ${ADD_BROKERS}; then
     -v cf_mysql_external_host=\"p-mysql.${cf_url}\""
 fi
 
+if ${SET_CF_MYSQL_HOST}; then
+    variables="$variables \
+      -v cf_mysql_host=\"proxy-p-mysql.${cf_url}\""
+fi
 
 bosh interpolate \
     ./cf-mysql-deployment/cf-mysql-deployment.yml \
