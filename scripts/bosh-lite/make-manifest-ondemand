@@ -63,6 +63,7 @@ if ${ADD_BROKERS}; then
 fi
 
 if ${SET_CF_MYSQL_HOST}; then
+    cf_url="$(cat url/url)"
     variables="$variables \
       -v cf_mysql_host=\"proxy-p-mysql.${cf_url}\""
 fi
