@@ -38,7 +38,7 @@ function deploy_with_exact_size() {
   OUTPUT_FILE="${MANIFEST_FILE}" \
   ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
 
-  gobosh -n deploy $MANIFEST_FILE
+  bosh -n deploy $MANIFEST_FILE
 }
 
 function deploy_with_percentage() {
@@ -49,35 +49,110 @@ function deploy_with_percentage() {
   OUTPUT_FILE="${MANIFEST_FILE}" \
   ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
 
-  gobosh -n deploy $MANIFEST_FILE
+  bosh -n deploy $MANIFEST_FILE
 }
 
+function deploy_with_everything_enabled() {
+  echo "Deploying with the opsfile specified in cf-mysql-acceptance-tests"
+  MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
+
+  EVERYTHING_ENABLED=true \
+  OUTPUT_FILE="${MANIFEST_FILE}" \
+  ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
+
+  bosh -n deploy $MANIFEST_FILE
+}
+
+function connect_to_mysql() {
+  write_mysql_config
+  trap close-ssh-tunnels EXIT
+  open_ssh_tunnel_to_mysql
+}
+
+function verify_exact_settings() {
+  # look at db to see that it is exact
+  innodb_bp_size=$(mysql --defaults-extra-file=${MYSQL_CONFIG} \
+    -sse "SELECT @@innodb_buffer_pool_size")
+
+  if [[ "${innodb_bp_size}" != "465567744" ]]; then
+    echo "Exact size did not render correctly, found ${innodb_bp_size}"
+    exit 1
+  fi
+}
+
+function verify_percentage_settings() {
+  # look at db to see it is not the old exact value
+  innodb_bp_size=$(mysql --defaults-extra-file=${MYSQL_CONFIG} \
+    -sse "SELECT @@innodb_buffer_pool_size")
+
+  if [[ "${innodb_bp_size}" == "465567744" ]]; then
+    echo "Percentage accidentally rendered old exact value, found ${innodb_bp_size}"
+    exit 1
+  fi
+}
+
+function create_acceptance_test_config() {
+  local expectation_file_path
+  expectation_file_path=$1
+
+cat <<EOF
+{
+  "api": "",
+  "apps_domain": null,
+  "admin_user": "",
+  "admin_password": "",
+  "test_password": "",
+  "broker_host": "",
+  "service_name": "",
+  "skip_ssl_validation": false,
+  "proxy": {
+    "dashboard_urls": [
+      "https://0-proxy-",
+      "https://1-proxy-"
+    ],
+    "api_username": "proxy",
+    "api_password": "password",
+    "api_force_https": true,
+    "skip_ssl_validation": false
+  },
+  "standalone_only": true,
+  "standalone": {
+    "host": "${MYSQL_TUNNEL_IP}",
+    "port": ${MYSQL_TUNNEL_PORT},
+    "username": "root",
+    "password": "password"
+  },
+  "tuning": {
+    "expectation_file_path": "${expectation_file_path}"
+  }
+}
+EOF
+}
+
+function verify_everything_enabled() {
+  export GOPATH="${WORKSPACE_DIR}/cf-mysql-release"
+  export PATH=$GOPATH/bin:$PATH
+
+  go install -v github.com/onsi/ginkgo/ginkgo
+
+  pushd "${WORKSPACE_DIR}/cf-mysql-release/src/github.com/cloudfoundry-incubator/cf-mysql-acceptance-tests"
+    create_acceptance_test_config \
+      "${PWD}/assets/tuning/everything_enabled.json" \
+      > /tmp/everything_enabled_config.json
+
+    CONFIG=/tmp/everything_enabled_config.json ginkgo cf-mysql-service/tuning
+  popd
+}
+
+
 deploy_with_exact_size
-
-# connect
-write_mysql_config
-trap close-ssh-tunnels EXIT
-open_ssh_tunnel_to_mysql
-
-# look at db to see that it is exact
-innodb_bp_size=$(mysql --defaults-extra-file=${MYSQL_CONFIG} \
-  -sse "SELECT @@innodb_buffer_pool_size")
-
-if [[ "${innodb_bp_size}" != "465567744" ]]; then
-  echo "Exact size did not render correctly, found ${innodb_bp_size}"
-  exit 1
-fi
+connect_to_mysql
+verify_exact_settings
 
 deploy_with_percentage
-
-# connect
-# look at db to see it is not the old exact value
-innodb_bp_size=$(mysql --defaults-extra-file=${MYSQL_CONFIG} \
-  -sse "SELECT @@innodb_buffer_pool_size")
-
-if [[ "${innodb_bp_size}" == "465567744" ]]; then
-  echo "Percentage accidentally rendered old exact value, found ${innodb_bp_size}"
-  exit 1
-fi
+verify_percentage_settings
 
 echo "Tuning overriding works with exact and percentage"
+
+deploy_with_everything_enabled
+verify_everything_enabled

@@ -12,6 +12,7 @@ set -eux
 : "${ADD_BROKERS:=false}"
 : "${DISABLE_CROSS_DEPLOYMENT_LINKS:=true}"
 : "${SET_CF_MYSQL_HOST:=false}"
+: "${EVERYTHING_ENABLED:=false}"
 
 operations=""
 variables=""
@@ -42,6 +43,10 @@ fi
 
 if ${TUNE_BY_PERCENTAGE}; then
     operations="$operations -o ./cf-mysql-ci/operations/tune-buffer-by-percentage.yml"
+fi
+
+if ${EVERYTHING_ENABLED}; then
+    operations="$operations -o ./cf-mysql-release/src/github.com/cloudfoundry-incubator/cf-mysql-acceptance-tests/assets/tuning/everything_enabled.yml"
 fi
 
 if ${ADD_BROKERS}; then
