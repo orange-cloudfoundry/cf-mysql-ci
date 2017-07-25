@@ -27,7 +27,7 @@ SSH_KEY_FILE=${SSH_KEY_FILE:-""}
 MYSQL_TUNNEL_IP=127.0.0.1
 MYSQL_TUNNEL_PORT=3307
 MYSQL_TUNNEL_USERNAME=${MYSQL_TUNNEL_USERNAME:-ubuntu}
-MYSQL_VM_IP=10.244.7.2
+MYSQL_VM_IP="$(bosh vms --column Instance --column IPs | grep mysql | awk '{print $2}' | head -1)"
 MYSQL_VM_PORT=3306
 
 function deploy_with_exact_size() {
