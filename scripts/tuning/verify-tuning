@@ -170,6 +170,22 @@ function verify_everything_disabled() {
   popd
 }
 
+function verify_config_file_updated_with_tests() {
+  pushd "${WORKSPACE_DIR}/cf-mysql-release/jobs/mysql/templates"
+    if [ -f my.cnf.erb.shasum ]; then
+      oldsha=$(cat my.cnf.erb.shasum)
+      newsha=$(shasum | awk '{print $1}')
+
+      if [ "$oldsha" != "$newsha" ]; then
+        echo "Detected my.cnf.erb change without sha being updated"
+        echo "Did you update my.cnf.erb without updating the tuning tests?"
+        exit 1
+      fi
+    fi
+  popd
+}
+
+verify_config_file_updated_with_tests
 
 deploy_with_exact_size
 connect_to_mysql
