@@ -44,10 +44,6 @@ if ${ENABLE_REMOTE_ADMIN_ACCESS}; then
     operations="$operations -o ./cf-mysql-ci/operations/enable-remote-admin-access.yml"
 fi
 
-if ${STATIC_PROXY_IPS}; then
-    operations="$operations -o ./cf-mysql-ci/operations/static-proxy-ips.yml"
-fi
-
 if ${TUNE_BY_EXACT_SIZE}; then
     operations="$operations -o ./cf-mysql-ci/operations/tune-buffer-by-exact-size.yml"
 fi
@@ -80,6 +76,10 @@ if ${ADD_BROKERS}; then
     -v cf_api_url=\"https://api.${cf_url}\" \
     -v app_domains=[${cf_url}] \
     -v cf_mysql_external_host=\"p-mysql.${cf_url}\""
+fi
+
+if ${STATIC_PROXY_IPS}; then
+    operations="$operations -o ./cf-mysql-ci/operations/static-proxy-ips.yml"
 fi
 
 bosh interpolate \
