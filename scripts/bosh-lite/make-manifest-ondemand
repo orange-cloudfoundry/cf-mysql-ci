@@ -13,6 +13,7 @@ set -eux
 : "${DISABLE_CROSS_DEPLOYMENT_LINKS:=true}"
 : "${SET_CF_MYSQL_HOST:=false}"
 : "${EVERYTHING_ENABLED:=false}"
+: "${EVERYTHING_DISABLED:=false}"
 
 operations=""
 variables=""
@@ -47,6 +48,10 @@ fi
 
 if ${EVERYTHING_ENABLED}; then
     operations="$operations -o ./cf-mysql-release/src/github.com/cloudfoundry-incubator/cf-mysql-acceptance-tests/assets/tuning/everything_enabled.yml"
+fi
+
+if ${EVERYTHING_DISABLED}; then
+    operations="$operations -o ./cf-mysql-release/src/github.com/cloudfoundry-incubator/cf-mysql-acceptance-tests/assets/tuning/everything_disabled.yml"
 fi
 
 if ${ADD_BROKERS}; then

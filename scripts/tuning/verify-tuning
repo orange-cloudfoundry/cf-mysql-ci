@@ -53,10 +53,21 @@ function deploy_with_percentage() {
 }
 
 function deploy_with_everything_enabled() {
-  echo "Deploying with the opsfile specified in cf-mysql-acceptance-tests"
+  echo "Deploying with the opsfile specified in cf-mysql-acceptance-tests, enabling all features"
   MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
 
   EVERYTHING_ENABLED=true \
+  OUTPUT_FILE="${MANIFEST_FILE}" \
+  ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
+
+  bosh -n deploy $MANIFEST_FILE
+}
+
+function deploy_with_everything_disabled() {
+  echo "Deploying with the opsfile specified in cf-mysql-acceptance-tests, disabling all toggable features"
+  MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
+
+  EVERYTHING_DISABLED=true \
   OUTPUT_FILE="${MANIFEST_FILE}" \
   ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
 
@@ -144,6 +155,21 @@ function verify_everything_enabled() {
   popd
 }
 
+function verify_everything_disabled() {
+  export GOPATH="${WORKSPACE_DIR}/cf-mysql-release"
+  export PATH=$GOPATH/bin:$PATH
+
+  go install -v github.com/onsi/ginkgo/ginkgo
+
+  pushd "${WORKSPACE_DIR}/cf-mysql-release/src/github.com/cloudfoundry-incubator/cf-mysql-acceptance-tests"
+    create_acceptance_test_config \
+      "${PWD}/assets/tuning/everything_disabled.json" \
+      > /tmp/everything_disabled_config.json
+
+    CONFIG=/tmp/everything_disabled_config.json ginkgo cf-mysql-service/tuning
+  popd
+}
+
 
 deploy_with_exact_size
 connect_to_mysql
@@ -156,3 +182,6 @@ echo "Tuning overriding works with exact and percentage"
 
 deploy_with_everything_enabled
 verify_everything_enabled
+
+deploy_with_everything_disabled
+verify_everything_disabled
