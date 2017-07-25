@@ -11,13 +11,13 @@ ENV_NAME="$(cat full-bosh-environment/name)"
 
 ENV_DIR="deployments-configuration/${ENV_NAME}/"
 export BOSH_CA_CERT=${ENV_NAME}.cert
-bosh2 int full-bosh-environment/metadata --path /ca_cert > $BOSH_CA_CERT
-export BOSH_ENVIRONMENT=$(bosh2 int full-bosh-environment/metadata --path /target)
-export BOSH_CLIENT=$(bosh2 int full-bosh-environment/metadata --path /client)
-export BOSH_CLIENT_SECRET=$(bosh2 int full-bosh-environment/metadata --path /client_secret)
+bosh int full-bosh-environment/metadata --path /ca_cert > $BOSH_CA_CERT
+export BOSH_ENVIRONMENT=$(bosh int full-bosh-environment/metadata --path /target)
+export BOSH_CLIENT=$(bosh int full-bosh-environment/metadata --path /client)
+export BOSH_CLIENT_SECRET=$(bosh int full-bosh-environment/metadata --path /client_secret)
 
-NATS_MACHINES="[$(bosh2 -d cf is | grep nats | awk '{print $4}')]"
-NATS_PASSWORD=$(bosh2 int "${ENV_DIR}/cf-deployment-vars.yml" --path /nats_password)
+NATS_MACHINES="[$(bosh -d cf is | grep nats | awk '{print $4}')]"
+NATS_PASSWORD=$(bosh int "${ENV_DIR}/cf-deployment-vars.yml" --path /nats_password)
 NATS_USER="nats"
 NATS_PORT="4222"
 

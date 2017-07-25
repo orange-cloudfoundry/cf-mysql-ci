@@ -14,6 +14,12 @@ set -eux
 : "${SET_CF_MYSQL_HOST:=false}"
 : "${EVERYTHING_ENABLED:=false}"
 : "${EVERYTHING_DISABLED:=false}"
+: "${VARS_FILE:=}"
+
+VARS_FILE_OPTION=''
+if [[ ! -z "${VARS_FILE}" ]]; then
+  VARS_FILE_OPTION="-l ${VARS_FILE}"
+fi
 
 operations=""
 variables=""
@@ -85,5 +91,6 @@ bosh interpolate \
     ${operations} \
     -o ./cf-mysql-ci/operations/default-vcap-password.yml \
     -l ./cf-mysql-deployment/bosh-lite/default-vars.yml \
+    ${VARS_FILE_OPTION} \
     ${variables} \
     > "${OUTPUT_FILE}"

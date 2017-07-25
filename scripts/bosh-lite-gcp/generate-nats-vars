@@ -1,0 +1,24 @@
+#!/bin/bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+CI_DIR="$( cd "${MY_DIR}/../.." && pwd )"
+WORKSPACE_DIR="$( cd "${CI_DIR}/.." && pwd )"
+OUTPUT_FILE="${WORKSPACE_DIR}/nats-vars/nats.yml"
+
+export BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
+
+NATS_MACHINES="[$(bosh -d cf is | grep nats | awk '{print $4}')]"
+NATS_PASSWORD=$(bosh int "varstore/deployment-vars.yml" --path /nats_password)
+NATS_USER="nats"
+NATS_PORT="4222"
+
+cat <<HEREDOC > ${OUTPUT_FILE}
+---
+nats:
+  machines: ${NATS_MACHINES}
+  user: ${NATS_USER}
+  password: ${NATS_PASSWORD}
+  port: ${NATS_PORT}
+HEREDOC
