@@ -11,9 +11,9 @@ set -eux
 : "${TUNE_BY_PERCENTAGE:=false}"
 : "${ADD_BROKERS:=false}"
 : "${DISABLE_CROSS_DEPLOYMENT_LINKS:=true}"
-: "${SET_CF_MYSQL_HOST:=false}"
 : "${EVERYTHING_ENABLED:=false}"
 : "${EVERYTHING_DISABLED:=false}"
+: "${STATIC_PROXY_IPS:=false}"
 : "${VARS_FILE:=}"
 
 VARS_FILE_OPTION=''
@@ -42,6 +42,10 @@ fi
 
 if ${ENABLE_REMOTE_ADMIN_ACCESS}; then
     operations="$operations -o ./cf-mysql-ci/operations/enable-remote-admin-access.yml"
+fi
+
+if ${STATIC_PROXY_IPS}; then
+    operations="$operations -o ./cf-mysql-ci/operations/static-proxy-ips.yml"
 fi
 
 if ${TUNE_BY_EXACT_SIZE}; then
@@ -76,13 +80,6 @@ if ${ADD_BROKERS}; then
     -v cf_api_url=\"https://api.${cf_url}\" \
     -v app_domains=[${cf_url}] \
     -v cf_mysql_external_host=\"p-mysql.${cf_url}\""
-fi
-
-if ${SET_CF_MYSQL_HOST}; then
-    cf_url="$(cat url/url)"
-    variables="$variables \
-      -v cf_mysql_host=\"proxy-p-mysql.${cf_url}\" \
-      -v cf_mysql_mysql_port=3306"
 fi
 
 bosh interpolate \

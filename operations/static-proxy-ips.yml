@@ -1,0 +1,12 @@
+---
+- type: replace
+  path: /instance_groups/name=proxy/networks
+  value:
+    - name: default
+      static_ips:
+      - 10.244.1.100
+      - 10.244.1.101
+
+- type: replace
+  path: /properties/cf_mysql/host?
+  value: 10.244.1.100
