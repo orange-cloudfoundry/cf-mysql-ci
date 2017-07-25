@@ -536,15 +536,12 @@ jobs:
     - aggregate:
       - get: cf-mysql-release
         passed: [create-and-compile-release]
-        trigger: true
       - get: cf-mysql-deployment
         passed: [create-and-compile-release]
-        trigger: true
       - get: cf-mysql-ci
       - get: compiled-release-tarball
         resource: cf-mysql-compiled-release
         passed: [create-and-compile-release]
-        trigger: true
       - get: bosh-deployment
         resource: bosh-deployment-repo
       - get: deployments
@@ -553,6 +550,7 @@ jobs:
         resource: bosh-lite-stemcell
       - get: version
         passed: [create-and-compile-release]
+        trigger: true
       - get: routing-release
       - get: cf-deployment
     - task: apply-terraform
