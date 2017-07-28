@@ -1,0 +1,28 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: cloudfoundry/cf-mysql-ci
+
+inputs:
+- name: cf-mysql-deployment-master
+  path: deployment-configuration    # for runtime-ci binary
+- name: bosh-io-release-cf-mysql-release
+  path: cf-mysql-release            # for runtime-ci binary
+- name: runtime-ci
+- name: gcp-bosh-stemcell
+  path: stemcell
+- name: cf-mysql-ci
+
+outputs:
+- name: updated-deployment-manifest # for runtime-ci binary
+- name: updated-cf-mysql-deployment-master
+
+run:
+  path: cf-mysql-ci/ci/tasks/finalize-cf-mysql-deployment/update-cf-mysql-deployment-with-new-release
+
+params:
+  GIT_AUTHOR_NAME: Concourse CI
+  GIT_AUTHOR_EMAIL: pivotal-core-services-eng@pivotal.io

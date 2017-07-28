@@ -96,6 +96,17 @@ resources:
     branch: release-candidate
     private_key: {{git-writer-private-key}}
 
+- name: runtime-ci
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry/runtime-ci
+    branch: master
+
+- name: bosh-io-release-cf-mysql-release
+  type: bosh-io-release
+  source:
+    repository: cloudfoundry/cf-mysql-release
+
 - name: cf-mysql-release
   type: git
   source:
@@ -1297,6 +1308,8 @@ jobs:
       - test-verify-tuning
       trigger: true
     - get: cf-mysql-ci
+    - get: gcp-bosh-stemcell
+      passed: [test-full-bosh]
   - aggregate:
     - put: cf-mysql-release-candidate
       params:
@@ -1325,6 +1338,8 @@ jobs:
       - get: version
         params:
           bump: final
+      - get: gcp-bosh-stemcell
+        passed: [promote-to-rc]
     - task: final-release
       config:
         platform: *platform
@@ -1351,7 +1366,6 @@ jobs:
     - put: cf-mysql-deployment-master
       params:
         repository: cf-mysql-deployment-release-candidate
-        tag: output-release-dir/cf-mysql-tag
     - put: cf-mysql-master
       params:
         repository: output-repo/cf-mysql-release
@@ -1369,6 +1383,26 @@ jobs:
         tag: output-release-dir/cf-mysql-tag
         body: output-release-dir/generated-release-notes
         commitish: output-release-dir/git-commit
+
+- name: finalize-cf-mysql-deployment
+  plan:
+    - aggregate:
+      - get: cf-mysql-deployment-master
+        passed: [final-release]
+      - get: bosh-io-release-cf-mysql-release
+        trigger: true
+      - get: runtime-ci
+      - get: gcp-bosh-stemcell
+        passed: [final-release]
+      - get: cf-mysql-ci
+    - task: update-cf-mysql-deployment-with-new-release
+      file: cf-mysql-ci/ci/tasks/finalize-cf-mysql-deployment/update-cf-mysql-deployment-with-new-release.yml
+    - task: configure-tag-name
+      file: cf-mysql-ci/ci/tasks/finalize-cf-mysql-deployment/configure-tag-name.yml
+    - put: cf-mysql-deployment-master
+      params:
+        repository: updated-cf-mysql-deployment-master
+        tag: tag-name/name
 
 - name: merge-cf-mysql-deployment-master-into-develop
   plan:

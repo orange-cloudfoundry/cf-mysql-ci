@@ -1,0 +1,17 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: cloudfoundry/cf-mysql-ci
+
+inputs:
+  - name: bosh-io-release-cf-mysql-release
+  - name: cf-mysql-ci
+
+outputs:
+  - name: tag-name
+
+run:
+  path: cf-mysql-ci/ci/tasks/finalize-cf-mysql-deployment/configure-tag-name
