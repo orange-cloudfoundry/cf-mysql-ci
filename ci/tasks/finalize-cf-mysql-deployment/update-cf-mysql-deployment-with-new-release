@@ -2,8 +2,7 @@
 
 set -eux
 
-CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-WORKSPACE_DIR="$(cd "${CURRENT_DIR}/../.." && pwd)"
+WORKSPACE_DIR=$PWD
 ORIGINAL_DEPLOYMENT_DIR="${WORKSPACE_DIR}/deployment-configuration"
 UPDATED_DEPLOYMENT_DIR="${WORKSPACE_DIR}/updated-cf-mysql-deployment-master"
 MANIFEST_OUTPUT_DIR="${WORKSPACE_DIR}/updated-deployment-manifest"
