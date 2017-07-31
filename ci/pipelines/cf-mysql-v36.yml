@@ -1125,6 +1125,7 @@ jobs:
         - name: cf-mysql-ci
         - name: bosh-lite-info
         - name: cf-mysql-deployment
+        - name: cf-mysql-release
       params:
         MYSQL_TUNNEL_USERNAME: jumpbox
         ENV_TARGET_FILE: bosh-lite-info/external-ip
