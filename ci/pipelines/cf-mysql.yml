@@ -1330,9 +1330,7 @@ jobs:
           submodules: none
       - get: cf-mysql-deployment-release-candidate
         passed: [promote-to-rc]
-      - get: cf-mysql-deployment-master
       - get: cf-mysql-ci
-      - get: deployments-configuration
       - get: release-notes
         trigger: true
       - get: version
@@ -1363,9 +1361,6 @@ jobs:
           OUTPUT_REPO_DIRECTORY: output-repo
           RELEASE_ACCESS_KEY: {{cf-mysql-publish-blobs-aws-access-key-id}}
           RELEASE_SECRET_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
-    - put: cf-mysql-deployment-master
-      params:
-        repository: cf-mysql-deployment-release-candidate
     - put: cf-mysql-master
       params:
         repository: output-repo/cf-mysql-release
@@ -1387,14 +1382,19 @@ jobs:
 - name: finalize-cf-mysql-deployment
   plan:
     - aggregate:
-      - get: cf-mysql-deployment-master
+      - get: cf-mysql-deployment-release-candidate
         passed: [final-release]
+      - get: cf-mysql-deployment-master
       - get: bosh-io-release-cf-mysql-release
         trigger: true
       - get: runtime-ci
       - get: gcp-bosh-stemcell
         passed: [final-release]
       - get: cf-mysql-ci
+    - put: cf-mysql-deployment-master
+      params:
+        repository: cf-mysql-deployment-release-candidate
+        merge: true
     - task: update-cf-mysql-deployment-with-new-release
       file: cf-mysql-ci/ci/tasks/finalize-cf-mysql-deployment/update-cf-mysql-deployment-with-new-release.yml
     - task: configure-tag-name
