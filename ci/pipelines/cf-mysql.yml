@@ -63,6 +63,12 @@ resources:
     uri: https://github.com/cloudfoundry-incubator/cf-mysql-ci.git
     branch: master
 
+- name: cf-deployment-concourse-tasks
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry/cf-deployment-concourse-tasks.git
+    tag_filter: v3.*
+
 - name: routing-release
   type: bosh-io-release
   source:
@@ -647,6 +653,7 @@ jobs:
         trigger: true
       - get: routing-release
       - get: cf-deployment
+      - get: cf-deployment-concourse-tasks
     - task: apply-terraform
       file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
     - task: create-bosh-lite
@@ -675,6 +682,11 @@ jobs:
       - task: delete-stemcell
         file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
     - aggregate:
+      - task: bosh-upload-stemcell-from-cf-deployment
+        file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+        input_mapping: {bbl-state: bosh-lite-info}
+        params:
+          INFRASTRUCTURE: bosh-lite
       - task: make-cf-manifest
         file: cf-mysql-ci/ci/tasks/make-cf-manifest-ondemand.yml
       - task: update-cloud-config
