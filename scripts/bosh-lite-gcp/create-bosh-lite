@@ -69,6 +69,7 @@ gobosh -n update-cloud-config "${cf_mysql_deployment_dir}/bosh-lite/cloud-config
   --ca-cert "${OUTPUT_DIR}/ca-cert"
 
 director_url="https://$(cat "${OUTPUT_DIR}/external-ip")"
+escaped_ca_cert="$(cat ${OUTPUT_DIR}/ca-cert | sed ':a;N;$!ba;s/\n/\\n/g')"
 
 # Adding https: escapes the regex that would otherwise convert to sslip
 echo ${director_url} > "${OUTPUT_DIR}/director-url"
@@ -80,6 +81,18 @@ cat <<HEREDOC > "${OUTPUT_DIR}/bosh-deployment-resource-source-file"
   client: "admin",
   client_secret: "${BOSH_CLIENT_SECRET}",
   target: "${director_url}",
-  ca_cert: "$(cat ${OUTPUT_DIR}/ca-cert | sed ':a;N;$!ba;s/\n/\\n/g')"
+  ca_cert: "${escaped_ca_cert}"
+}
+HEREDOC
+
+# Create a bbl state file with credentials so that we can target the director with `bbl print-env`
+cat <<HEREDOC > "${OUTPUT_DIR}/bbl-state.json"
+{
+  "bosh": {
+    "directorUsername": "admin",
+    "directorPassword": "${BOSH_CLIENT_SECRET}",
+    "directorAddress": "${director_url}",
+    "directorSSLCA": "${escaped_ca_cert}"
+  }
 }
 HEREDOC
