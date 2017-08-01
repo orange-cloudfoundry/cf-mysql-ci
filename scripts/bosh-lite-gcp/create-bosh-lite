@@ -88,6 +88,7 @@ HEREDOC
 # Create a bbl state file with credentials so that we can target the director with `bbl print-env`
 cat <<HEREDOC > "${OUTPUT_DIR}/bbl-state.json"
 {
+  "version": 3,
   "bosh": {
     "directorUsername": "admin",
     "directorPassword": "${BOSH_CLIENT_SECRET}",
