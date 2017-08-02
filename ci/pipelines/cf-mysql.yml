@@ -286,10 +286,16 @@ jobs:
       passed: [test-unit]
     - get: cf-mysql-ci
     - get: aws-bosh-stemcell
+      trigger: true
     - get: gcp-bosh-stemcell
+      trigger: true
+    - get: bosh-lite-stemcell
+      trigger: true
     - get: version
       passed: [test-unit]
       trigger: true
+  - task: gate-on-stemcells
+    file: cf-mysql-ci/ci/tasks/create-and-compile-release/gate-on-stemcells.yml
   - &create-release
     task: create-release
     file: cf-mysql-ci/ci/tasks/create-release.yml
@@ -516,6 +522,7 @@ jobs:
         resource: deployments-configuration
       - get: stemcell
         resource: bosh-lite-stemcell
+        passed: [create-and-compile-release]
       - get: version
         passed: [create-and-compile-release]
         trigger: true
@@ -648,6 +655,7 @@ jobs:
         resource: deployments-configuration
       - get: stemcell
         resource: bosh-lite-stemcell
+        passed: [create-and-compile-release]
       - get: version
         passed: [create-and-compile-release]
         trigger: true
@@ -858,7 +866,9 @@ jobs:
       resource: deployments-configuration
     - get: stemcell
       resource: bosh-lite-stemcell
+      passed: [create-and-compile-release]
     - get: aws-bosh-stemcell
+      passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
       trigger: true
@@ -1145,6 +1155,7 @@ jobs:
         resource: deployments-configuration
       - get: stemcell
         resource: bosh-lite-stemcell
+        passed: [create-and-compile-release]
       - get: version
         passed: [create-and-compile-release]
         trigger: true
@@ -1205,6 +1216,7 @@ jobs:
         resource: deployments-configuration
       - get: stemcell
         resource: bosh-lite-stemcell
+        passed: [create-and-compile-release]
       - get: version
         passed: [create-and-compile-release]
         trigger: true

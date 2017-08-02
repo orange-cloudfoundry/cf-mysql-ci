@@ -1,0 +1,16 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: cloudfoundry/cf-mysql-ci
+
+inputs:
+- name: aws-bosh-stemcell
+- name: bosh-lite-stemcell
+- name: gcp-bosh-stemcell
+- name: cf-mysql-ci
+
+run:
+  path: cf-mysql-ci/ci/tasks/create-and-compile-release/gate-on-stemcells
