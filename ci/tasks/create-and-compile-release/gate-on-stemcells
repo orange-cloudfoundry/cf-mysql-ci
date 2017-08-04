@@ -4,9 +4,9 @@ set -eux
 
 CWD=$(pwd)
 
-aws=$(cat "${CWD}/aws-bosh-stemcell/version")
-gcp=$(cat "${CWD}/gcp-bosh-stemcell/version")
-boshlite=$(cat "${CWD}/bosh-lite-stemcell/version")
+aws=$(egrep -o "^[0-9]+" "${CWD}/aws-bosh-stemcell/version")
+gcp=$(egrep -o "^[0-9]+" "${CWD}/gcp-bosh-stemcell/version")
+boshlite=$(egrep -o "^[0-9]+" "${CWD}/bosh-lite-stemcell/version")
 
 if [[ "${aws}" != "${gcp}" || "${aws}" != "${boshlite}" ]]; then
 	set +x
