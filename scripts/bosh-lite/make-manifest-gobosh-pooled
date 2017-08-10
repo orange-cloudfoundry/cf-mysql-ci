@@ -36,7 +36,8 @@ if ${ADD_BROKERS}; then
     operations="$operations -o ./cf-mysql-deployment/operations/register-proxy-route.yml"
     operations="$operations -o ./cf-mysql-ci/operations/default-vcap-password-broker.yml"
     if ${DISABLE_CROSS_DEPLOYMENT_LINKS}; then
-        operations="$operations -o ./cf-mysql-deployment/operations/disable-cross-deployment-links.yml"
+        operations="$operations -o ./cf-mysql-deployment/operations/disable-route-registrar-cross-deployment-links.yml"
+        operations="$operations -o ./cf-mysql-deployment/operations/disable-smoke-tests-cross-deployment-links.yml"
     fi
 fi
 
