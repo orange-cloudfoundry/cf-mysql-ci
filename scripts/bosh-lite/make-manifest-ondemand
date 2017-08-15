@@ -91,4 +91,5 @@ bosh interpolate \
     -l ./cf-mysql-deployment/bosh-lite/default-vars.yml \
     ${VARS_FILE_OPTION} \
     ${variables} \
+    -v cf_mysql_mysql_admin_password=password \
     > "${OUTPUT_FILE}"
