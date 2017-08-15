@@ -61,7 +61,7 @@ resources:
   type: git
   source:
     uri: git@github.com:cloudfoundry/cf-mysql-deployment.git
-    branch: v36
+    branch: releases/v36
     private_key: {{git-writer-private-key}}
 
 - name: cf-mysql-release
