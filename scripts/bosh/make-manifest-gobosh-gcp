@@ -35,6 +35,7 @@ bosh2 interpolate \
     ./cf-mysql-deployment/cf-mysql-deployment.yml \
     -o ./cf-mysql-deployment/operations/latest-versions.yml \
     -o ./cf-mysql-deployment/operations/add-broker.yml \
+    -o ./cf-mysql-deployment/operations/configure-broker-load-balancer.yml \
     -o ./cf-mysql-deployment/operations/proxy-elb.yml \
     -o ./cf-mysql-deployment/operations/register-proxy-route.yml \
     -o ./cf-mysql-ci/operations/default-vcap-password.yml \
