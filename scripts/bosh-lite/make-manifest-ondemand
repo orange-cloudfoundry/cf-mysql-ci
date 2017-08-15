@@ -92,4 +92,5 @@ bosh interpolate \
     ${VARS_FILE_OPTION} \
     ${variables} \
     -v cf_mysql_mysql_admin_password=password \
+    -v cf_mysql_mysql_galera_healthcheck_endpoint_password=password \
     > "${OUTPUT_FILE}"
