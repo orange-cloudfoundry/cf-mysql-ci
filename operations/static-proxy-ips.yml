@@ -8,5 +8,9 @@
       - 10.244.1.101
 
 - type: replace
-  path: /properties/cf_mysql/host?
+  path: /instance_groups/name=smoke_tests/jobs/name=smoke_tests/properties/cf_mysql/host?
+  value: 10.244.1.100
+
+- type: replace
+  path: /instance_groups/name=broker/jobs/name=cf-mysql-broker/properties/cf_mysql/host?
   value: 10.244.1.100
