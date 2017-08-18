@@ -11,10 +11,13 @@ inputs:
 - name: bosh-lite-environment
 
 run:
-  path: cf-mysql-ci/scripts/bosh/delete_deployment
+  path: cf-mysql-ci/scripts/bosh/delete_deployment_gcp
 
 params:
-  ENV_TARGET_FILE: bosh-lite-environment/name
   ENV_METADATA: bosh-lite-environment/metadata
   BOSH_DEPLOYMENT: ~
+  BOSH_CLIENT:
+  BOSH_CLIENT_SECRET:
+  BOSH_CA_CERT:
+  BOSH_ENVIRONMENT:
 
