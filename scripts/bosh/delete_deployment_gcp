@@ -17,7 +17,7 @@ export BOSH_CLIENT
 BOSH_CLIENT_SECRET=${BOSH_CLIENT_SECRET:-"$(jq_val "client_secret" "${ENV_METADATA}")"}
 export BOSH_CLIENT_SECRET
 
-BOSH_CA_CERT=${BOSH_CLIENT_SECRET:-"$(jq_val "ca_cert" "${ENV_METADATA}")"}
+BOSH_CA_CERT=${BOSH_CA_CERT:-"$(jq_val "ca_cert" "${ENV_METADATA}")"}
 export BOSH_CA_CERT
 
 gobosh -n delete-deployment
