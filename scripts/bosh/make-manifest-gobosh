@@ -28,8 +28,9 @@ gobosh interpolate \
     -o ./cf-mysql-deployment/operations/configure-broker-load-balancer.yml \
     -o ./cf-mysql-deployment/operations/proxy-elb.yml \
     -o ./cf-mysql-deployment/operations/register-proxy-route.yml \
+    -o ./cf-mysql-deployment/operations/disable-broker-route-registrar-cross-deployment-links.yml \
+    -o ./cf-mysql-deployment/operations/disable-proxy-route-registrar-cross-deployment-links.yml \
     -o ./cf-mysql-deployment/operations/disable-smoke-tests-cross-deployment-links.yml \
-    -o ./cf-mysql-deployment/operations/disable-route-registrar-cross-deployment-links.yml \
     -o ./cf-mysql-ci/operations/default-vcap-password.yml \
     -o ./cf-mysql-ci/operations/default-vcap-password-broker.yml \
     -o ./cf-mysql-ci/operations/enable-remote-admin-access.yml \
