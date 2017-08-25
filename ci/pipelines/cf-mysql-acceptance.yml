@@ -1,13 +1,25 @@
 ---
 #
-# Deploy the cf-mysql release candidate to the "Primo" environment.
+# Deploy the cf-mysql release candidate to the "sriracha" environment.
 # Triggered by updates to the release-candidate branch.
 #
+
+resource_types:
+- name: bosh-deployment
+  type: docker-image
+  source:
+    repository: cloudfoundry/bosh-deployment-resource
+
 resources:
 - name: aws-bosh-stemcell
   type: bosh-io-stemcell
   source:
     name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
+
+- name: gcp-bosh-stemcell
+  type: bosh-io-stemcell
+  source:
+    name: bosh-google-kvm-ubuntu-trusty-go_agent
 
 - name: cf-mysql-ci
   type: git
@@ -42,12 +54,12 @@ resources:
     access_key_id: {{cf-mysql-ci-aws-access-key-id}}
     secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
 
-- name: aws-acceptance-environment
+- name: full-bosh-acceptance-environment
   type: pool
   source:
     uri: git@github.com:pivotal-cf-experimental/core-services-oss-env-resource-pool
     branch: master
-    pool: aws-acceptance
+    pool: full-bosh-acceptance
     private_key: {{git-writer-private-key}}
 
 - name: compiled-packages-lock
@@ -61,10 +73,7 @@ resources:
 - name: acceptance-deployment
   type: bosh-deployment
   source:
-    username: {{aws_bosh_username}}
-    password: {{aws_bosh_password}}
     deployment: cf-mysql
-    ignore_ssl: true
 
 - name: routing-release
   type: bosh-io-release
@@ -72,13 +81,13 @@ resources:
     repository: cloudfoundry-incubator/cf-routing-release
 
 jobs:
-- name: claim-aws-environment
+- name: claim-full-bosh-environment
   plan:
   - aggregate:
     - get: cf-mysql-release
       resource: cf-mysql-release-rc
       trigger: true
-    - put: aws-acceptance-environment
+    - put: full-bosh-acceptance-environment
       params:
         acquire: true
 
@@ -87,13 +96,13 @@ jobs:
   - do:
     - timeout: 1h
       aggregate:
-      - get: aws-acceptance-environment
-        passed: [claim-aws-environment]
+      - get: full-bosh-acceptance-environment
+        passed: [claim-full-bosh-environment]
         trigger: true
         version: every
       - get: cf-mysql-release
         resource: cf-mysql-release-rc
-        passed: [claim-aws-environment]
+        passed: [claim-full-bosh-environment]
       - get: cf-mysql-ci
       - get: deployments-configuration
     - try:
@@ -107,16 +116,16 @@ jobs:
           inputs:
             - name: cf-mysql-ci
             - name: deployments-configuration
-            - name: aws-acceptance-environment
+            - name: full-bosh-acceptance-environment
           params:
             ENV_REPO: deployments-configuration
-            ENV_TARGET_FILE: aws-acceptance-environment/name
-            ENV_METADATA: aws-acceptance-environment/metadata
+            ENV_TARGET_FILE: full-bosh-acceptance-environment/name
+            ENV_METADATA: full-bosh-acceptance-environment/metadata
             ERRAND: deregister-and-purge-instances
             SKIP_IF_NO_DEPLOYMENT: true
-            DEPLOYMENT_NAME: cf-mysql
+            BOSH_DEPLOYMENT: cf-mysql
           run:
-            path: cf-mysql-ci/scripts/bosh/run_errand
+            path: cf-mysql-ci/scripts/bosh/run_errand_gcp
     - task: delete-acceptance-deployment
       config:
         platform: linux
@@ -124,14 +133,14 @@ jobs:
         inputs:
           - name: cf-mysql-ci
           - name: deployments-configuration
-          - name: aws-acceptance-environment
+          - name: full-bosh-acceptance-environment
         params:
           ENV_REPO: deployments-configuration
-          ENV_TARGET_FILE: aws-acceptance-environment/name
-          ENV_METADATA: aws-acceptance-environment/metadata
-          DEPLOYMENT_NAME: cf-mysql
+          ENV_TARGET_FILE: full-bosh-acceptance-environment/name
+          ENV_METADATA: full-bosh-acceptance-environment/metadata
+          BOSH_DEPLOYMENT: cf-mysql
         run:
-          path: cf-mysql-ci/scripts/bosh/delete_deployment
+          path: cf-mysql-ci/scripts/bosh/delete_deployment_gcp
 
 - name: deploy-to-acceptance
   plan:
@@ -144,8 +153,9 @@ jobs:
         resource: cf-mysql-release-rc
         passed: [delete-acceptance-deployment]
       - get: cf-mysql-deployment
+      - get: gcp-bosh-stemcell
       - get: aws-bosh-stemcell
-      - get: aws-acceptance-environment
+      - get: full-bosh-acceptance-environment
         passed: [delete-acceptance-deployment]
         trigger: true
         version: every
@@ -161,14 +171,15 @@ jobs:
         - name: cf-mysql-deployment
         - name: deployments-configuration
         - name: cf-mysql-release
-        - name: aws-acceptance-environment
+        - name: full-bosh-acceptance-environment
         outputs:
         - name: deployment-manifest
         params:
-          ENV_METADATA: aws-acceptance-environment/metadata
+          ENV_NAME_FILE: full-bosh-acceptance-environment/name
+          ENV_METADATA: full-bosh-acceptance-environment/metadata
           DEPLOYMENTS_DIR: deployments-configuration
         run:
-          path: cf-mysql-ci/scripts/bosh/make-manifest-gobosh
+          path: cf-mysql-ci/scripts/bosh/make-manifest-gobosh-gcp
     - put: compiled-packages-lock
       params:
         acquire: true
@@ -195,19 +206,19 @@ jobs:
           release: compiled-packages-lock
     - put: acceptance-deployment
       params:
-        target_file: aws-acceptance-environment/name
+        source_file: full-bosh-acceptance-environment/metadata
         manifest: deployment-manifest/deployment.yml
         releases:
         - compiled-release-tarball/*.tgz
         - routing-release/*.tgz
-        stemcells: [aws-bosh-stemcell/*.tgz]
+        stemcells: [gcp-bosh-stemcell/*.tgz]
 
 - name: run-smoke-tests-acceptance
   plan:
   - do:
     - timeout: 3h
       aggregate:
-      - get: aws-acceptance-environment
+      - get: full-bosh-acceptance-environment
         passed: [deploy-to-acceptance]
         trigger: true
         version: every
@@ -223,15 +234,15 @@ jobs:
         inputs:
           - name: cf-mysql-ci
           - name: deployments-configuration
-          - name: aws-acceptance-environment
+          - name: full-bosh-acceptance-environment
         params:
           ENV_REPO: deployments-configuration
-          ENV_TARGET_FILE: aws-acceptance-environment/name
-          ENV_METADATA: aws-acceptance-environment/metadata  
+          ENV_TARGET_FILE: full-bosh-acceptance-environment/name
+          ENV_METADATA: full-bosh-acceptance-environment/metadata
           ERRAND: broker-registrar
-          DEPLOYMENT_NAME: cf-mysql
+          BOSH_DEPLOYMENT: cf-mysql
         run:
-          path: cf-mysql-ci/scripts/bosh/run_errand
+          path: cf-mysql-ci/scripts/bosh/run_errand_gcp
     - task: run-smoke-tests
       config:
         platform: linux
@@ -239,15 +250,15 @@ jobs:
         inputs:
           - name: cf-mysql-ci
           - name: deployments-configuration
-          - name: aws-acceptance-environment
+          - name: full-bosh-acceptance-environment
         params:
           ENV_REPO: deployments-configuration
-          ENV_TARGET_FILE: aws-acceptance-environment/name
-          ENV_METADATA: aws-acceptance-environment/metadata  
+          ENV_TARGET_FILE: full-bosh-acceptance-environment/name
+          ENV_METADATA: full-bosh-acceptance-environment/metadata
           ERRAND: smoke-tests
-          DEPLOYMENT_NAME: cf-mysql
+          BOSH_DEPLOYMENT: cf-mysql
         run:
-          path: cf-mysql-ci/scripts/bosh/run_errand
+          path: cf-mysql-ci/scripts/bosh/run_errand_gcp
 
 - name: release-acceptance-environment
   plan:
@@ -255,12 +266,10 @@ jobs:
     - get: cf-mysql-release
       resource: cf-mysql-release-rc
       passed: [run-smoke-tests-acceptance]
-    - get: aws-acceptance-environment
+    - get: full-bosh-acceptance-environment
       passed: [run-smoke-tests-acceptance]
       trigger: true
       version: every
-  - put: aws-acceptance-environment
+  - put: full-bosh-acceptance-environment
     params:
-      release: aws-acceptance-environment
-
-groups: [{name: cf-mysql-acceptance, jobs: [claim-aws-environment,delete-acceptance-deployment,deploy-to-acceptance,run-smoke-tests-acceptance,release-acceptance-environment]}]
+      release: full-bosh-acceptance-environment
