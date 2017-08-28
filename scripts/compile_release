@@ -18,7 +18,7 @@ RELEASE_FILENAME=${RELEASE_FILENAME:-tgz}
 RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/ | grep ${RELEASE_FILENAME})
 export RELEASE_FILE
 
-name=$(release_name)
+name=${RELEASE_NAME:-$(release_name)}
 version=$(release_version)
 
 # egrep for pivnet-resource stemcells that will have the etag after the version

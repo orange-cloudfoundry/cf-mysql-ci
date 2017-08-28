@@ -18,7 +18,7 @@ params:
   BOSH_CLIENT:
   BOSH_CLIENT_SECRET:
   BOSH_ENVIRONMENT:
+  RELEASE_NAME:
 
 run:
   path: cf-mysql-ci/scripts/compile_release
-
