@@ -8,6 +8,7 @@ image_resource:
 
 inputs:
 - name: bbl-github-release
+- name: cf-mysql-ci
 
 outputs:
 - name: docker-build-args

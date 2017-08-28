@@ -248,6 +248,7 @@ jobs:
       trigger: true
     - get: bbl-github-release
       trigger: true
+    - get: cf-mysql-ci
   - task: generate-docker-build-args-file
     file: cf-mysql-ci/ci/tasks/generate-docker-build-args-file.yml
   - put: cf-mysql-ci-image
