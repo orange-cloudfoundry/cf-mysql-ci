@@ -1,0 +1,16 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: cloudfoundry/cf-mysql-ci
+
+inputs:
+- name: bbl-github-release
+
+outputs:
+- name: docker-build-args
+
+run:
+  path: cf-mysql-ci/scripts/docker/generate-docker-build-args-file

@@ -1,0 +1,10 @@
+#!/bin/bash
+set -eux
+
+BBL_VERSION=`cat bbl-github-release/version`
+
+cat << EOF > docker-build-args/docker-build-args.json
+{
+  "BBL_VERSION": "${BBL_VERSION}"
+}
+EOF

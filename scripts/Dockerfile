@@ -112,6 +112,6 @@ RUN wget 'https://releases.hashicorp.com/terraform/0.9.8/terraform_0.9.8_linux_a
   chmod +x /usr/local/bin/terraform && \
   rm /tmp/terraform.zip
 
-RUN wget 'https://github.com/cloudfoundry/bosh-bootloader/releases/download/v3.2.4/bbl-v3.2.4_linux_x86-64' \
+RUN wget "https://github.com/cloudfoundry/bosh-bootloader/releases/download/${BBL_VERSION}/bbl-${BBL_VERSION}_linux_x86-64" \
       -O /usr/local/bin/bbl && \
       chmod +x /usr/local/bin/bbl

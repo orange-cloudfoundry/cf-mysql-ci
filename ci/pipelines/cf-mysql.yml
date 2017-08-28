@@ -28,6 +28,15 @@ resources:
     password: {{pivotal-docker-password}}
     repository: cloudfoundry/cf-mysql-ci
 
+- name: ubuntu-trusty-docker-image
+  type: docker-image
+  source:
+    username: {{pivotal-docker-username}}
+    email: {{pivotal-docker-email}}
+    password: {{pivotal-docker-password}}
+    repository: ubuntu
+    tag: trusty
+
 - name: cf-mysql-dockerfile
   type: git
   source:
@@ -35,6 +44,13 @@ resources:
     branch: master
     paths:
     - scripts/Dockerfile
+
+- name: bbl-github-release
+  type: github-release
+  source:
+    owner: cloudfoundry
+    repository: bosh-bootloader
+    access_token: {{git-writer-github-access-token}}
 
 - name: aws-bosh-stemcell
   type: bosh-io-stemcell
@@ -225,11 +241,19 @@ resources:
 jobs:
 - name: build-dockerfile
   plan:
-  - get: cf-mysql-dockerfile
-    trigger: true
+  - aggregate:
+    - get: ubuntu-trusty-docker-image
+      trigger: true
+    - get: cf-mysql-dockerfile
+      trigger: true
+    - get: bbl-github-release
+      trigger: true
+  - task: generate-docker-build-args-file
+    file: cf-mysql-ci/ci/tasks/generate-docker-build-args-file.yml
   - put: cf-mysql-ci-image
     params:
       build: cf-mysql-dockerfile/scripts/
+      build_args_file: docker-build-args/docker-build-args.json
 
 - name: test-unit
   serial_groups: [version_bumper]
