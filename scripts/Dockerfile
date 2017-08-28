@@ -3,6 +3,8 @@ MAINTAINER https://github.com/cloudfoundry/cf-mysql-release
 
 ENV DEBIAN_FRONTEND=noninteractive
 
+ARG BBL_VERSION
+
 # libmysqlclient-dev is used for pre-packaging cf-mysql-broker
 # libfontconfig1-dev etc. are required by phantomjs
 # nodejs, npm and libicu52 are for switchboard ui
