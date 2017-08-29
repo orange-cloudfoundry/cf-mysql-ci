@@ -3,7 +3,7 @@ MAINTAINER https://github.com/cloudfoundry/cf-mysql-release
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-ARG BBL_VERSION
+ARG BBL_GIT_TAG
 
 # libmysqlclient-dev is used for pre-packaging cf-mysql-broker
 # libfontconfig1-dev etc. are required by phantomjs
@@ -114,6 +114,6 @@ RUN wget 'https://releases.hashicorp.com/terraform/0.9.8/terraform_0.9.8_linux_a
   chmod +x /usr/local/bin/terraform && \
   rm /tmp/terraform.zip
 
-RUN wget "https://github.com/cloudfoundry/bosh-bootloader/releases/download/${BBL_VERSION}/bbl-${BBL_VERSION}_linux_x86-64" \
+RUN wget "https://github.com/cloudfoundry/bosh-bootloader/releases/download/${BBL_GIT_TAG}/bbl-${BBL_GIT_TAG}_linux_x86-64" \
       -O /usr/local/bin/bbl && \
       chmod +x /usr/local/bin/bbl
