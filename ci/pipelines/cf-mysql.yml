@@ -52,6 +52,13 @@ resources:
     repository: bosh-bootloader
     access_token: {{git-writer-github-access-token}}
 
+- name: bosh-cli-github-release
+  type: github-release
+  source:
+    owner: cloudfoundry
+    repository: bosh-cli
+    access_token: {{git-writer-github-access-token}}
+
 - name: aws-bosh-stemcell
   type: bosh-io-stemcell
   source:
@@ -247,6 +254,8 @@ jobs:
     - get: cf-mysql-dockerfile
       trigger: true
     - get: bbl-github-release
+      trigger: true
+    - get: bosh-cli-github-release
       trigger: true
     - get: cf-mysql-ci
   - task: generate-docker-build-args-file

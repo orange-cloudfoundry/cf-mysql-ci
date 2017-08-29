@@ -4,6 +4,7 @@ MAINTAINER https://github.com/cloudfoundry/cf-mysql-release
 ENV DEBIAN_FRONTEND=noninteractive
 
 ARG BBL_GIT_TAG
+ARG BOSH_CLI_VERSION
 
 # libmysqlclient-dev is used for pre-packaging cf-mysql-broker
 # libfontconfig1-dev etc. are required by phantomjs
@@ -67,7 +68,7 @@ ENV PATH $PATH:/home/root/.gem/ruby/${DOCKER_RUBY_VERSION}/bin:/opt/rubies/ruby-
 
 # Install gobosh cli
 RUN \
-  wget -q https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-2.0.33-linux-amd64 -O /usr/local/bin/gobosh && \
+  wget -q "https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-${BOSH_CLI_VERSION}-linux-amd64" -O /usr/local/bin/gobosh && \
   chmod +x /usr/local/bin/gobosh && \
   ln -s /usr/local/bin/gobosh /usr/local/bin/bosh && \
   ln -s /usr/local/bin/gobosh /usr/local/bin/bosh2
