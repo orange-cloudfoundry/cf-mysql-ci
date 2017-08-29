@@ -42,6 +42,13 @@ RUN \
     && apt-get update \
     && apt-get -y install google-cloud-sdk
 
+# Install cf cli
+RUN \
+    wget -q -O - https://packages.cloudfoundry.org/debian/cli.cloudfoundry.org.key | apt-key add - \
+    && echo "deb http://packages.cloudfoundry.org/debian stable main" | tee /etc/apt/sources.list.d/cloudfoundry-cli.list \
+    && apt-get update \
+    && apt-get -y install cf-cli
+
 # Alias nodejs as node for switchboard ui
 RUN ln -s /usr/bin/nodejs /usr/bin/node
 
@@ -69,9 +76,6 @@ RUN \
 RUN wget https://github.com/Pyppe/phantomjs2.0-ubuntu14.04x64/raw/master/bin/phantomjs && \
           chmod +x phantomjs && \
           mv phantomjs /usr/bin/phantomjs
-
-# Install cf cli
-RUN curl 'https://s3-us-west-1.amazonaws.com/cf-cli-releases/releases/v6.22.2/cf-cli_6.22.2_linux_x86-64.tgz'| tar xvz -C /bin
 
 # Install go
 RUN curl https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz | tar xvz -C /usr/local/
