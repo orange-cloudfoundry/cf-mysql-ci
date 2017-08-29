@@ -60,7 +60,7 @@ ENV PATH $PATH:/home/root/.gem/ruby/${DOCKER_RUBY_VERSION}/bin:/opt/rubies/ruby-
 
 # Install gobosh cli
 RUN \
-  wget -q https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-2.0.23-linux-amd64 -O /usr/local/bin/gobosh && \
+  wget -q https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-2.0.33-linux-amd64 -O /usr/local/bin/gobosh && \
   chmod +x /usr/local/bin/gobosh && \
   ln -s /usr/local/bin/gobosh /usr/local/bin/bosh && \
   ln -s /usr/local/bin/gobosh /usr/local/bin/bosh2
