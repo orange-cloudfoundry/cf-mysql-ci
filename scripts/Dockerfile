@@ -111,7 +111,7 @@ RUN \
 RUN gem install bundler gorgeous --no-rdoc --no-ri
 
 # Install terraform
-RUN wget 'https://releases.hashicorp.com/terraform/0.10.2/terraform_0.10.2_linux_amd64.zip' \
+RUN wget 'https://releases.hashicorp.com/terraform/0.9.8/terraform_0.9.8_linux_amd64.zip' \
   --quiet \
   --output-document /tmp/terraform.zip && \
   unzip /tmp/terraform.zip -d /usr/local/bin/ && \
