@@ -8,7 +8,7 @@ WORKSPACE_DIR="$( cd "${ci_dir}/../" && pwd )"
 
 source "${ci_dir}/scripts/utils.sh"
 
-: "${ENV_TARGET_FILE:?}"
+: "${ENV_METADATA:?}"
 : "${ERRAND:?}"
 
 BOSH_ENVIRONMENT=$(jq_val "target" "${ENV_METADATA}")
