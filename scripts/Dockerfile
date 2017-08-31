@@ -5,6 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 ARG BBL_GIT_TAG
 ARG BOSH_CLI_VERSION
+ARG TERRAFORM_VERSION
 
 # libmysqlclient-dev is used for pre-packaging cf-mysql-broker
 # libfontconfig1-dev etc. are required by phantomjs
@@ -112,7 +113,7 @@ RUN \
 RUN gem install bundler gorgeous --no-rdoc --no-ri
 
 # Install terraform
-RUN wget 'https://releases.hashicorp.com/terraform/0.10.2/terraform_0.10.2_linux_amd64.zip' \
+RUN wget "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip" \
   --quiet \
   --output-document /tmp/terraform.zip && \
   unzip /tmp/terraform.zip -d /usr/local/bin/ && \
