@@ -45,23 +45,27 @@ resources:
     paths:
     - scripts/Dockerfile
 
+# these inputs require a private key so that we don't get rate limited by github
 - name: bbl-github-release
   type: github-release
   source:
     owner: cloudfoundry
     repository: bosh-bootloader
+    access_token: {{pcf-core-services-github-api-token}}
 
 - name: bosh-cli-github-release
   type: github-release
   source:
     owner: cloudfoundry
     repository: bosh-cli
+    access_token: {{pcf-core-services-github-api-token}}
 
 - name: terraform-github-release
   type: github-release
   source:
     owner: hashicorp
     repository: terraform
+    access_token: {{pcf-core-services-github-api-token}}
 
 - name: aws-bosh-stemcell
   type: bosh-io-stemcell
