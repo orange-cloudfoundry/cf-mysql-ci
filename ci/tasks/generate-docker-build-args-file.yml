@@ -9,6 +9,7 @@ image_resource:
 inputs:
 - name: bbl-github-release
 - name: bosh-cli-github-release
+- name: terraform-github-release
 - name: cf-mysql-ci
 
 outputs:
