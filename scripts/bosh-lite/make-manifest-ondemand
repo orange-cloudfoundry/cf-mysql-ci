@@ -93,4 +93,10 @@ bosh interpolate \
     ${variables} \
     -v cf_mysql_mysql_admin_password=password \
     -v cf_mysql_mysql_galera_healthcheck_endpoint_password=password \
+    --vars-store=./vars-store.yml \
+    > ./manifest-with-variables.yml
+
+bosh interpolate \
+    ./manifest-with-variables.yml \
+    -o ./cf-mysql-ci/operations/remove-variables.yml \
     > "${OUTPUT_FILE}"
