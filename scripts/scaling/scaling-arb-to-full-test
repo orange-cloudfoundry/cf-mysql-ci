@@ -9,9 +9,18 @@ MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CI_DIR="$( cd "${MY_DIR}/../../" && pwd )"
 WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
 
-source "${MY_DIR}/scaling-helpers"
+: "${ENV_TARGET_FILE:?}"
+: "${BOSH_DEPLOYMENT:?}"
+: "${BOSH_CLIENT:?}"
+: "${BOSH_CLIENT_SECRET:?}"
 
-setup_infrastructure_variables 10.244.7.2 10.244.8.2 10.244.9.2
+export BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
+export BOSH_CA_CERT="${WORKSPACE_DIR}/bosh-lite-info/ca-cert"
+
+source "${MY_DIR}/scaling-helpers-ondemand"
+
+# After deploy_full_cluster, the third mysql node will be in z1
+setup_infrastructure_variables 10.244.7.2 10.244.8.2 10.244.9.3
 
 pushd "${MY_DIR}"
   bundle install

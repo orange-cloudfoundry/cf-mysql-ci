@@ -364,7 +364,7 @@ jobs:
         NEW_STYLE_PROXY_URL: true
         USE_SMALL_PLANS: true
       run:
-        path: cf-mysql-ci/scripts/acceptance-tests-gcp
+        path: cf-mysql-ci/scripts/acceptance-tests
   - try:
       task: run-deregister-and-purge-instances
       config:
@@ -427,7 +427,7 @@ jobs:
         trigger: true
     - aggregate:
       - task: make-manifest
-        file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+        file: cf-mysql-ci/ci/tasks/make-manifest.yml
         params:
           ENABLE_REMOTE_ADMIN_ACCESS: true
       - task: apply-terraform
@@ -485,7 +485,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-info/director-url
         ENABLE_REMOTE_ADMIN_ACCESS: true
       run:
-        path: cf-mysql-ci/scripts/scaling/scaling-test-ondemand
+        path: cf-mysql-ci/scripts/scaling/scaling-test
   - &ondemand-teardown
       do:
       - task: delete-deployment
@@ -532,7 +532,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-info/director-url
         ENABLE_REMOTE_ADMIN_ACCESS: true
       run:
-        path: cf-mysql-ci/scripts/scaling/scaling-arb-to-full-test-ondemand
+        path: cf-mysql-ci/scripts/scaling/scaling-arb-to-full-test
   - *ondemand-teardown
 
 ### FAILOVER
@@ -594,7 +594,7 @@ jobs:
         params:
           INFRASTRUCTURE: bosh-lite
       - task: make-cf-manifest
-        file: cf-mysql-ci/ci/tasks/make-cf-manifest-ondemand.yml
+        file: cf-mysql-ci/ci/tasks/make-cf-manifest.yml
       - do:
         - task: generate-cloud-config
           file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
@@ -631,7 +631,7 @@ jobs:
           ENABLE_REMOTE_ADMIN_ACCESS: true
           DISABLE_CROSS_DEPLOYMENT_LINKS: false
         run:
-          path: cf-mysql-ci/scripts/bosh-lite/make-manifest-ondemand
+          path: cf-mysql-ci/scripts/bosh-lite/make-manifest
     - put: cf-bosh-deployment
       params:
         manifest: cf-deployment-manifest/cf.yml
@@ -696,7 +696,7 @@ jobs:
         BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
         BOSH_DEPLOYMENT: cf-mysql
       run:
-        path: cf-mysql-ci/scripts/failover/failover-test-ondemand
+        path: cf-mysql-ci/scripts/failover/failover-test
   - task: delete-cf-mysql-deployment
     config:
       platform: *platform
@@ -772,7 +772,7 @@ jobs:
       passed: [create-and-compile-release]
   - aggregate:
     - task: make-manifest
-      file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+      file: cf-mysql-ci/ci/tasks/make-manifest.yml
       params:
         ENABLE_REMOTE_ADMIN_ACCESS: true
     - do:
@@ -813,10 +813,10 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-info/external-ip
         SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
       run:
-        path: cf-mysql-ci/scripts/persistence/load-test-data-ondemand
+        path: cf-mysql-ci/scripts/persistence/load-test-data
 
   - task: make-manifest
-    file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+    file: cf-mysql-ci/ci/tasks/make-manifest.yml
     params:
       ENABLE_REMOTE_ADMIN_ACCESS: true
 
@@ -843,7 +843,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-info/external-ip
         MYSQL_VM_IP: 10.244.7.3
       run:
-        path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data-ondemand
+        path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data
 
   - *run-smoke-tests-ondemand
   - *ondemand-teardown
@@ -853,7 +853,7 @@ jobs:
   plan:
   - *ondemand-setup
   - task: make-manifest-with-standalone
-    file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+    file: cf-mysql-ci/ci/tasks/make-manifest.yml
     params:
       ENABLE_REMOTE_ADMIN_ACCESS: true
   - *ondemand-deploy-manifest
@@ -873,7 +873,7 @@ jobs:
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         BOSH_DEPLOYMENT: cf-mysql
       run:
-        path: cf-mysql-ci/scripts/persistence/load-test-data-ondemand
+        path: cf-mysql-ci/scripts/persistence/load-test-data
   - task: break-mysql-cluster
     config:
       platform: *platform
@@ -887,7 +887,7 @@ jobs:
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         BOSH_DEPLOYMENT: cf-mysql
       run:
-        path: cf-mysql-ci/scripts/bootstrap/break-mysql-cluster-ondemand
+        path: cf-mysql-ci/scripts/bootstrap/break-mysql-cluster
   - task: bootstrap
     config:
       platform: *platform
@@ -917,7 +917,7 @@ jobs:
       params:
         ENV_TARGET_FILE: bosh-lite-info/external-ip
       run:
-        path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data-ondemand
+        path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data
   - *ondemand-teardown
 
 ### DATA LOSS
@@ -938,7 +938,7 @@ jobs:
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         BOSH_DEPLOYMENT: cf-mysql
       run:
-        path: cf-mysql-ci/scripts/data-loss/force-sst-test-ondemand
+        path: cf-mysql-ci/scripts/data-loss/force-sst-test
   - task: run-rejoin-unsafe-errand
     config:
       platform: *platform
@@ -975,9 +975,9 @@ jobs:
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         BOSH_DEPLOYMENT: cf-mysql
       run:
-        path: cf-mysql-ci/scripts/data-loss/force-sst-test-ondemand
+        path: cf-mysql-ci/scripts/data-loss/force-sst-test
   - task: make-manifest-with-interruptor-disabled
-    file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+    file: cf-mysql-ci/ci/tasks/make-manifest.yml
     params:
       DISABLE_INTERRUPTOR: true
       ENABLE_REMOTE_ADMIN_ACCESS: true
@@ -1004,7 +1004,7 @@ jobs:
   plan:
   - *ondemand-setup
   - task: make-manifest
-    file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+    file: cf-mysql-ci/ci/tasks/make-manifest.yml
     params:
       TINY_GCACHE: true #TODO: do we need this?
       ENABLE_REMOTE_ADMIN_ACCESS: true
@@ -1054,7 +1054,7 @@ jobs:
         trigger: true
     - aggregate:
       - task: make-manifest
-        file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+        file: cf-mysql-ci/ci/tasks/make-manifest.yml
         params:
           ENABLE_REMOTE_ADMIN_ACCESS: false
           MINIMAL_MODE: true
@@ -1114,7 +1114,7 @@ jobs:
         trigger: true
     - aggregate:
       - task: make-manifest
-        file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+        file: cf-mysql-ci/ci/tasks/make-manifest.yml
         params:
           ENABLE_REMOTE_ADMIN_ACCESS: true
           MINIMAL_MODE: true

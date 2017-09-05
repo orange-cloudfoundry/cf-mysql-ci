@@ -9,13 +9,12 @@ image_resource:
 inputs:
 - name: cf-mysql-ci
 - name: cf-mysql-deployment
-- name: url
 
 outputs:
 - name: deployment-manifest
 
 run:
-  path: cf-mysql-ci/scripts/bosh-lite/make-manifest-ondemand
+  path: cf-mysql-ci/scripts/bosh-lite/make-manifest
 
 params:
   OUTPUT_FILE: deployment-manifest/deployment.yml
@@ -24,4 +23,4 @@ params:
   NO_ARBITRATOR: false
   ENABLE_REMOTE_ADMIN_ACCESS: false
   ADD_BROKER: false
-  SET_CF_MYSQL_HOST: true
+  SET_CF_MYSQL_HOST: false

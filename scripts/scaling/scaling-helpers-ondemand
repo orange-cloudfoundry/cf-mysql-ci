@@ -67,7 +67,7 @@ function scale_down_to_minimal() {
   MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
   MINIMAL_MODE=true \
     OUTPUT_FILE="${MANIFEST_FILE}" \
-    ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
+    ${CI_DIR}/scripts/bosh-lite/make-manifest
 
   gobosh -n deploy $MANIFEST_FILE
 }
@@ -78,7 +78,7 @@ function scale_up_to_default() {
 
   MINIMAL_MODE=false \
   OUTPUT_FILE="${MANIFEST_FILE}" \
-    ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
+    ${CI_DIR}/scripts/bosh-lite/make-manifest
 
   gobosh -n deploy $MANIFEST_FILE
 }
@@ -89,7 +89,7 @@ function deploy_full_cluster() {
 
   NO_ARBITRATOR=true \
   OUTPUT_FILE="${MANIFEST_FILE}" \
-    ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
+    ${CI_DIR}/scripts/bosh-lite/make-manifest
 
   gobosh -n deploy $MANIFEST_FILE
 }

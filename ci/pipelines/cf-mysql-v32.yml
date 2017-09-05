@@ -382,7 +382,7 @@ jobs:
         PROXY_COUNT: 1
         USE_SMALL_PLANS: true
       run:
-        path: cf-mysql-ci/scripts/acceptance-tests-gcp
+        path: cf-mysql-ci/scripts/acceptance-tests
   - try:
       task: run-deregister-and-purge-instances
       config:
@@ -471,7 +471,7 @@ jobs:
       - task: delete-stemcell
         file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
     - task: make-manifest
-      file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+      file: cf-mysql-ci/ci/tasks/make-manifest.yml
     - &ondemand-deploy-manifest
       put: cf-mysql-bosh-deployment
       params:
@@ -513,7 +513,7 @@ jobs:
         BOSH_DEPLOYMENT: cf-mysql
         ENV_TARGET_FILE: bosh-lite-info/director-url
       run:
-        path: cf-mysql-ci/scripts/scaling/scaling-test-ondemand
+        path: cf-mysql-ci/scripts/scaling/scaling-test
 
   - &ondemand-teardown
       do:
@@ -561,7 +561,7 @@ jobs:
         BOSH_DEPLOYMENT: cf-mysql
         ENV_TARGET_FILE: bosh-lite-info/director-url
       run:
-        path: cf-mysql-ci/scripts/scaling/scaling-arb-to-full-test-ondemand
+        path: cf-mysql-ci/scripts/scaling/scaling-arb-to-full-test
   - *ondemand-teardown
 
 ### FAILOVER
@@ -622,7 +622,7 @@ jobs:
         params:
           INFRASTRUCTURE: bosh-lite
       - task: make-cf-manifest
-        file: cf-mysql-ci/ci/tasks/make-cf-manifest-ondemand.yml
+        file: cf-mysql-ci/ci/tasks/make-cf-manifest.yml
       - do:
         - task: generate-cloud-config
           file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
@@ -685,7 +685,7 @@ jobs:
           STATIC_PROXY_IPS: true
           VARS_FILE: nats-vars/nats.yml
         run:
-          path: cf-mysql-ci/scripts/bosh-lite/make-manifest-ondemand
+          path: cf-mysql-ci/scripts/bosh-lite/make-manifest
     - put: cf-mysql-bosh-deployment
       params:
         manifest: deployment-manifest/deployment.yml
@@ -742,7 +742,7 @@ jobs:
         BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
         BOSH_DEPLOYMENT: cf-mysql
       run:
-        path: cf-mysql-ci/scripts/failover/failover-test-ondemand
+        path: cf-mysql-ci/scripts/failover/failover-test
   - task: delete-cf-mysql-deployment
     config:
       platform: *platform
@@ -818,7 +818,7 @@ jobs:
       passed: [create-and-compile-release]
   - aggregate:
     - task: make-manifest
-      file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+      file: cf-mysql-ci/ci/tasks/make-manifest.yml
     - do:
       - task: apply-terraform
         file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
@@ -857,10 +857,10 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-info/external-ip
         SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
       run:
-        path: cf-mysql-ci/scripts/persistence/load-test-data-ondemand
+        path: cf-mysql-ci/scripts/persistence/load-test-data
 
   - task: make-manifest
-    file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+    file: cf-mysql-ci/ci/tasks/make-manifest.yml
 
   - put: cf-mysql-bosh-deployment
     params:
@@ -885,7 +885,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-info/external-ip
         MYSQL_VM_IP: 10.244.7.3
       run:
-        path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data-ondemand
+        path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data
 
   - *run-smoke-tests-ondemand
   - *ondemand-teardown
@@ -895,7 +895,7 @@ jobs:
   plan:
   - *ondemand-setup
   - task: make-manifest-with-standalone
-    file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+    file: cf-mysql-ci/ci/tasks/make-manifest.yml
   - *ondemand-deploy-manifest
   - task: persistence-test-data-write
     config:
@@ -913,7 +913,7 @@ jobs:
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         BOSH_DEPLOYMENT: cf-mysql
       run:
-        path: cf-mysql-ci/scripts/persistence/load-test-data-ondemand
+        path: cf-mysql-ci/scripts/persistence/load-test-data
   - task: break-mysql-cluster
     config:
       platform: *platform
@@ -927,7 +927,7 @@ jobs:
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         BOSH_DEPLOYMENT: cf-mysql
       run:
-        path: cf-mysql-ci/scripts/bootstrap/break-mysql-cluster-ondemand
+        path: cf-mysql-ci/scripts/bootstrap/break-mysql-cluster
   - task: bootstrap
     config:
       platform: *platform
@@ -957,7 +957,7 @@ jobs:
       params:
         ENV_TARGET_FILE: bosh-lite-info/external-ip
       run:
-        path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data-ondemand
+        path: cf-mysql-ci/scripts/persistence/verify-db-matches-test-data
   - *ondemand-teardown
 
 ### DATA LOSS
@@ -978,7 +978,7 @@ jobs:
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         BOSH_DEPLOYMENT: cf-mysql
       run:
-        path: cf-mysql-ci/scripts/data-loss/force-sst-test-ondemand
+        path: cf-mysql-ci/scripts/data-loss/force-sst-test
   - task: run-rejoin-unsafe-errand
     config:
       platform: *platform
@@ -1015,9 +1015,9 @@ jobs:
         BOSH_CLIENT_SECRET: {{bosh-lite-password}}
         BOSH_DEPLOYMENT: cf-mysql
       run:
-        path: cf-mysql-ci/scripts/data-loss/force-sst-test-ondemand
+        path: cf-mysql-ci/scripts/data-loss/force-sst-test
   - task: make-manifest-with-interruptor-disabled
-    file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+    file: cf-mysql-ci/ci/tasks/make-manifest.yml
     params:
       DISABLE_INTERRUPTOR: true
   - *ondemand-deploy-manifest
@@ -1043,7 +1043,7 @@ jobs:
   plan:
   - *ondemand-setup
   - task: make-manifest
-    file: cf-mysql-ci/ci/tasks/make-manifest-ondemand.yml
+    file: cf-mysql-ci/ci/tasks/make-manifest.yml
     params:
       TINY_GCACHE: true #TODO: do we need this?
   - *ondemand-deploy-manifest

@@ -8,24 +8,20 @@ SQL_QUERY_DIR=$( cd ${MY_DIR}/test-data && pwd )
 
 : "${ENV_TARGET_FILE:?}"
 
-director_ip="$(cat "${ENV_TARGET_FILE}")"
+BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
+
+bosh_ip=$(echo "${BOSH_ENVIRONMENT}" | sed 's$https://$$g')
 
 MYSQL_TUNNEL_IP=127.0.0.1
 MYSQL_TUNNEL_PORT=3307
-MYSQL_TUNNEL_USERNAME=${MYSQL_TUNNEL_USERNAME:-ubuntu}
-MYSQL_VM_IP=10.244.7.2
+MYSQL_VM_IP="${MYSQL_VM_IP:-10.244.7.2}"
 MYSQL_VM_PORT=3306
-SSH_KEY_FILE=${SSH_KEY_FILE:-""}
 
 echo "Targeting remote bosh-lite, starting ssh tunnel..."
 
-if [[ -z "${SSH_KEY_FILE}" ]]; then
-  SSH_KEY_FILE="bosh-key"
-  echo "${BOSH_SSH_KEY}" > "${SSH_KEY_FILE}"
-  chmod 600 "${SSH_KEY_FILE}"
-fi
+SSH_KEY_FILE="${WORKSPACE_DIR}/bosh-lite-info/jumpbox-private-key"
 
-if [ -z "${director_ip}" ]; then
+if [ -z "${BOSH_ENVIRONMENT}" ]; then
   echo "BOSH target file is empty"
   exit 1
 fi
@@ -42,7 +38,7 @@ ssh -L ${MYSQL_TUNNEL_PORT}:${MYSQL_VM_IP}:${MYSQL_VM_PORT} \
   -nNTf \
   -o StrictHostKeyChecking=no \
   -i "${SSH_KEY_FILE}" \
-  ${MYSQL_TUNNEL_USERNAME}@${director_ip}
+  jumpbox@${bosh_ip}
 
 MYSQL_HOST=${MYSQL_TUNNEL_IP}
 MYSQL_PORT=${MYSQL_TUNNEL_PORT}

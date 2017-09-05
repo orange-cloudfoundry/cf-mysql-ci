@@ -8,30 +8,26 @@ set_env(){
 
   source "${CI_DIR}/scripts/utils.sh"
 
-  : "${BOSH_LITE_SSH_KEY:?}"
   : "${ENV_TARGET_FILE:?}"
+  : "${BOSH_CLIENT:?}"
+  : "${BOSH_CLIENT_SECRET:?}"
 
-  director_ip=$(cat "${ENV_TARGET_FILE}")
+  bosh_ip=$(cat "${ENV_TARGET_FILE}")
+
   GALERA_HEALTHCHECK_USERNAME="${GALERA_HEALTHCHECK_USERNAME:-galera-healthcheck}"
 }
 
 stop_all_nodes() {
   pushd "${WORKSPACE_DIR}"
-    # assumes we are running against a remote bosh-lite
-    BOSH_LITE_KEY_FILE="/tmp/id_rsa"
-    echo "${BOSH_LITE_SSH_KEY}" > "${BOSH_LITE_KEY_FILE}"
-    chmod 600 "${BOSH_LITE_KEY_FILE}"
+    SSH_KEY_FILE="${WORKSPACE_DIR}/bosh-lite-info/jumpbox-private-key"
 
-    for nodeOctet in $(seq 7 9); do
-      MYSQL_NODE=$"10.244.${nodeOctet}.2"
-      if [[ $nodeOctet == 9 ]]; then
-        MYSQL_NODE=$"10.244.${nodeOctet}.6"
-      fi
+    # stopping mysql on node0 and the arbitrator node
+    for MYSQL_NODE in 10.244.7.2 10.244.8.2 10.244.9.2; do
       ssh \
           -t \
-          -i "${BOSH_LITE_KEY_FILE}" \
+          -i "${SSH_KEY_FILE}" \
           -o StrictHostKeyChecking=no \
-          "ubuntu@${director_ip}" \
+          "jumpbox@${bosh_ip}" \
           "curl -vkf -X POST ${GALERA_HEALTHCHECK_USERNAME}:password@${MYSQL_NODE}:9200/stop_mysql"
     done
   popd

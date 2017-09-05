@@ -16,7 +16,7 @@ outputs:
 - name: varstore
 
 run:
-  path: cf-mysql-ci/scripts/bosh-lite/make-cf-manifest-ondemand
+  path: cf-mysql-ci/scripts/bosh-lite/make-cf-manifest
 
 params:
   OUTPUT_FILE: cf-deployment-manifest/cf.yml

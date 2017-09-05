@@ -9,11 +9,10 @@ RELEASE_DIR="$(cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
 
 source "${CI_DIR}/scripts/utils.sh"
 
-: "${BOSH_LITE_SSH_KEY:?}"
 : "${ENV_TARGET_FILE:?}"
-: "${ENV_METADATA:?}"
-
-export BOSH_DEPLOYMENT=${DEPLOYMENT_NAME:-cf-mysql}
+: "${BOSH_DEPLOYMENT:?}"
+: "${BOSH_CLIENT:?}"
+: "${BOSH_CLIENT_SECRET:?}"
 
 function close-ssh-tunnels() {
   echo "Closing SSH tunnels ..."
@@ -23,45 +22,68 @@ function close-ssh-tunnels() {
   [[ -z "${OLD_TUNNELS}" ]] || kill ${OLD_TUNNELS}
 }
 
-function bosh-ip() {
-  bosh2 vms | grep $1 | awk '{ print $4 }'
-}
+export BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
+export BOSH_CA_CERT="$WORKSPACE_DIR/bosh-lite-info/ca-cert"
+SSH_KEY_FILE="${WORKSPACE_DIR}/bosh-lite-info/jumpbox-private-key"
 
-DIRECTOR_IP="$(cat "${ENV_TARGET_FILE}")"
-export BOSH_ENVIRONMENT="$(sslip_from_ip "${DIRECTOR_IP}")"
-export BOSH_CLIENT="$(jq_val "bosh_user" "${ENV_METADATA}")"
-export BOSH_CLIENT_SECRET="$(jq_val "bosh_password" "${ENV_METADATA}")"
+bosh_ip=$(cat $WORKSPACE_DIR/bosh-lite-info/external-ip)
 
-export BROKER_0_REMOTE_IP=$(bosh-ip cf-mysql-broker_z1)
-export BROKER_1_REMOTE_IP=$(bosh-ip cf-mysql-broker_z2)
-export MYSQL_NODE_0_REMOTE_IP=$(bosh-ip mysql_z1)
+instances_file=$(mktemp)
+bosh2 instances --column instance --column ips > $instances_file
+broker_0_ip=$(cat $instances_file | awk '/broker\// {print $2}' | head -1)
+broker_1_ip=$(cat $instances_file | awk '/broker\// {print $2}' | tail -1)
+mysql_0_ip=$(cat $instances_file | awk '/mysql\// {print $2}' | head -1)
+
+export BROKER_0_REMOTE_IP=$broker_0_ip
+export BROKER_1_REMOTE_IP=$broker_1_ip
+export MYSQL_NODE_0_REMOTE_IP=$mysql_0_ip
 
 # assumes we are running against a remote bosh-lite
 export BROKER_0_LOCAL_PORT="43306"
 export BROKER_1_LOCAL_PORT="43307"
 export MYSQL_NODE_0_LOCAL_PORT="43305"
 
-BOSH_LITE_KEY_FILE="/tmp/id_rsa"
-echo "${BOSH_LITE_SSH_KEY}" > "${BOSH_LITE_KEY_FILE}"
-chmod 600 "${BOSH_LITE_KEY_FILE}"
 trap close-ssh-tunnels EXIT
 ssh -L ${BROKER_0_LOCAL_PORT}:${BROKER_0_REMOTE_IP}:22 \
   -NnTf \
-  -i "${BOSH_LITE_KEY_FILE}" \
+  -i "${SSH_KEY_FILE}" \
   -o StrictHostKeyChecking=no \
-  "ubuntu@${DIRECTOR_IP}"
+  "jumpbox@${bosh_ip}"
 
 ssh -L ${BROKER_1_LOCAL_PORT}:${BROKER_1_REMOTE_IP}:22 \
   -NnTf \
-  -i "${BOSH_LITE_KEY_FILE}" \
+  -i "${SSH_KEY_FILE}" \
   -o StrictHostKeyChecking=no \
-   "ubuntu@${DIRECTOR_IP}"
+   "jumpbox@${bosh_ip}"
 
-ssh  -L ${MYSQL_NODE_0_LOCAL_PORT}:${MYSQL_NODE_0_REMOTE_IP}:22 \
+ssh -L ${MYSQL_NODE_0_LOCAL_PORT}:${MYSQL_NODE_0_REMOTE_IP}:22 \
   -NnTf \
-  -i "${BOSH_LITE_KEY_FILE}" \
+  -i "${SSH_KEY_FILE}" \
   -o StrictHostKeyChecking=no \
-  "ubuntu@${DIRECTOR_IP}"
+  "jumpbox@${bosh_ip}"
+
+
+# turn off the resurrector so that `scan-and-fix` tasks don't collide with our tests
+bosh2 update-resurrection off
+
+bosh2 manifest > /tmp/mysql-manifest.yml
+PROXY_API_PASSWORD=$(bosh2 int /tmp/mysql-manifest.yml --path /instance_groups/name=proxy/jobs/name=proxy/properties/cf_mysql/proxy/api_password)
+
+bosh2 -d cf manifest > /tmp/cf-manifest.yml
+CF_API_PASSWORD=$(bosh2 int /tmp/cf-manifest.yml --path /instance_groups/name=uaa/jobs/name=uaa/properties/uaa/scim/users/name=admin/password)
+DOMAIN=$(bosh2 int /tmp/cf-manifest.yml --path /instance_groups/name=api/jobs/name=cloud_controller_ng/properties/app_domains/0)
+
+cat <<EOF > /tmp/env_metadata.json
+{
+  "cf_api_user": "admin",
+  "cf_api_password": "${CF_API_PASSWORD}",
+  "proxy_api_user": "proxy",
+  "proxy_api_password": "${PROXY_API_PASSWORD}",
+  "domain": "${DOMAIN}"
+}
+EOF
+
+export ENV_METADATA=/tmp/env_metadata.json
 
 export CONFIG_LOCATION="${CI_DIR}/integration_config.json"
 export BOSH_LITE_METADATA

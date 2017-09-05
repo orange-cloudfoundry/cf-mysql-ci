@@ -6,21 +6,18 @@ MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKSPACE_DIR="$( cd ${MY_DIR}/../../.. && pwd )"
 SQL_QUERY_DIR=$( cd ${MY_DIR}/test-data && pwd )
 
-: "${BOSH_LITE_SSH_KEY:?}"
 : "${ENV_TARGET_FILE:?}"
 
-BOSH_TARGET="$(cat "${ENV_TARGET_FILE}")"
+BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
 
 MYSQL_TUNNEL_IP=127.0.0.1
 MYSQL_TUNNEL_PORT=3307
-MYSQL_VM_IP=10.244.7.2
+MYSQL_VM_IP="${MYSQL_VM_IP:-10.244.7.2}"
 MYSQL_VM_PORT=3306
 
 echo "Targeting remote bosh-lite, starting ssh tunnel..."
 
-SSH_KEY_FILE="bosh-lite-key"
-echo "${BOSH_LITE_SSH_KEY}" > "${SSH_KEY_FILE}"
-chmod 600 "${SSH_KEY_FILE}"
+SSH_KEY_FILE="${WORKSPACE_DIR}/bosh-lite-info/jumpbox-private-key"
 
 function close-ssh-tunnels() {
   echo "Closing SSH tunnels ..."
@@ -34,7 +31,7 @@ ssh -L ${MYSQL_TUNNEL_PORT}:${MYSQL_VM_IP}:${MYSQL_VM_PORT} \
   -nNTf \
   -o StrictHostKeyChecking=no \
   -i "${SSH_KEY_FILE}" \
-  ubuntu@${BOSH_TARGET}
+  jumpbox@${BOSH_ENVIRONMENT}
 
 MYSQL_HOST=${MYSQL_TUNNEL_IP}
 MYSQL_PORT=${MYSQL_TUNNEL_PORT}

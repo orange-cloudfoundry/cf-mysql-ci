@@ -36,7 +36,7 @@ function deploy_with_exact_size() {
 
   TUNE_BY_EXACT_SIZE=true \
   OUTPUT_FILE="${MANIFEST_FILE}" \
-  ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
+  ${CI_DIR}/scripts/bosh-lite/make-manifest
 
   bosh -n deploy $MANIFEST_FILE
 }
@@ -47,7 +47,7 @@ function deploy_with_percentage() {
 
   TUNE_BY_PERCENTAGE=true \
   OUTPUT_FILE="${MANIFEST_FILE}" \
-  ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
+  ${CI_DIR}/scripts/bosh-lite/make-manifest
 
   bosh -n deploy $MANIFEST_FILE
 }
@@ -58,7 +58,7 @@ function deploy_with_everything_enabled() {
 
   EVERYTHING_ENABLED=true \
   OUTPUT_FILE="${MANIFEST_FILE}" \
-  ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
+  ${CI_DIR}/scripts/bosh-lite/make-manifest
 
   bosh -n deploy $MANIFEST_FILE
 }
@@ -69,7 +69,7 @@ function deploy_with_everything_disabled() {
 
   EVERYTHING_DISABLED=true \
   OUTPUT_FILE="${MANIFEST_FILE}" \
-  ${CI_DIR}/scripts/bosh-lite/make-manifest-ondemand
+  ${CI_DIR}/scripts/bosh-lite/make-manifest
 
   bosh -n deploy $MANIFEST_FILE
 }
