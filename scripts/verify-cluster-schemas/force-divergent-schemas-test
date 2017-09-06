@@ -43,7 +43,7 @@ function open_ssh_tunnel_to_bosh_lite() {
 }
 
 function verify_schemas() {
-  output="$(bosh2 run-errand verify-cluster-schemas --keep-alive)"
+  output="$(bosh run-errand verify-cluster-schemas --keep-alive)"
   echo $output
 }
 

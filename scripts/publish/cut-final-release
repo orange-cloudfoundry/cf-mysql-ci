@@ -45,7 +45,7 @@ pushd "${RELEASE_DIR}"
   write_upload_keys
 
   mkdir -p "${OUTPUT_RELEASE_ARTIFACTS}"
-  gobosh -n create-release \
+  bosh -n create-release \
     --tarball="${OUTPUT_RELEASE_ARTIFACTS}/cf-mysql-${VERSION}.tgz" \
     --final \
     --version="${VERSION}"

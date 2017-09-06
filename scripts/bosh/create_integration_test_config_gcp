@@ -38,10 +38,10 @@ CF_DEPLOYMENT_VARS="${WORKSPACE_DIR}/deployments-configuration/${ENV_NAME}/cf-de
 CF_MYSQL_VARS="${WORKSPACE_DIR}/deployment-manifest/vars.yml"
 
 CF_API_USER="admin"
-CF_API_PASSWORD="$(bosh2 int ${CF_DEPLOYMENT_VARS} --path /cf_admin_password)"
+CF_API_PASSWORD="$(bosh int ${CF_DEPLOYMENT_VARS} --path /cf_admin_password)"
 PROXY_API_USER="proxy"
-PROXY_API_PASSWORD="$(bosh2 int ${CF_MYSQL_VARS} --path /cf_mysql_proxy_api_password)"
-DOMAIN="$(bosh2 int ${ENV_METADATA} --path /domain)"
+PROXY_API_PASSWORD="$(bosh int ${CF_MYSQL_VARS} --path /cf_mysql_proxy_api_password)"
+DOMAIN="$(bosh int ${ENV_METADATA} --path /domain)"
 
 if [ "${USE_HTTPS}" = true ]; then
   PROTOCOL="https"

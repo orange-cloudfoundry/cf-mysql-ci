@@ -20,6 +20,6 @@ export BOSH_CLIENT_SECRET
 BOSH_CA_CERT=${BOSH_CA_CERT:-"$(jq_val "ca_cert" "${ENV_METADATA}")"}
 export BOSH_CA_CERT
 
-gobosh -n delete-deployment
+bosh -n delete-deployment
 
-gobosh -n clean-up --all
+bosh -n clean-up --all

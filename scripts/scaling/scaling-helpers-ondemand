@@ -69,7 +69,7 @@ function scale_down_to_minimal() {
     OUTPUT_FILE="${MANIFEST_FILE}" \
     ${CI_DIR}/scripts/bosh-lite/make-manifest
 
-  gobosh -n deploy $MANIFEST_FILE
+  bosh -n deploy $MANIFEST_FILE
 }
 
 function scale_up_to_default() {
@@ -80,7 +80,7 @@ function scale_up_to_default() {
   OUTPUT_FILE="${MANIFEST_FILE}" \
     ${CI_DIR}/scripts/bosh-lite/make-manifest
 
-  gobosh -n deploy $MANIFEST_FILE
+  bosh -n deploy $MANIFEST_FILE
 }
 
 function deploy_full_cluster() {
@@ -91,7 +91,7 @@ function deploy_full_cluster() {
   OUTPUT_FILE="${MANIFEST_FILE}" \
     ${CI_DIR}/scripts/bosh-lite/make-manifest
 
-  gobosh -n deploy $MANIFEST_FILE
+  bosh -n deploy $MANIFEST_FILE
 }
 
 function write_some_data() {

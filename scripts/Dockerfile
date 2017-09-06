@@ -67,7 +67,7 @@ RUN ruby-install ruby ${DOCKER_RUBY_VERSION} -- --disable-install-rdoc
 # Add ruby to PATH
 ENV PATH $PATH:/home/root/.gem/ruby/${DOCKER_RUBY_VERSION}/bin:/opt/rubies/ruby-${DOCKER_RUBY_VERSION}/lib/ruby/gems/${DOCKER_RUBY_VERSION}/bin:/opt/rubies/ruby-${DOCKER_RUBY_VERSION}/bin
 
-# Install gobosh cli
+# Install bosh cli
 RUN \
   wget -q "https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-${BOSH_CLI_VERSION}-linux-amd64" -O /usr/local/bin/gobosh && \
   chmod +x /usr/local/bin/gobosh && \

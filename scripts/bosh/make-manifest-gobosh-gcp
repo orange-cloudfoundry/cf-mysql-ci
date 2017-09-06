@@ -27,11 +27,11 @@ fi
 
 ENV="$(cat ${ENV_NAME_FILE})"
 ENV_DIR="${DEPLOYMENTS_DIR}/${ENV}/"
-CF_ADMIN_PASSWORD=$(bosh2 int "${ENV_DIR}/cf-deployment-vars.yml" --path /cf_admin_password)
-ENV_DOMAIN=$(bosh2 int ${ENV_METADATA} --path /domain)
+CF_ADMIN_PASSWORD=$(bosh int "${ENV_DIR}/cf-deployment-vars.yml" --path /cf_admin_password)
+ENV_DOMAIN=$(bosh int ${ENV_METADATA} --path /domain)
 
 
-bosh2 interpolate \
+bosh interpolate \
     ./cf-mysql-deployment/cf-mysql-deployment.yml \
     -o ./cf-mysql-deployment/operations/latest-versions.yml \
     -o ./cf-mysql-deployment/operations/add-broker.yml \

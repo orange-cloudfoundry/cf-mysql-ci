@@ -26,7 +26,7 @@ pushd "${bosh_lite_dir}" > /dev/null
   terraform output lite-external-ip > "${OUTPUT_DIR}/external-ip"
 popd > /dev/null
 
-gobosh interpolate "${BOSH_DEPLOYMENT_DIR}/bosh.yml" \
+bosh interpolate "${BOSH_DEPLOYMENT_DIR}/bosh.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/gcp/cpi.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/bosh-lite.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/bosh-lite-runc.yml" \
@@ -45,24 +45,24 @@ gobosh interpolate "${BOSH_DEPLOYMENT_DIR}/bosh.yml" \
   -v admin_password="${BOSH_CLIENT_SECRET}" \
   -v subnetwork="${SUBNETWORK}" > "${OUTPUT_DIR}/manifest.yml"
 
-gobosh create-env "${OUTPUT_DIR}/manifest.yml" \
+bosh create-env "${OUTPUT_DIR}/manifest.yml" \
   --state "${OUTPUT_DIR}/bosh-state.json" \
   --vars-store "${OUTPUT_DIR}/credentials.yml"
 
-gobosh -n interpolate "${OUTPUT_DIR}/credentials.yml" \
+bosh -n interpolate "${OUTPUT_DIR}/credentials.yml" \
   --path /director_ssl/ca > "${OUTPUT_DIR}/ca-cert"
 
-gobosh -n interpolate "${OUTPUT_DIR}/credentials.yml" \
+bosh -n interpolate "${OUTPUT_DIR}/credentials.yml" \
   --path /jumpbox_ssh/private_key > "${OUTPUT_DIR}/jumpbox-private-key"
 chmod 600 "${OUTPUT_DIR}/jumpbox-private-key"
 
-gobosh -n upload-stemcell "${stemcell_dir}"/*.tgz \
+bosh -n upload-stemcell "${stemcell_dir}"/*.tgz \
   -e "$(cat "${OUTPUT_DIR}/external-ip")" \
   --client admin \
   --client-secret "${BOSH_CLIENT_SECRET}" \
   --ca-cert "${OUTPUT_DIR}/ca-cert"
 
-gobosh -n update-cloud-config "${cf_mysql_deployment_dir}/bosh-lite/cloud-config.yml" \
+bosh -n update-cloud-config "${cf_mysql_deployment_dir}/bosh-lite/cloud-config.yml" \
   -e "$(cat "${OUTPUT_DIR}/external-ip")" \
   --client admin \
   --client-secret "${BOSH_CLIENT_SECRET}" \

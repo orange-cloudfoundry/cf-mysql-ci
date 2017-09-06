@@ -10,7 +10,7 @@ service_key="${bosh_lite_dir}/ci-service-account.json"
 gcloud auth activate-service-account --key-file=${service_key}
 gcloud config set project cf-core-services
 
-stemcell_id=$(gobosh int "${workspace_dir}/bosh-lite-info/bosh-state.json" --path /stemcells/0/cid)
+stemcell_id=$(bosh int "${workspace_dir}/bosh-lite-info/bosh-state.json" --path /stemcells/0/cid)
 
 echo "Deleting stemcell ${stemcell_id}"
 

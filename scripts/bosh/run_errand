@@ -27,7 +27,7 @@ export BOSH_CA_CERT
 BOSH_DEPLOYMENT=${BOSH_DEPLOYMENT:-"${DEPLOYMENT_NAME}"}
 export BOSH_DEPLOYMENT
 
-gobosh \
+bosh \
     -n \
     run-errand \
     "${ERRAND}"

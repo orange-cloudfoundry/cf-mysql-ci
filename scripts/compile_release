@@ -48,10 +48,10 @@ update:
   update_watch_time: 1000-90000
 EOF
 
-  bosh2 upload-stemcell *stemcell/*.tgz
-  bosh2 -n -d ${DEPLOYMENT_NAME} deploy deployment.yml
+  bosh upload-stemcell *stemcell/*.tgz
+  bosh -n -d ${DEPLOYMENT_NAME} deploy deployment.yml
 
-  bosh2 -d ${DEPLOYMENT_NAME} export-release --dir ${OUTPUT_DIR} ${name}/${version} ubuntu-trusty/${stemcell_version}
+  bosh -d ${DEPLOYMENT_NAME} export-release --dir ${OUTPUT_DIR} ${name}/${version} ubuntu-trusty/${stemcell_version}
 
-  bosh2 -d ${DEPLOYMENT_NAME} -n delete-deployment
+  bosh -d ${DEPLOYMENT_NAME} -n delete-deployment
 popd

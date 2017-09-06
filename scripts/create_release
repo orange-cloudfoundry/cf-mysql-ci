@@ -35,7 +35,7 @@ EOF
 version=$(cat ${WORKSPACE_DIR}/version/version)
 tarball_path="${tarball_dir}/${RELEASE_NAME}-${version}.tgz"
 
-create_release_command="gobosh -n create-release --name ${RELEASE_NAME} --version ${version} --tarball ${tarball_path} --force"
+create_release_command="bosh -n create-release --name ${RELEASE_NAME} --version ${version} --tarball ${tarball_path} --force"
 if [ -n "${FINAL}" ]; then
   create_release_command="${create_release_command} --final"
 fi

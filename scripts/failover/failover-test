@@ -29,7 +29,7 @@ SSH_KEY_FILE="${WORKSPACE_DIR}/bosh-lite-info/jumpbox-private-key"
 bosh_ip=$(cat $WORKSPACE_DIR/bosh-lite-info/external-ip)
 
 instances_file=$(mktemp)
-bosh2 instances --column instance --column ips > $instances_file
+bosh instances --column instance --column ips > $instances_file
 broker_0_ip=$(cat $instances_file | awk '/broker\// {print $2}' | head -1)
 broker_1_ip=$(cat $instances_file | awk '/broker\// {print $2}' | tail -1)
 mysql_0_ip=$(cat $instances_file | awk '/mysql\// {print $2}' | head -1)
@@ -64,14 +64,14 @@ ssh -L ${MYSQL_NODE_0_LOCAL_PORT}:${MYSQL_NODE_0_REMOTE_IP}:22 \
 
 
 # turn off the resurrector so that `scan-and-fix` tasks don't collide with our tests
-bosh2 update-resurrection off
+bosh update-resurrection off
 
-bosh2 manifest > /tmp/mysql-manifest.yml
-PROXY_API_PASSWORD=$(bosh2 int /tmp/mysql-manifest.yml --path /instance_groups/name=proxy/jobs/name=proxy/properties/cf_mysql/proxy/api_password)
+bosh manifest > /tmp/mysql-manifest.yml
+PROXY_API_PASSWORD=$(bosh int /tmp/mysql-manifest.yml --path /instance_groups/name=proxy/jobs/name=proxy/properties/cf_mysql/proxy/api_password)
 
-bosh2 -d cf manifest > /tmp/cf-manifest.yml
-CF_API_PASSWORD=$(bosh2 int /tmp/cf-manifest.yml --path /instance_groups/name=uaa/jobs/name=uaa/properties/uaa/scim/users/name=admin/password)
-DOMAIN=$(bosh2 int /tmp/cf-manifest.yml --path /instance_groups/name=api/jobs/name=cloud_controller_ng/properties/app_domains/0)
+bosh -d cf manifest > /tmp/cf-manifest.yml
+CF_API_PASSWORD=$(bosh int /tmp/cf-manifest.yml --path /instance_groups/name=uaa/jobs/name=uaa/properties/uaa/scim/users/name=admin/password)
+DOMAIN=$(bosh int /tmp/cf-manifest.yml --path /instance_groups/name=api/jobs/name=cloud_controller_ng/properties/app_domains/0)
 
 cat <<EOF > /tmp/env_metadata.json
 {

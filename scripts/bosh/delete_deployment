@@ -37,9 +37,9 @@ set -e
 # A value of 0 indicates grep matched successfully,
 # and hence the deployment exists
 if [ ${DEPLOYMENT_GREP_RESULT} -eq 0 ]; then
-  bosh2 -n delete-deployment --force
+  bosh -n delete-deployment --force
 else
   echo "deployment ${DEPLOYMENT_NAME} not found - nothing to delete"
 fi
 
-bosh2 -n clean-up --all
+bosh -n clean-up --all

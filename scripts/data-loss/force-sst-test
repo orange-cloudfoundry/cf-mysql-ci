@@ -23,7 +23,7 @@ MYSQL_VM_PORT=3306
 GCACHE_SIZE_PLUS_ONE=513
 
 # Figure out the name of mysql z2
-MYSQL_NODE_NAME=`gobosh instances | grep "mysql/" | grep "z2" | cut -d ' ' -f 1`
+MYSQL_NODE_NAME=`bosh instances | grep "mysql/" | grep "z2" | cut -d ' ' -f 1`
 
 function close-ssh-tunnels() {
   echo "Closing SSH tunnels ..."
@@ -42,7 +42,7 @@ function open_ssh_tunnel_to_bosh_lite() {
 }
 
 function stop_mysql_z2() {
-  gobosh -n stop ${MYSQL_NODE_NAME}
+  bosh -n stop ${MYSQL_NODE_NAME}
 }
 
 function write_data_to_overflow_gcache() {
@@ -67,7 +67,7 @@ function write_data_to_overflow_gcache() {
 
 function attempt_to_start_mysql_z2() {
   set +e
-  gobosh -n start ${MYSQL_NODE_NAME}
+  bosh -n start ${MYSQL_NODE_NAME}
   set -e
 }
 

@@ -23,7 +23,7 @@ export BOSH_CLIENT_SECRET
 BOSH_CA_CERT=$(jq_val "ca_cert" "${ENV_METADATA}")
 export BOSH_CA_CERT
 
-gobosh \
+bosh \
     -n \
     run-errand \
     "${ERRAND}"
