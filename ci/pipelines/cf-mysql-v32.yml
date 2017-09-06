@@ -12,11 +12,6 @@ resource_types:
     repository: cloudfoundry/bosh-deployment-resource
 
 resources:
-- name: aws-bosh-stemcell
-  type: bosh-io-stemcell
-  source:
-    name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
-
 - name: bosh-lite-stemcell
   type: bosh-io-stemcell
   source:
@@ -198,7 +193,6 @@ jobs:
     - get: cf-mysql-deployment
       passed: [test-unit]
     - get: cf-mysql-ci
-    - get: aws-bosh-stemcell
     - get: gcp-bosh-stemcell
     - get: version
       passed: [test-unit]
@@ -223,7 +217,7 @@ jobs:
       inputs:
       - name: cf-mysql-ci
       - name: release-tarball
-      - name: aws-bosh-stemcell
+      - name: gcp-bosh-stemcell
       outputs:
       - name: compiled-release-tarball
       params:
@@ -810,7 +804,6 @@ jobs:
       resource: deployments-configuration
     - get: stemcell
       resource: bosh-lite-stemcell
-    - get: aws-bosh-stemcell
     - get: version
       passed: [create-and-compile-release]
       trigger: true
