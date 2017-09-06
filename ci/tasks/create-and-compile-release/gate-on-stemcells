@@ -4,14 +4,12 @@ set -eux
 
 CWD=$(pwd)
 
-aws=$(egrep -o "^[0-9]+" "${CWD}/aws-bosh-stemcell/version")
 gcp=$(egrep -o "^[0-9]+" "${CWD}/gcp-bosh-stemcell/version")
 boshlite=$(egrep -o "^[0-9]+" "${CWD}/bosh-lite-stemcell/version")
 
-if [[ "${aws}" != "${gcp}" || "${aws}" != "${boshlite}" ]]; then
+if [[ "${gcp}" != "${boshlite}" ]]; then
 	set +x
 	echo "Not all stemcells are on the same version"
-	echo "aws=${aws}"
 	echo "gcp=${gcp}"
 	echo "boshlite=${boshlite}"
 	exit 1

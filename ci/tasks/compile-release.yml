@@ -9,7 +9,7 @@ image_resource:
 inputs:
 - name: cf-mysql-ci
 - name: release-tarball
-- name: aws-bosh-stemcell
+- name: gcp-bosh-stemcell
 
 outputs:
 - name: compiled-release-tarball

@@ -7,7 +7,6 @@ image_resource:
     repository: cloudfoundry/cf-mysql-ci
 
 inputs:
-- name: aws-bosh-stemcell
 - name: bosh-lite-stemcell
 - name: gcp-bosh-stemcell
 - name: cf-mysql-ci
