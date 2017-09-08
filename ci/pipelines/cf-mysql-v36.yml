@@ -758,6 +758,7 @@ jobs:
       resource: deployments-configuration
     - get: stemcell
       resource: bosh-lite-stemcell
+    - get: gcp-bosh-stemcell
     - get: version
       passed: [create-and-compile-release]
       trigger: true
