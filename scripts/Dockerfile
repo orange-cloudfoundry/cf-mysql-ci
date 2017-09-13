@@ -69,10 +69,8 @@ ENV PATH $PATH:/home/root/.gem/ruby/${DOCKER_RUBY_VERSION}/bin:/opt/rubies/ruby-
 
 # Install bosh cli
 RUN \
-  wget -q "https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-${BOSH_CLI_VERSION}-linux-amd64" -O /usr/local/bin/gobosh && \
-  chmod +x /usr/local/bin/gobosh && \
-  ln -s /usr/local/bin/gobosh /usr/local/bin/bosh && \
-  ln -s /usr/local/bin/gobosh /usr/local/bin/bosh2
+  wget -q "https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-${BOSH_CLI_VERSION}-linux-amd64" -O /usr/local/bin/bosh && \
+  chmod +x /usr/local/bin/bosh
 
 # Phantomjs is used by switchboard ui tests and dashboard acceptance tests
 RUN wget https://github.com/Pyppe/phantomjs2.0-ubuntu14.04x64/raw/master/bin/phantomjs && \
