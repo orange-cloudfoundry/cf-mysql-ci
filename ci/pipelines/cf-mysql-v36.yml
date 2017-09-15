@@ -185,6 +185,7 @@ jobs:
       passed: [test-unit]
     - get: cf-mysql-deployment
       passed: [test-unit]
+      trigger: true
     - get: cf-mysql-ci
     - get: gcp-bosh-stemcell
     - get: version
@@ -235,6 +236,7 @@ jobs:
       passed: [create-and-compile-release]
     - get: cf-mysql-deployment
       passed: [create-and-compile-release]
+      trigger: true
     - put: full-bosh-environment
       params:
         acquire: true
@@ -406,6 +408,7 @@ jobs:
         passed: [create-and-compile-release]
       - get: cf-mysql-deployment
         passed: [create-and-compile-release]
+        trigger: true
       - get: cf-mysql-ci
       - get: compiled-release-tarball
         resource: cf-mysql-compiled-release
@@ -538,6 +541,7 @@ jobs:
         passed: [create-and-compile-release]
       - get: cf-mysql-deployment
         passed: [create-and-compile-release]
+        trigger: true
       - get: cf-mysql-ci
       - get: compiled-release-tarball
         resource: cf-mysql-compiled-release
@@ -749,6 +753,7 @@ jobs:
       passed: [create-and-compile-release]
     - get: cf-mysql-deployment
       passed: [create-and-compile-release]
+      trigger: true
     - get: cf-mysql-ci
     - get: release-tarball
       resource: cf-mysql-release-final-v36
@@ -1034,6 +1039,7 @@ jobs:
         passed: [create-and-compile-release]
       - get: cf-mysql-deployment
         passed: [create-and-compile-release]
+        trigger: true
       - get: cf-mysql-ci
       - get: compiled-release-tarball
         resource: cf-mysql-compiled-release
@@ -1094,6 +1100,7 @@ jobs:
         passed: [create-and-compile-release]
       - get: cf-mysql-deployment
         passed: [create-and-compile-release]
+        trigger: true
       - get: cf-mysql-ci
       - get: compiled-release-tarball
         resource: cf-mysql-compiled-release
