@@ -6,7 +6,7 @@ image_resource:
 inputs:
 - name: cf-mysql-release
 params:
-  RAILS_ENV: ci_test
+  RAILS_ENV: test
 run:
   path: bash
   args:
