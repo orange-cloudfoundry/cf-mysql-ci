@@ -11,6 +11,7 @@ inputs:
 - name: version
 
 outputs:
+- name: commit-message
 - name: release-tarball
 - name: release-repo-modified
 

@@ -215,7 +215,6 @@ resources:
     access_key_id: {{cf-mysql-ci-aws-access-key-id}}
     secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
     key: version
-    initial_version: 33.0.0
 
 - name: weekly-trigger
   type: time
@@ -1380,6 +1379,19 @@ jobs:
     - get: cf-mysql-ci
     - get: gcp-bosh-stemcell
       passed: [test-full-bosh]
+    - get: version
+      passed:
+      - test-full-bosh
+      - test-scaling
+      - test-failover
+      - test-verify-cluster-schemas
+      - test-interruptor-prevents-data-loss
+      - test-interruptor-can-be-disabled
+      - test-bootstrap-on-standalone
+      - test-upgrade-from-previous
+      - test-arb-to-full-scaling
+      - test-verify-no-remote-access
+      - test-verify-tuning
   - aggregate:
     - put: cf-mysql-release-candidate
       params:
@@ -1392,56 +1404,69 @@ jobs:
   serial_groups: [version-bumper]
   plan:
     - aggregate:
-      - get: cf-mysql-master
-        params:
-          fetch:
-          - develop
-          - release-candidate
-          submodules: none
+      - get: cf-mysql-release
+        passed: [promote-to-rc]
       - get: cf-mysql-deployment-release-candidate
         passed: [promote-to-rc]
       - get: cf-mysql-ci
       - get: release-notes
         trigger: true
       - get: version
+        passed: [promote-to-rc]
         params:
           bump: final
       - get: gcp-bosh-stemcell
         passed: [promote-to-rc]
-    - task: final-release
+    - task: create-mysql-release
+      file: cf-mysql-ci/ci/tasks/create-release.yml
+      input_mapping: {release-repo: cf-mysql-release}
+      output_mapping: {release-repo-modified: cf-mysql-release-final}
+      params:
+        RELEASE_NAME: cf-mysql
+        BLOBS_BUCKET_NAME: mysql-service-blobs
+        FINAL: true
+        AWS_ACCESS_KEY_ID: {{cf-mysql-publish-blobs-aws-access-key-id}}
+        AWS_SECRET_ACCESS_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
+    - task: commit-final-release-changes
       config:
         platform: *platform
         image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
-        - name: cf-mysql-master
-          path: cf-mysql-release
-        - name: release-notes
+        - name: cf-mysql-release-final
+        - name: commit-message
         outputs:
-          - name: output-release-dir
-          - name: output-repo
-        run:
-          path: cf-mysql-ci/scripts/publish/cut-final-release
+        - name: cf-mysql-committed
         params:
-          RELEASE_NOTES_DIRECTORY: release-notes
-          OUTPUT_RELEASE_ARTIFACTS: output-release-dir/release-artifacts
-          OUTPUT_RELEASE_TAG: output-release-dir/cf-mysql-tag
-          OUTPUT_RELEASE_NOTES: output-release-dir/generated-release-notes
-          OUTPUT_RELEASE_COMMIT: output-release-dir/git-commit
-          OUTPUT_REPO_DIRECTORY: output-repo
-          RELEASE_ACCESS_KEY: {{cf-mysql-publish-blobs-aws-access-key-id}}
-          RELEASE_SECRET_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
+          GIT_COMMIT_MESSAGE: commit-message/commit-message
+          REPO_DIR: cf-mysql-release-final
+          OUTPUT_DIR: cf-mysql-committed
+        run:
+          path: cf-mysql-ci/scripts/publish/git-commit-changes
+    - task: prep-github-release
+      config:
+        platform: *platform
+        image_resource: *image_resource
+        inputs:
+        - name: release-notes
+        - name: cf-mysql-ci
+        - name: cf-mysql-committed
+        - name: version
+        outputs:
+        - name: output-release-dir
+        run:
+          path: cf-mysql-ci/scripts/publish/prep-github-release
     - put: cf-mysql-master
       params:
-        repository: output-repo/cf-mysql-release
+        repository: cf-mysql-committed/cf-mysql-release-final
         tag: output-release-dir/cf-mysql-tag
     - put: version
       params:
-        bump: major
+        bump: minor
         pre: rc
     - put: s3-resource-final-release
       params:
-        file: output-release-dir/release-artifacts/*.tgz
+        file: release-tarball/cf-mysql-*.tgz
     - put: publish-github-release
       params:
         name: output-release-dir/cf-mysql-tag
