@@ -63,6 +63,17 @@ function deploy_with_everything_enabled() {
   bosh -n deploy $MANIFEST_FILE
 }
 
+function deploy_with_ssl_enabled() {
+  echo "Deploying with cf-mysql-deployment/operations/add-tls.yml"
+  MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
+
+  ADD_TLS=true \
+  OUTPUT_FILE="${MANIFEST_FILE}" \
+  ${CI_DIR}/scripts/bosh-lite/make-manifest
+
+  bosh -n deploy $MANIFEST_FILE
+}
+
 function deploy_with_everything_disabled() {
   echo "Deploying with the opsfile specified in cf-mysql-acceptance-tests, disabling all toggable features"
   MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
@@ -98,6 +109,45 @@ function verify_percentage_settings() {
 
   if [[ "${innodb_bp_size}" == "465567744" ]]; then
     echo "Percentage accidentally rendered old exact value, found ${innodb_bp_size}"
+    exit 1
+  fi
+}
+
+function verify_ssl_disabled() {
+  is_ssl_enabled=$(mysql -sse "show @@have_ssl")
+
+  if [[ "${is_ssl_enabled}" != "DISABLED" ]]; then
+    echo "Somehow SSL is enabled in a default cf-mysql-release deployment"
+    exit 1
+  fi
+}
+
+function verify_ssl_enabled_but_not_connected_via_ssl() {
+  is_ssl_enabled=$(mysql -sse "show @@have_ssl")
+  ssl_cipher=$(mysql -sse "select variable_value from information_schema.session_status where variable_name='ssl_cipher'")
+
+  if [[ "${is_ssl_enabled}" != "YES" ]]; then
+    echo "SSL is not enabled"
+    exit 1
+  fi
+
+  if [[ "${ssl_cipher}" != "" ]]; then
+    echo "The client connection is using SSL even when not asking to."
+    exit 1
+  fi
+}
+
+function verify_ssl_enabled_and_connected_via_ssl() {
+  is_ssl_enabled=$(mysql -sse "show @@have_ssl")
+  ssl_cipher=$(mysql --ssl -sse "select variable_value from information_schema.session_status where variable_name='ssl_cipher'")
+
+  if [[ "${is_ssl_enabled}" != "YES" ]]; then
+    echo "SSL is not enabled"
+    exit 1
+  fi
+
+  if [[ "${ssl_cipher}" == "" ]]; then
+    echo "The client connection is not using SSL even when asking to."
     exit 1
   fi
 }
@@ -177,6 +227,13 @@ verify_exact_settings
 
 deploy_with_percentage
 verify_percentage_settings
+
+# we have already deployed without ssl
+verify_ssl_disabled
+
+deploy_with_ssl_enabled
+verify_ssl_enabled_but_not_connected_via_ssl
+verify_ssl_enabled_and_connected_via_ssl
 
 echo "Tuning overriding works with exact and percentage"
 

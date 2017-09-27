@@ -15,6 +15,7 @@ set -eux
 : "${EVERYTHING_DISABLED:=false}"
 : "${STATIC_PROXY_IPS:=false}"
 : "${VARS_FILE:=}"
+: "${ADD_TLS:=}"
 
 VARS_FILE_OPTION=''
 if [[ ! -z "${VARS_FILE}" ]]; then
@@ -58,6 +59,10 @@ fi
 
 if ${EVERYTHING_DISABLED}; then
     operations="$operations -o ./cf-mysql-release/src/github.com/cloudfoundry-incubator/cf-mysql-acceptance-tests/assets/tuning/everything_disabled.yml"
+fi
+
+if ${ADD_TLS}; then
+    operations="$operations -o ./cf-mysql-deployment/operations/add-tls.yml"
 fi
 
 if ${ADD_BROKERS}; then
