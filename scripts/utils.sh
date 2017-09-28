@@ -84,7 +84,7 @@ close-ssh-tunnels() {
 }
 
 cf_admin_username() {
-    if [ -n "${ENV_METADATA}" ]; then
+    if [ -n "${ENV_METADATA:-}" ]; then
       echo "$(jq_val "cf_api_user" "${ENV_METADATA}")"
     else
       echo "admin"
@@ -92,7 +92,7 @@ cf_admin_username() {
 }
 
 cf_admin_password() {
-    if [ -n "${ENV_METADATA}" ]; then
+    if [ -n "${ENV_METADATA:-}" ]; then
       echo "$(jq_val "cf_api_password" "${ENV_METADATA}")"
     else
       echo "$(bosh int varstore/deployment-vars.yml --path /cf_admin_password)"
@@ -100,7 +100,7 @@ cf_admin_password() {
 }
 
 cf_domain() {
-    if [ -n "${ENV_METADATA}" ]; then
+    if [ -n "${ENV_METADATA:-}" ]; then
       echo "$(jq_val "domain" "${ENV_METADATA}")"
     else
       echo "$(cat bosh-lite-info/url)"
