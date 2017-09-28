@@ -82,3 +82,27 @@ close-ssh-tunnels() {
   OLD_TUNNELS=`ps aux | grep "ssh" | grep "\-L $MYSQL_TUNNEL_PORT" | awk '{print $2}'`
   [[ -z "${OLD_TUNNELS}" ]] || kill ${OLD_TUNNELS}
 }
+
+cf_admin_username() {
+    if [ -n "${ENV_METADATA}" ]; then
+      echo "$(jq_val "cf_api_user" "${ENV_METADATA}")"
+    else
+      echo "admin"
+    fi
+}
+
+cf_admin_password() {
+    if [ -n "${ENV_METADATA}" ]; then
+      echo "$(jq_val "cf_api_password" "${ENV_METADATA}")"
+    else
+      echo "$(bosh int varstore/deployment-vars.yml --path /cf_admin_password)"
+    fi
+}
+
+cf_domain() {
+    if [ -n "${ENV_METADATA}" ]; then
+      echo "$(jq_val "domain" "${ENV_METADATA}")"
+    else
+      echo "$(cat bosh-lite-info/url)"
+    fi
+}
