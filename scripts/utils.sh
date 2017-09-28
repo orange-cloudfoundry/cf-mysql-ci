@@ -106,3 +106,12 @@ cf_domain() {
       echo "$(cat url/url)"
     fi
 }
+
+cf_uaa_admin_client_secret() {
+    if [ -f varstore/deployment-vars.yml ]; then
+      echo "$(bosh int varstore/deployment-vars.yml --path /uaa_admin_client_secret)"
+    else
+      echo "admin-secret"
+    fi
+
+}
