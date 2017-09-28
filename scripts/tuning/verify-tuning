@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -eux
+set -o pipefail
 
 tmpdir=$(mktemp -d /tmp/mysql_tuning.XXXXX)
 trap '{ rm -rf ${tmpdir}; }' EXIT
@@ -63,6 +64,17 @@ function deploy_with_everything_enabled() {
   bosh -n deploy $MANIFEST_FILE
 }
 
+function deploy_with_ssl_disabled() {
+  echo "Deploying without TLS"
+  MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
+
+  ADD_TLS=false \
+  OUTPUT_FILE="${MANIFEST_FILE}" \
+  ${CI_DIR}/scripts/bosh-lite/make-manifest
+
+  bosh -n deploy $MANIFEST_FILE
+}
+
 function deploy_with_ssl_enabled() {
   echo "Deploying with cf-mysql-deployment/operations/add-tls.yml"
   MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
@@ -114,7 +126,8 @@ function verify_percentage_settings() {
 }
 
 function verify_ssl_disabled() {
-  is_ssl_enabled=$(mysql -sse "show @@have_ssl")
+  is_ssl_enabled=$(mysql --defaults-extra-file=${MYSQL_CONFIG} \
+    -sse "select @@have_ssl")
 
   if [[ "${is_ssl_enabled}" != "DISABLED" ]]; then
     echo "Somehow SSL is enabled in a default cf-mysql-release deployment"
@@ -123,30 +136,34 @@ function verify_ssl_disabled() {
 }
 
 function verify_ssl_enabled_but_not_connected_via_ssl() {
-  is_ssl_enabled=$(mysql -sse "show @@have_ssl")
-  ssl_cipher=$(mysql -sse "select variable_value from information_schema.session_status where variable_name='ssl_cipher'")
+  is_ssl_enabled=$(mysql --defaults-extra-file=${MYSQL_CONFIG} \
+    -sse "select @@have_ssl")
+  ssl_cipher=$(mysql --defaults-extra-file=${MYSQL_CONFIG} \
+    -sse "status" | grep 'SSL')
 
   if [[ "${is_ssl_enabled}" != "YES" ]]; then
     echo "SSL is not enabled"
     exit 1
   fi
 
-  if [[ "${ssl_cipher}" != "" ]]; then
+  if [[ "${ssl_cipher}" != *"Not in use"* ]]; then
     echo "The client connection is using SSL even when not asking to."
     exit 1
   fi
 }
 
 function verify_ssl_enabled_and_connected_via_ssl() {
-  is_ssl_enabled=$(mysql -sse "show @@have_ssl")
-  ssl_cipher=$(mysql --ssl -sse "select variable_value from information_schema.session_status where variable_name='ssl_cipher'")
+  is_ssl_enabled=$(mysql --defaults-extra-file=${MYSQL_CONFIG} \
+    -sse "select @@have_ssl")
+  ssl_cipher=$(mysql --defaults-extra-file=${MYSQL_CONFIG} --ssl-cipher=DHE-RSA-AES256-SHA --ssl \
+    -sse "status" | grep 'SSL')
 
   if [[ "${is_ssl_enabled}" != "YES" ]]; then
     echo "SSL is not enabled"
     exit 1
   fi
 
-  if [[ "${ssl_cipher}" == "" ]]; then
+  if [[ "${ssl_cipher}" != *"Cipher in use is DHE-RSA-AES256-SHA"* ]]; then
     echo "The client connection is not using SSL even when asking to."
     exit 1
   fi
@@ -228,7 +245,7 @@ verify_exact_settings
 deploy_with_percentage
 verify_percentage_settings
 
-# we have already deployed without ssl
+deploy_with_ssl_disabled
 verify_ssl_disabled
 
 deploy_with_ssl_enabled

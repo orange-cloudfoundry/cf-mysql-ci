@@ -14,8 +14,8 @@ set -eux
 : "${EVERYTHING_ENABLED:=false}"
 : "${EVERYTHING_DISABLED:=false}"
 : "${STATIC_PROXY_IPS:=false}"
+: "${ADD_TLS:=false}"
 : "${VARS_FILE:=}"
-: "${ADD_TLS:=}"
 
 VARS_FILE_OPTION=''
 if [[ ! -z "${VARS_FILE}" ]]; then
