@@ -103,6 +103,6 @@ cf_domain() {
     if [ -n "${ENV_METADATA:-}" ]; then
       echo "$(jq_val "domain" "${ENV_METADATA}")"
     else
-      echo "$(cat bosh-lite-info/url)"
+      echo "$(cat url/url)"
     fi
 }
