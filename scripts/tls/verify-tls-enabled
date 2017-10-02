@@ -25,7 +25,6 @@ cf target -s test-space
 
 cf create-service p-mysql 10mb $service_instance
 cf create-service-key $service_instance $service_instance_key
-cf service-key $service_instance $service_instance_key
 cf service-key $service_instance $service_instance_key | tail -n +3 > ${MY_DIR}/connection.json
 
 ${MY_DIR}/get_mysql_ssl_cipher.rb ${MY_DIR}/connection.json ${MY_DIR}/cipher
