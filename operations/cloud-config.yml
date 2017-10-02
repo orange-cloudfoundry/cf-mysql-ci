@@ -2,7 +2,7 @@
 - type: replace
   path: /vm_extensions/-
   value:
-    name: p-mysql-broker-lb
+    name: mysql-broker-lb
     cloud_properties:
       ports:
       - host: 443
@@ -10,7 +10,7 @@
 - type: replace
   path: /vm_extensions/-
   value:
-    name: p-mysql-proxy-lb
+    name: mysql-proxy-lb
     cloud_properties:
       ports:
       - host: 8080 # is this necessary?

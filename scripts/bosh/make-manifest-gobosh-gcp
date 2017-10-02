@@ -44,7 +44,7 @@ bosh interpolate \
     ${VARS_FILE_OPTION} \
     -v cf_admin_password="${CF_ADMIN_PASSWORD}" \
     -v cf_admin_username="admin" \
-    -v proxy_vm_extension="p-mysql-proxy-lb" \
+    -v proxy_vm_extension="mysql-proxy-lb" \
     -v cf_skip_ssl_validation="true" \
     -v cf_api_url="https://api.${ENV_DOMAIN}" \
     -v app_domains="[${ENV_DOMAIN}]" \
