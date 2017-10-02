@@ -1410,7 +1410,6 @@ jobs:
         passed: [promote-to-rc]
       - get: cf-mysql-ci
       - get: release-notes
-        trigger: true
       - get: version
         passed: [promote-to-rc]
         params:
