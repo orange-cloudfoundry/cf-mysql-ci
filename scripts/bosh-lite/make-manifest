@@ -62,7 +62,13 @@ if ${EVERYTHING_DISABLED}; then
 fi
 
 if ${ADD_TLS}; then
-    operations="$operations -o ./cf-mysql-deployment/operations/add-tls.yml"
+    operations="$operations \
+    -o ./cf-mysql-deployment/operations/add-tls.yml \
+    -o ./cf-mysql-deployment/operations/proxy-elb.yml"
+
+    variables="$variables \
+    -v proxy_vm_extension=mysql-proxy-lb \
+    -v cf_mysql_host=$(cat bosh-lite-info/external-ip)"
 fi
 
 if ${ADD_BROKERS}; then
