@@ -61,16 +61,6 @@ if ${EVERYTHING_DISABLED}; then
     operations="$operations -o ./cf-mysql-release/src/github.com/cloudfoundry-incubator/cf-mysql-acceptance-tests/assets/tuning/everything_disabled.yml"
 fi
 
-if ${ADD_TLS}; then
-    operations="$operations \
-    -o ./cf-mysql-deployment/operations/add-tls.yml \
-    -o ./cf-mysql-deployment/operations/proxy-elb.yml"
-
-    variables="$variables \
-    -v proxy_vm_extension=mysql-proxy-lb \
-    -v cf_mysql_host=$(cat bosh-lite-info/external-ip)"
-fi
-
 if ${ADD_BROKERS}; then
     operations="$operations -o ./cf-mysql-deployment/operations/add-broker.yml"
     operations="$operations -o ./cf-mysql-deployment/operations/register-proxy-route.yml"
@@ -88,6 +78,17 @@ if ${ADD_BROKERS}; then
     -v cf_api_url=\"https://api.${cf_url}\" \
     -v app_domains=[${cf_url}] \
     -v cf_mysql_external_host=\"p-mysql.${cf_url}\""
+fi
+
+if ${ADD_TLS}; then
+    operations="$operations \
+    -o ./cf-mysql-deployment/operations/add-tls.yml \
+    -o ./cf-mysql-deployment/operations/proxy-elb.yml \
+    -o ./cf-mysql-deployment/operations/configure-broker-load-balancer.yml"
+
+    variables="$variables \
+    -v proxy_vm_extension=mysql-proxy-lb \
+    -v cf_mysql_host=$(cat bosh-lite-info/external-ip)"
 fi
 
 if ${STATIC_PROXY_IPS}; then

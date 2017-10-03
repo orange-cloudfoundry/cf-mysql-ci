@@ -17,7 +17,7 @@ my_id=$RANDOM
 service_instance="tls-service-instance-${my_id}"
 service_instance_key="${service_instance}-key"
 
-cf login -a ${api_url} -u $(cf_admin_username) -p $(cf_admin_password)
+cf login -a ${api_url} -u $(cf_admin_username) -p $(cf_admin_password) --skip-ssl-validation
 cf create-org test-org
 cf target -o test-org
 cf create-space test-space
