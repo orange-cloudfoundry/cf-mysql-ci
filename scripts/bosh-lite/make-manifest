@@ -83,8 +83,12 @@ fi
 if ${ADD_TLS}; then
     operations="$operations \
     -o ./cf-mysql-deployment/operations/add-tls.yml \
-    -o ./cf-mysql-deployment/operations/proxy-elb.yml \
-    -o ./cf-mysql-deployment/operations/configure-broker-load-balancer.yml"
+    -o ./cf-mysql-deployment/operations/proxy-elb.yml"
+
+    if ${ADD_BROKERS}; then
+      operations="$operations \
+      -o ./cf-mysql-deployment/operations/configure-broker-load-balancer.yml"
+    fi
 
     variables="$variables \
     -v proxy_vm_extension=mysql-proxy-lb \
