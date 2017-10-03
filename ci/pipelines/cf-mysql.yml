@@ -242,7 +242,7 @@ resources:
   type: s3
   source:
     bucket: cf-mysql-release-notes
-    regexp: RELEASE_NOTES_v(\d+)
+    regexp: RELEASE_NOTES_v(.*)
     access_key_id: {{cf-mysql-ci-aws-access-key-id}}
     secret_access_key: {{cf-mysql-ci-aws-secret-access-key}}
 
