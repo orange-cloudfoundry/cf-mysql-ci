@@ -675,6 +675,201 @@ jobs:
         path: cf-mysql-ci/scripts/scaling/scaling-arb-to-full-test
   - *ondemand-teardown
 
+### TLS
+- name: test-tls
+  plan:
+  - do:
+    - aggregate:
+      - get: cf-mysql-release
+        passed: [create-and-compile-release]
+      - get: cf-mysql-deployment
+        passed: [create-and-compile-release]
+        trigger: true
+      - get: cf-mysql-ci
+      - get: compiled-release-tarball
+        resource: cf-mysql-compiled-release
+        passed: [create-and-compile-release]
+      - get: bosh-deployment
+        resource: bosh-deployment-repo
+      - get: deployments
+        resource: deployments-configuration
+      - get: routing-release
+      - get: stemcell
+        resource: bosh-lite-stemcell
+        passed: [create-and-compile-release]
+      - get: version
+        passed: [create-and-compile-release]
+        trigger: true
+      - get: cf-deployment
+      - get: cf-deployment-concourse-tasks
+    - task: apply-terraform
+      file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+    - task: create-bosh-lite
+      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+      input_mapping: {deployments: deployments-terraformed}
+      params:
+        PROJECT_ID: {{gcp-bosh-lite-project-id}}
+        ZONE: {{gcp-bosh-lite-zone}}
+        NETWORK: {{gcp-bosh-lite-network}}
+        SUBNETWORK: {{gcp-bosh-lite-subnetwork}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+    - aggregate:
+      - task: create-dns
+        config:
+          platform: *platform
+          image_resource: *image_resource
+          inputs:
+          - name: cf-mysql-ci
+          - name: bosh-lite-info
+          - name: deployments
+            path: deployments-core-services
+          outputs:
+          - name: url
+          run:
+            path: cf-mysql-ci/scripts/bosh-lite-gcp/create-dns
+      - task: delete-stemcell
+        file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
+    - aggregate:
+      - task: bosh-upload-stemcell-from-cf-deployment
+        file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+        input_mapping: {bbl-state: bosh-lite-info}
+        params:
+          INFRASTRUCTURE: bosh-lite
+      - task: make-cf-manifest
+        file: cf-mysql-ci/ci/tasks/make-cf-manifest.yml
+      - do:
+        - task: generate-cloud-config
+          file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
+        - task: update-cloud-config
+          config:
+            platform: linux
+            image_resource: *image_resource
+            inputs:
+            - name: cf-mysql-ci
+            - name: cloud-config
+            - name: bosh-lite-info
+            params:
+              BOSH_CLIENT: {{bosh-lite-username}}
+              BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+              ENV_TARGET_FILE: bosh-lite-info/director-url
+              BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
+              CLOUD_CONFIG: cloud-config/cloud-config.yml
+            run:
+              path: cf-mysql-ci/scripts/bosh-lite-gcp/update-cloud-config
+    - task: make-manifest
+      config:
+        platform: linux
+        image_resource: *image_resource
+        inputs:
+        - name: bosh-lite-info
+        - name: varstore
+        - name: cf-mysql-ci
+        - name: cf-mysql-deployment
+        - name: url
+        outputs:
+        - name: deployment-manifest
+        params:
+          OUTPUT_FILE: deployment-manifest/deployment.yml
+          ADD_BROKERS: true
+          ADD_TLS: true
+          DISABLE_CROSS_DEPLOYMENT_LINKS: false
+        run:
+          path: cf-mysql-ci/scripts/bosh-lite/make-manifest
+    - put: cf-bosh-deployment
+      params:
+        manifest: cf-deployment-manifest/cf.yml
+        releases: []
+        stemcells:
+        - stemcell/*.tgz
+        source_file: bosh-lite-info/bosh-deployment-resource-source-file
+    - put: cf-mysql-bosh-deployment
+      params:
+        manifest: deployment-manifest/deployment.yml
+        releases:
+        - compiled-release-tarball/*.tgz
+        - routing-release/*.tgz
+        stemcells:
+        - stemcell/*.tgz
+        source_file: bosh-lite-info/bosh-deployment-resource-source-file
+  - task: run-broker-registrar
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+        - name: cf-mysql-ci
+        - name: bosh-lite-info
+      params:
+        BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        ENV_TARGET_FILE: bosh-lite-info/director-url
+        ERRAND: broker-registrar
+        BOSH_DEPLOYMENT: cf-mysql
+      run:
+        path: cf-mysql-ci/scripts/bosh/run_errand
+  - task: test-tls
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: url
+      - name: varstore
+      run:
+        path: cf-mysql-ci/scripts/tls/verify-tls-enabled
+  - task: delete-cf-mysql-deployment
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: bosh-lite-info
+      params:
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        BOSH_CA_CERT: bosh-lite-info/ca-cert
+        BOSH_DEPLOYMENT: cf-mysql
+        ENV_TARGET_FILE: bosh-lite-info/external-ip
+      run:
+        path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
+  - task: delete-cf-deployment
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: bosh-lite-info
+      params:
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        BOSH_DEPLOYMENT: cf
+        BOSH_CA_CERT: bosh-lite-info/ca-cert
+        ENV_TARGET_FILE: bosh-lite-info/external-ip
+      run:
+        path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
+  - task: destroy-bosh-lite
+    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite.yml
+    input_mapping: {bosh-lite-info: bosh-lite-info-stemcell-deleted}
+  - task: destroy-terraform
+    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
+    input_mapping: {deployments: deployments-terraformed}
+  - task: delete-dns
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: bosh-lite-info
+      - name: url
+      - name: deployments
+        path: deployments-core-services
+      run:
+        path: cf-mysql-ci/scripts/bosh-lite-gcp/delete-dns
+
+
+
+
+
 ### FAILOVER
 - name: test-failover
   plan:
