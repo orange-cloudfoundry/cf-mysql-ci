@@ -25,7 +25,6 @@ RUN \
             npm \
             libicu52 \
             libfontconfig1-dev libfreetype6 libssl-dev libpng-dev libjpeg-dev \
-            jq \
             mysql-client \
             python-dev \
             apt-transport-https \
@@ -121,3 +120,7 @@ RUN wget "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terrafor
 RUN wget "https://github.com/cloudfoundry/bosh-bootloader/releases/download/${BBL_GIT_TAG}/bbl-${BBL_GIT_TAG}_linux_x86-64" \
       -O /usr/local/bin/bbl && \
       chmod +x /usr/local/bin/bbl
+
+# Install jq 1.5
+RUN wget -O /usr/local/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 && \
+  chmod +x /usr/local/bin/jq
