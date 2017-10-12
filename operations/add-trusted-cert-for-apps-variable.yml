@@ -1,0 +1,9 @@
+---
+- type: replace
+  path: /variables/-
+  value:
+    name: trusted_cert_for_apps
+    type: certificate
+    options:
+      is_ca: true
+      common_name: trusted_cert_for_apps

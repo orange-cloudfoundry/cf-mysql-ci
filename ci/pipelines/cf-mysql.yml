@@ -107,6 +107,13 @@ resources:
     branch: master
     private_key: {{git-writer-private-key}}
 
+- name: cf-deployment-with-tls
+  type: git
+  source:
+    uri: https://github.com/cloudfoundry/cf-deployment.git
+    branch: pr/use-trusted-ca-cert-for-apps
+    private_key: {{git-writer-private-key}}
+
 - name: cf-mysql-deployment
   type: git
   source:
@@ -701,6 +708,7 @@ jobs:
         passed: [create-and-compile-release]
         trigger: true
       - get: cf-deployment
+        resource: cf-deployment-with-tls
       - get: cf-deployment-concourse-tasks
     - task: apply-terraform
       file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
@@ -737,6 +745,8 @@ jobs:
           INFRASTRUCTURE: bosh-lite
       - task: make-cf-manifest
         file: cf-mysql-ci/ci/tasks/make-cf-manifest.yml
+        params:
+          DEPLOY_WITH_DIEGO_CA_CERT: true
       - do:
         - task: generate-cloud-config
           file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
@@ -817,6 +827,22 @@ jobs:
       - name: varstore
       run:
         path: cf-mysql-ci/scripts/tls/verify-tls-enabled
+  - task: run-smoke-tests
+    config:
+      platform: *platform
+      image_resource: *image_resource
+      inputs:
+        - name: cf-mysql-ci
+        - name: bosh-lite-info
+      params:
+        BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
+        BOSH_CLIENT: {{bosh-lite-username}}
+        BOSH_CLIENT_SECRET: {{bosh-lite-password}}
+        ENV_TARGET_FILE: bosh-lite-info/director-url
+        ERRAND: smoke-tests
+        BOSH_DEPLOYMENT: cf-mysql
+      run:
+        path: cf-mysql-ci/scripts/bosh/run_errand
   - task: delete-cf-mysql-deployment
     config:
       platform: *platform
@@ -865,10 +891,6 @@ jobs:
         path: deployments-core-services
       run:
         path: cf-mysql-ci/scripts/bosh-lite-gcp/delete-dns
-
-
-
-
 
 ### FAILOVER
 - name: test-failover

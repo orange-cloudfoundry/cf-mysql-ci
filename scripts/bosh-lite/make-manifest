@@ -91,6 +91,7 @@ if ${ADD_TLS}; then
     fi
 
     variables="$variables \
+    -l ./varstore/deployment-vars.yml \
     -v proxy_vm_extension=mysql-proxy-lb \
     -v cf_mysql_host=$(cat bosh-lite-info/external-ip)"
 fi
@@ -104,9 +105,9 @@ bosh interpolate \
     -o ./cf-mysql-deployment/operations/latest-versions.yml \
     ${operations} \
     -o ./cf-mysql-ci/operations/default-vcap-password.yml \
-    -l ./cf-mysql-deployment/bosh-lite/default-vars.yml \
     ${VARS_FILE_OPTION} \
     ${variables} \
+    -l ./cf-mysql-deployment/bosh-lite/default-vars.yml \
     -v cf_mysql_mysql_admin_password=password \
     -v cf_mysql_mysql_galera_healthcheck_endpoint_password=password \
     --vars-store=./vars-store.yml \
