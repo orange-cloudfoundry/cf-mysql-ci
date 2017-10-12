@@ -80,6 +80,7 @@ function deploy_with_ssl_enabled() {
   MANIFEST_FILE="${tmpdir}/bosh_lite_manifest.yml"
 
   ADD_TLS=true \
+  FAKE_CA=true \
   OUTPUT_FILE="${MANIFEST_FILE}" \
   ${CI_DIR}/scripts/bosh-lite/make-manifest
 

@@ -15,6 +15,7 @@ set -eux
 : "${EVERYTHING_DISABLED:=false}"
 : "${STATIC_PROXY_IPS:=false}"
 : "${ADD_TLS:=false}"
+: "${FAKE_CA:=false}"
 : "${VARS_FILE:=}"
 
 VARS_FILE_OPTION=''
@@ -90,8 +91,13 @@ if ${ADD_TLS}; then
       -o ./cf-mysql-deployment/operations/configure-broker-load-balancer.yml"
     fi
 
+    if ${FAKE_CA}; then
+      operations="$operations -o ./cf-mysql-ci/operations/add-trusted-cert-for-apps-variable.yml"
+    else
+      variables="$variables -l ./varstore/deployment-vars.yml"
+    fi
+
     variables="$variables \
-    -l ./varstore/deployment-vars.yml \
     -v proxy_vm_extension=mysql-proxy-lb \
     -v cf_mysql_host=$(cat bosh-lite-info/external-ip)"
 fi
