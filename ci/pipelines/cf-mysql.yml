@@ -1542,6 +1542,7 @@ jobs:
       - test-arb-to-full-scaling
       - test-verify-no-remote-access
       - test-verify-tuning
+      - test-tls
       trigger: true
     - get: cf-mysql-ci
     - get: version
@@ -1557,6 +1558,7 @@ jobs:
       - test-arb-to-full-scaling
       - test-verify-no-remote-access
       - test-verify-tuning
+      - test-tls
   - *create-release
   - put: cf-mysql-rc-artifacts
     params:
@@ -1578,6 +1580,7 @@ jobs:
       - test-arb-to-full-scaling
       - test-verify-no-remote-access
       - test-verify-tuning
+      - test-tls
       trigger: true
       params:
         fetch: [release-candidate]
@@ -1594,6 +1597,7 @@ jobs:
       - test-arb-to-full-scaling
       - test-verify-no-remote-access
       - test-verify-tuning
+      - test-tls
     - get: cf-mysql-ci
     - get: gcp-bosh-stemcell
       passed: [test-full-bosh]
@@ -1610,6 +1614,7 @@ jobs:
       - test-arb-to-full-scaling
       - test-verify-no-remote-access
       - test-verify-tuning
+      - test-tls
   - aggregate:
     - put: cf-mysql-release-candidate
       params:
