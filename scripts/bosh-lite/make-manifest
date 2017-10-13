@@ -82,6 +82,12 @@ if ${ADD_BROKERS}; then
 fi
 
 if ${ADD_TLS}; then
+    if ${FAKE_CA}; then
+      operations="$operations -o ./cf-mysql-ci/operations/add-trusted-cert-for-apps-variable.yml"
+    else
+      variables="$variables -l ./varstore/deployment-vars.yml"
+    fi
+
     operations="$operations \
     -o ./cf-mysql-deployment/operations/add-tls.yml \
     -o ./cf-mysql-deployment/operations/proxy-elb.yml"
@@ -89,12 +95,6 @@ if ${ADD_TLS}; then
     if ${ADD_BROKERS}; then
       operations="$operations \
       -o ./cf-mysql-deployment/operations/configure-broker-load-balancer.yml"
-    fi
-
-    if ${FAKE_CA}; then
-      operations="$operations -o ./cf-mysql-ci/operations/add-trusted-cert-for-apps-variable.yml"
-    else
-      variables="$variables -l ./varstore/deployment-vars.yml"
     fi
 
     variables="$variables \
