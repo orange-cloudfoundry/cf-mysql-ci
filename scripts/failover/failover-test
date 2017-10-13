@@ -14,14 +14,6 @@ source "${CI_DIR}/scripts/utils.sh"
 : "${BOSH_CLIENT:?}"
 : "${BOSH_CLIENT_SECRET:?}"
 
-function close-ssh-tunnels() {
-  echo "Closing SSH tunnels ..."
-  OLD_TUNNELS=`ps aux | grep "ssh" | \
-    grep "\-L ${BROKER_0_LOCAL_PORT}\|\-L ${BROKER_1_LOCAL_PORT}\|\-L ${MYSQL_NODE_0_LOCAL_PORT}" | \
-    awk '{print $2}'`
-  [[ -z "${OLD_TUNNELS}" ]] || kill ${OLD_TUNNELS}
-}
-
 export BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
 export BOSH_CA_CERT="$WORKSPACE_DIR/bosh-lite-info/ca-cert"
 SSH_KEY_FILE="${WORKSPACE_DIR}/bosh-lite-info/jumpbox-private-key"
@@ -43,26 +35,6 @@ export BROKER_0_LOCAL_PORT="43306"
 export BROKER_1_LOCAL_PORT="43307"
 export MYSQL_NODE_0_LOCAL_PORT="43305"
 
-trap close-ssh-tunnels EXIT
-ssh -L ${BROKER_0_LOCAL_PORT}:${BROKER_0_REMOTE_IP}:22 \
-  -NnTf \
-  -i "${SSH_KEY_FILE}" \
-  -o StrictHostKeyChecking=no \
-  "jumpbox@${bosh_ip}"
-
-ssh -L ${BROKER_1_LOCAL_PORT}:${BROKER_1_REMOTE_IP}:22 \
-  -NnTf \
-  -i "${SSH_KEY_FILE}" \
-  -o StrictHostKeyChecking=no \
-   "jumpbox@${bosh_ip}"
-
-ssh -L ${MYSQL_NODE_0_LOCAL_PORT}:${MYSQL_NODE_0_REMOTE_IP}:22 \
-  -NnTf \
-  -i "${SSH_KEY_FILE}" \
-  -o StrictHostKeyChecking=no \
-  "jumpbox@${bosh_ip}"
-
-
 # turn off the resurrector so that `scan-and-fix` tasks don't collide with our tests
 bosh update-resurrection off
 
@@ -79,7 +51,11 @@ cat <<EOF > /tmp/env_metadata.json
   "cf_api_password": "${CF_API_PASSWORD}",
   "proxy_api_user": "proxy",
   "proxy_api_password": "${PROXY_API_PASSWORD}",
-  "domain": "${DOMAIN}"
+  "domain": "${DOMAIN}",
+  "bosh_client": "${BOSH_CLIENT}",
+  "bosh_client_secret":"${BOSH_CLIENT_SECRET}",
+  "bosh_ca_cert": "$(awk '{printf "%s\\n", $0}' ${BOSH_CA_CERT})",
+  "bosh_url": "${bosh_ip}"
 }
 EOF
 

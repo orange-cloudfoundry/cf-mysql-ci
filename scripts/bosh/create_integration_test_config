@@ -36,6 +36,11 @@ CF_API_USER="$(jq_val "cf_api_user" "${ENV_METADATA}")"
 CF_API_PASSWORD="$(jq_val "cf_api_password" "${ENV_METADATA}")"
 PROXY_API_USER="$(jq_val "proxy_api_user" "${ENV_METADATA}")"
 PROXY_API_PASSWORD="$(jq_val "proxy_api_password" "${ENV_METADATA}")"
+BOSH_CLIENT="$(jq_val "bosh_client" "${ENV_METADATA}")"
+BOSH_CLIENT_SECRET="$(jq_val "bosh_client_secret" "${ENV_METADATA}")"
+BOSH_CA_CERT="$(jq_val "bosh_ca_cert" "${ENV_METADATA}")"
+BOSH_URL="$(jq_val "bosh_url" "${ENV_METADATA}")"
+
 DOMAIN="$(jq_val "domain" "${ENV_METADATA}")"
 
 if [ "${USE_HTTPS}" = true ]; then
@@ -100,6 +105,12 @@ cat > ${CONFIG_LOCATION} <<EOF
     "api_password":"${PROXY_API_PASSWORD}",
     "api_force_https": ${USE_HTTPS},
     "skip_ssl_validation": true
+  },
+  "bosh": {
+    "client": "${BOSH_CLIENT}",
+    "client_secret": "${BOSH_CLIENT_SECRET}",
+    "url": "${BOSH_URL}",
+    "ca_cert": "${BOSH_CA_CERT}"
   },
   "brokers": [
     {

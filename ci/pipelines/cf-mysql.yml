@@ -1054,6 +1054,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-info/director-url
         BOSH_LITE_SSH_KEY: {{bosh-lite-private-key}}
         BOSH_DEPLOYMENT: cf-mysql
+        NEW_STYLE_PROXY_URL: true
       run:
         path: cf-mysql-ci/scripts/failover/failover-test
   - task: delete-cf-mysql-deployment
