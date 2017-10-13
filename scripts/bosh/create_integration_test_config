@@ -38,7 +38,7 @@ PROXY_API_USER="$(jq_val "proxy_api_user" "${ENV_METADATA}")"
 PROXY_API_PASSWORD="$(jq_val "proxy_api_password" "${ENV_METADATA}")"
 BOSH_CLIENT="$(jq_val "bosh_client" "${ENV_METADATA}")"
 BOSH_CLIENT_SECRET="$(jq_val "bosh_client_secret" "${ENV_METADATA}")"
-BOSH_CA_CERT="$(jq_val "bosh_ca_cert" "${ENV_METADATA}")"
+BOSH_CA_CERT_PATH="$(jq_val "bosh_ca_cert_path" "${ENV_METADATA}")"
 BOSH_URL="$(jq_val "bosh_url" "${ENV_METADATA}")"
 
 DOMAIN="$(jq_val "domain" "${ENV_METADATA}")"
@@ -110,7 +110,7 @@ cat > ${CONFIG_LOCATION} <<EOF
     "client": "${BOSH_CLIENT}",
     "client_secret": "${BOSH_CLIENT_SECRET}",
     "url": "${BOSH_URL}",
-    "ca_cert": "${BOSH_CA_CERT}"
+    "ca_cert": "$(awk '{printf "%s\\n", $0}' ${BOSH_CA_CERT_PATH})"
   },
   "brokers": [
     {

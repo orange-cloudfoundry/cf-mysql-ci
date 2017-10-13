@@ -54,7 +54,7 @@ cat <<EOF > /tmp/env_metadata.json
   "domain": "${DOMAIN}",
   "bosh_client": "${BOSH_CLIENT}",
   "bosh_client_secret":"${BOSH_CLIENT_SECRET}",
-  "bosh_ca_cert": "$(awk '{printf "%s\\n", $0}' ${BOSH_CA_CERT})",
+  "bosh_ca_cert_path": "${BOSH_CA_CERT}",
   "bosh_url": "${bosh_ip}"
 }
 EOF
