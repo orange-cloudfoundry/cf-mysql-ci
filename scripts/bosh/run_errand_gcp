@@ -26,5 +26,5 @@ export BOSH_CA_CERT
 bosh \
     -n \
     run-errand \
-    "${ERRAND}"
+    ${ERRAND}
 

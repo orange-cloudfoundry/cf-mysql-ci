@@ -30,4 +30,4 @@ export BOSH_DEPLOYMENT
 bosh \
     -n \
     run-errand \
-    "${ERRAND}"
+    ${ERRAND}
