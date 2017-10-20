@@ -107,11 +107,11 @@ resources:
     branch: master
     private_key: {{git-writer-private-key}}
 
-- name: cf-deployment-with-tls
+- name: cf-deployment-develop
   type: git
   source:
     uri: https://github.com/cloudfoundry/cf-deployment.git
-    branch: pr/use-trusted-ca-cert-for-apps
+    branch: develop
     private_key: {{git-writer-private-key}}
 
 - name: cf-mysql-deployment
@@ -708,7 +708,7 @@ jobs:
         passed: [create-and-compile-release]
         trigger: true
       - get: cf-deployment
-        resource: cf-deployment-with-tls
+        resource: cf-deployment-develop
       - get: cf-deployment-concourse-tasks
     - task: apply-terraform
       file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
