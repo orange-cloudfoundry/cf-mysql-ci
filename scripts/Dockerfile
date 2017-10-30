@@ -30,13 +30,9 @@ RUN \
             apt-transport-https \
             software-properties-common \
             phantomjs \
+            shellcheck \
       && \
       apt-get clean
-
-RUN \
-    apt-add-repository "deb http://archive.ubuntu.com/ubuntu $(lsb_release -cs)-backports universe" \
-    && apt-get -qq update \
-    && apt-get -t $(lsb_release -cs)-backports install shellcheck
 
 RUN \
     apt-add-repository "deb https://packages.cloud.google.com/apt cloud-sdk-$(lsb_release -c -s) main" \
