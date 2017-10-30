@@ -1,4 +1,4 @@
-FROM ubuntu:trusty
+FROM ubuntu:xenial
 MAINTAINER https://github.com/cloudfoundry/cf-mysql-release
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -23,12 +23,13 @@ RUN \
             libmysqlclient-dev \
             nodejs \
             npm \
-            libicu52 \
+            libicu55 \
             libfontconfig1-dev libfreetype6 libssl-dev libpng-dev libjpeg-dev \
             mysql-client \
             python-dev \
             apt-transport-https \
             software-properties-common \
+            phantomjs \
       && \
       apt-get clean
 
@@ -71,10 +72,6 @@ RUN \
   wget -q "https://s3.amazonaws.com/bosh-cli-artifacts/bosh-cli-${BOSH_CLI_VERSION}-linux-amd64" -O /usr/local/bin/bosh && \
   chmod +x /usr/local/bin/bosh
 
-# Phantomjs is used by switchboard ui tests and dashboard acceptance tests
-RUN wget https://github.com/Pyppe/phantomjs2.0-ubuntu14.04x64/raw/master/bin/phantomjs && \
-          chmod +x phantomjs && \
-          mv phantomjs /usr/bin/phantomjs
 
 # Install go
 RUN curl https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz | tar xvz -C /usr/local/
