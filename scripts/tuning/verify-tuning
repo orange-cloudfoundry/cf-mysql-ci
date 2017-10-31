@@ -156,7 +156,7 @@ function verify_ssl_enabled_but_not_connected_via_ssl() {
 function verify_ssl_enabled_and_connected_via_ssl() {
   is_ssl_enabled=$(mysql --defaults-extra-file=${MYSQL_CONFIG} \
     -sse "select @@have_ssl")
-  ssl_cipher=$(mysql --defaults-extra-file=${MYSQL_CONFIG} --ssl-cipher=DHE-RSA-AES256-SHA256 --ssl \
+  ssl_cipher=$(mysql --defaults-extra-file=${MYSQL_CONFIG} --ssl-cipher=DHE-RSA-AES256-SHA --ssl \
     -sse "status" | grep 'SSL')
 
   if [[ "${is_ssl_enabled}" != "YES" ]]; then
@@ -164,7 +164,7 @@ function verify_ssl_enabled_and_connected_via_ssl() {
     exit 1
   fi
 
-  if [[ "${ssl_cipher}" != *"Cipher in use is DHE-RSA-AES256-SHA256"* ]]; then
+  if [[ "${ssl_cipher}" != *"Cipher in use is DHE-RSA-AES256-SHA"* ]]; then
     echo "The client connection is not using SSL even when asking to."
     exit 1
   fi
