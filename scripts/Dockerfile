@@ -31,6 +31,7 @@ RUN \
             software-properties-common \
             phantomjs \
             shellcheck \
+            net-tools \
       && \
       apt-get clean
 
