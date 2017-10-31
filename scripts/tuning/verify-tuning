@@ -139,7 +139,7 @@ function verify_ssl_disabled() {
 function verify_ssl_enabled_but_not_connected_via_ssl() {
   is_ssl_enabled=$(mysql --defaults-extra-file=${MYSQL_CONFIG} \
     -sse "select @@have_ssl")
-  ssl_cipher=$(mysql --defaults-extra-file=${MYSQL_CONFIG} \
+  ssl_cipher=$(mysql --defaults-extra-file=${MYSQL_CONFIG} --ssl=0 \
     -sse "status" | grep 'SSL')
 
   if [[ "${is_ssl_enabled}" != "YES" ]]; then
