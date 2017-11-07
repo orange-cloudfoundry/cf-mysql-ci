@@ -1292,6 +1292,12 @@ jobs:
 - name: test-interruptor-prevents-data-loss
   plan:
   - *ondemand-setup
+  - task: make-manifest-with-interruptor-enabled
+    file: cf-mysql-ci/ci/tasks/make-manifest.yml
+    params:
+      ENABLE_INTERRUPTOR: true
+      ENABLE_REMOTE_ADMIN_ACCESS: true
+  - *ondemand-deploy-manifest
   - task: run-data-loss-tests
     config:
       platform: *platform
@@ -1329,6 +1335,12 @@ jobs:
 - name: test-interruptor-can-be-disabled
   plan:
   - *ondemand-setup
+  - task: make-manifest-with-interruptor-enabled
+    file: cf-mysql-ci/ci/tasks/make-manifest.yml
+    params:
+      ENABLE_INTERRUPTOR: true
+      ENABLE_REMOTE_ADMIN_ACCESS: true
+  - *ondemand-deploy-manifest
   - task: run-data-loss-tests # leaves cluster in broken state with node z2 down
     config:
       platform: *platform
@@ -1347,7 +1359,6 @@ jobs:
   - task: make-manifest-with-interruptor-disabled
     file: cf-mysql-ci/ci/tasks/make-manifest.yml
     params:
-      DISABLE_INTERRUPTOR: true
       ENABLE_REMOTE_ADMIN_ACCESS: true
   - *ondemand-deploy-manifest
   - task: restart-broken-node

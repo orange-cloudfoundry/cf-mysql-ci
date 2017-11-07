@@ -3,7 +3,7 @@
 set -eux
 
 : "${MINIMAL_MODE:=false}"
-: "${DISABLE_INTERRUPTOR:=false}"
+: "${ENABLE_INTERRUPTOR:=false}"
 : "${NO_ARBITRATOR:=false}"
 : "${TINY_GCACHE:=false}"
 : "${ENABLE_REMOTE_ADMIN_ACCESS:=false}"
@@ -30,8 +30,8 @@ if ${MINIMAL_MODE}; then
     operations="$operations -o ./cf-mysql-ci/operations/minimal-mode.yml"
 fi
 
-if ${DISABLE_INTERRUPTOR}; then
-    operations="$operations -o ./cf-mysql-ci/operations/disable-interruptor.yml"
+if ${ENABLE_INTERRUPTOR}; then
+    operations="$operations -o ./cf-mysql-ci/operations/enable-interruptor.yml"
 fi
 
 if ${NO_ARBITRATOR}; then

@@ -18,7 +18,7 @@ run:
 
 params:
   OUTPUT_FILE: deployment-manifest/deployment.yml
-  DISABLE_INTERRUPTOR: false
+  ENABLE_INTERRUPTOR: false
   MINIMAL_MODE: false
   NO_ARBITRATOR: false
   ENABLE_REMOTE_ADMIN_ACCESS: false
