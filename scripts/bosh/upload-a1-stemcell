@@ -1,0 +1,17 @@
+#!/bin/bash
+set -eux
+
+my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ci_dir="$( cd "${my_dir}/../../../" && pwd )"
+WORKSPACE_DIR="$( cd "${ci_dir}/../" && pwd )"
+
+# get version from GCP stemcell resource
+stemcell_version=$(cat ${WORKSPACE_DIR}/gcp-bosh-stemcell/version)
+
+cd ${WORKSPACE_DIR}/a1-env
+# export BOSH env vars to target a1 director
+source .envrc
+
+# upload AWS variant of the stemcell
+bosh upload-stemcell \
+  "https://bosh.io/d/stemcells/bosh-aws-xen-hvm-ubuntu-trusty-go_agent?v=${stemcell_version}"

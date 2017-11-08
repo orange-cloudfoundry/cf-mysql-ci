@@ -83,6 +83,12 @@ resources:
     uri: git@github.com:pivotal-cf/deployments-core-services
     private_key: {{git-private-key}}
 
+- name: a1-env
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/a1-env
+    private_key: {{git-private-key}}
+
 - name: cf-mysql-ci
   type: git
   source:
@@ -1633,6 +1639,39 @@ jobs:
     - put: cf-mysql-deployment-release-candidate
       params:
         repository: cf-mysql-deployment
+
+- name: deploy-to-a1
+  plan:
+    - aggregate:
+      - get: cf-mysql-release
+        passed: [promote-to-rc]
+      - get: cf-mysql-deployment
+        passed: [promote-to-rc]
+      - get: gcp-bosh-stemcell
+        passed: [promote-to-rc]
+      - get: version
+        trigger: true
+        passed: [promote-to-rc]
+      - get: cf-mysql-ci
+      - get: a1-env
+      - get: deployments-configuration
+    - task: upload-a1-stemcell
+      file: cf-mysql-ci/ci/tasks/upload-a1-stemcell.yml
+    - task: make-manifest
+      config:
+        platform: *platform
+        image_resource: *image_resource
+        inputs:
+        - name: deployments-configuration
+        - name: cf-mysql-ci
+        - name: cf-mysql-deployment
+        outputs:
+        - name: deployment-manifest
+        params:
+          ENV_NAME: a1/cf-a1-mysql
+          DEPLOYMENTS_DIR: deployments-configuration
+        run:
+          path: cf-mysql-ci/scripts/bosh/make-manifest-cf-a1-mysql
 
 - name: final-release
   serial_groups: [version-bumper]
