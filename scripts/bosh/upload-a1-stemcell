@@ -2,7 +2,7 @@
 set -eux
 
 my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-ci_dir="$( cd "${my_dir}/../../../" && pwd )"
+ci_dir="$( cd "${my_dir}/../../" && pwd )"
 WORKSPACE_DIR="$( cd "${ci_dir}/../" && pwd )"
 
 # get version from GCP stemcell resource
