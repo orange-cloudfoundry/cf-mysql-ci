@@ -498,6 +498,7 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand_gcp
   - task: acceptance-test
+    attempts: 3
     config:
       platform: *platform
       image_resource: *image_resource
