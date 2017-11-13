@@ -58,7 +58,7 @@ RUN curl https://codeload.github.com/postmodern/ruby-install/tar.gz/v0.5.0 | tar
           cd /tmp/ruby-install-0.5.0 && \
           make install
 
-ENV DOCKER_RUBY_VERSION 2.3.1
+ENV DOCKER_RUBY_VERSION 2.3.5
 
 # Install Ruby
 RUN ruby-install ruby ${DOCKER_RUBY_VERSION} -- --disable-install-rdoc
