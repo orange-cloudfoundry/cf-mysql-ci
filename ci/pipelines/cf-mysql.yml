@@ -101,6 +101,11 @@ resources:
     uri: https://github.com/cloudfoundry/cf-deployment-concourse-tasks.git
     tag_filter: v3.*
 
+- name: consul-release
+  type: bosh-io-release
+  source:
+    repository: cloudfoundry-incubator/consul-release
+
 - name: routing-release
   type: bosh-io-release
   source:
@@ -219,6 +224,11 @@ resources:
   type: bosh-deployment
   source:
     deployment: cf-a1-mysql
+
+- name: a1-mysql-bosh-deployment
+  type: bosh-deployment
+  source:
+    deployment: a1-mysql
 
 - name: bosh-deployment-repo
   type: git
@@ -1668,8 +1678,6 @@ jobs:
       - get: compiled-release-tarball
         resource: cf-mysql-compiled-release
         passed: [create-and-compile-release]
-      - get: gcp-bosh-stemcell
-        passed: [create-and-compile-release]
     - aggregate:
       - task: make-a1-env
         config:
@@ -1677,6 +1685,7 @@ jobs:
           image_resource: *image_resource
           inputs:
           - name: a1-env
+          - name: cf-mysql-ci
           outputs:
           - name: a1-env-config
           params:
@@ -1705,6 +1714,67 @@ jobs:
         manifest: deployment-manifest/deployment.yml
         releases:
         - routing-release/*.tgz
+        - compiled-release-tarball/*.tgz
+        stemcells: [gcp-bosh-stemcell/*.tgz]
+
+- name: deploy-to-a1-standalone
+  serial: true
+  plan:
+    - aggregate:
+      - get: cf-mysql-release
+        passed:
+        - promote-to-rc
+        - create-and-compile-release
+      - get: cf-mysql-deployment
+        passed: [promote-to-rc]
+      - get: gcp-bosh-stemcell
+        passed: [promote-to-rc]
+      - get: version
+        trigger: true
+        passed: [promote-to-rc]
+      - get: cf-mysql-ci
+      - get: a1-env
+      - get: deployments-configuration
+      - get: consul-release
+      - get: compiled-release-tarball
+        resource: cf-mysql-compiled-release
+        passed: [create-and-compile-release]
+    - aggregate:
+      - task: make-a1-env
+        config:
+          platform: *platform
+          image_resource: *image_resource
+          inputs:
+          - name: a1-env
+          - name: cf-mysql-ci
+          outputs:
+          - name: a1-env-config
+          params:
+            ENV_DIR: a1-env
+            OUTPUT_FILE: a1-env-config/a1-env-metadata
+          run:
+            path: cf-mysql-ci/scripts/make-env-metadata
+      - task: make-manifest
+        config:
+          platform: *platform
+          image_resource: *image_resource
+          inputs:
+          - name: deployments-configuration
+          - name: cf-mysql-ci
+          - name: cf-mysql-deployment
+          outputs:
+          - name: deployment-manifest
+          params:
+            ENV_NAME: a1/a1-mysql
+            DEPLOYMENTS_DIR: deployments-configuration
+          run:
+            path: cf-mysql-ci/scripts/bosh/make-manifest-a1-mysql
+    - put: a1-mysql-bosh-deployment
+      params:
+        source_file: a1-env-config/a1-env-metadata
+        manifest: deployment-manifest/deployment.yml
+        releases:
+        - consul-release/*.tgz
         - compiled-release-tarball/*.tgz
         stemcells: [gcp-bosh-stemcell/*.tgz]
 
