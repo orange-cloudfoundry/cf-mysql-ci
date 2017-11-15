@@ -215,6 +215,11 @@ resources:
   source:
     deployment: cf
 
+- name: cf-a1-mysql-bosh-deployment
+  type: bosh-deployment
+  source:
+    deployment: cf-a1-mysql
+
 - name: bosh-deployment-repo
   type: git
   source:
@@ -1642,10 +1647,13 @@ jobs:
         repository: cf-mysql-deployment
 
 - name: deploy-to-a1
+  serial: true
   plan:
     - aggregate:
       - get: cf-mysql-release
-        passed: [promote-to-rc]
+        passed:
+        - promote-to-rc
+        - create-and-compile-release
       - get: cf-mysql-deployment
         passed: [promote-to-rc]
       - get: gcp-bosh-stemcell
@@ -1656,23 +1664,49 @@ jobs:
       - get: cf-mysql-ci
       - get: a1-env
       - get: deployments-configuration
-    - task: upload-a1-stemcell
-      file: cf-mysql-ci/ci/tasks/upload-a1-stemcell.yml
-    - task: make-manifest
-      config:
-        platform: *platform
-        image_resource: *image_resource
-        inputs:
-        - name: deployments-configuration
-        - name: cf-mysql-ci
-        - name: cf-mysql-deployment
-        outputs:
-        - name: deployment-manifest
-        params:
-          ENV_NAME: a1/cf-a1-mysql
-          DEPLOYMENTS_DIR: deployments-configuration
-        run:
-          path: cf-mysql-ci/scripts/bosh/make-manifest-cf-a1-mysql
+      - get: routing-release
+      - get: compiled-release-tarball
+        resource: cf-mysql-compiled-release
+        passed: [create-and-compile-release]
+      - get: gcp-bosh-stemcell
+        passed: [create-and-compile-release]
+    - aggregate:
+      - task: make-a1-env
+        config:
+          platform: *platform
+          image_resource: *image_resource
+          inputs:
+          - name: a1-env
+          outputs:
+          - name: a1-env-config
+          params:
+            ENV_DIR: a1-env
+            OUTPUT_FILE: a1-env-config/a1-env-metadata
+          run:
+            path: cf-mysql-ci/scripts/make-env-metadata
+      - task: make-manifest
+        config:
+          platform: *platform
+          image_resource: *image_resource
+          inputs:
+          - name: deployments-configuration
+          - name: cf-mysql-ci
+          - name: cf-mysql-deployment
+          outputs:
+          - name: deployment-manifest
+          params:
+            ENV_NAME: a1/cf-a1-mysql
+            DEPLOYMENTS_DIR: deployments-configuration
+          run:
+            path: cf-mysql-ci/scripts/bosh/make-manifest-cf-a1-mysql
+    - put: cf-a1-mysql-bosh-deployment
+      params:
+        source_file: a1-env-config/a1-env-metadata
+        manifest: deployment-manifest/deployment.yml
+        releases:
+        - routing-release/*.tgz
+        - compiled-release-tarball/*.tgz
+        stemcells: [gcp-bosh-stemcell/*.tgz]
 
 - name: final-release
   serial_groups: [version-bumper]
