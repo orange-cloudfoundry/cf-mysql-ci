@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eux
+set -eu
 
 pushd ${ENV_DIR}
   source .envrc
