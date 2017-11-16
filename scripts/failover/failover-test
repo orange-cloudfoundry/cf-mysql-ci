@@ -4,8 +4,8 @@ set -eux
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 CI_DIR="$( cd "${MY_DIR}/../../" && pwd )"
-WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
-RELEASE_DIR="$(cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
+WORKSPACE_DIR="${WORKSPACE_DIR:-$( cd "${MY_DIR}/../../../" && pwd )}"
+RELEASE_DIR="${RELEASE_DIR:-$(cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )}"
 
 source "${CI_DIR}/scripts/utils.sh"
 
