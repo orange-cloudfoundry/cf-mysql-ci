@@ -106,6 +106,8 @@ if ${STATIC_PROXY_IPS}; then
     operations="$operations -o ./cf-mysql-ci/operations/static-proxy-ips.yml"
 fi
 
+OUTPUT_FILE_DIR=$(dirname "${OUTPUT_FILE}")
+
 bosh interpolate \
     ./cf-mysql-deployment/cf-mysql-deployment.yml \
     -o ./cf-mysql-deployment/operations/latest-versions.yml \
@@ -116,7 +118,7 @@ bosh interpolate \
     -l ./cf-mysql-deployment/bosh-lite/default-vars.yml \
     -v cf_mysql_mysql_admin_password=password \
     -v cf_mysql_mysql_galera_healthcheck_endpoint_password=password \
-    --vars-store=./vars-store.yml \
+    --vars-store="${OUTPUT_FILE_DIR}/vars-store.yml" \
     > ./manifest-with-variables.yml
 
 bosh interpolate \
