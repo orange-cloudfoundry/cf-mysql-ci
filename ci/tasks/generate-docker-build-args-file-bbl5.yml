@@ -4,7 +4,7 @@ platform: linux
 image_resource:
   type: docker-image
   source:
-    repository: cloudfoundry/cf-mysql-ci-bbl5 #is this gonna chicken-egg?
+    repository: cloudfoundry/cf-mysql-ci #is this gonna chicken-egg?
 
 inputs:
 - name: bbl-github-release-bbl5
