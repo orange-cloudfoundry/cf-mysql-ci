@@ -16,4 +16,4 @@ outputs:
 - name: docker-build-args
 
 run:
-  path: cf-mysql-ci/scripts/docker/generate-docker-build-args-file-bbl5
+  path: cf-mysql-ci/scripts/docker/generate-docker-build-args-file
