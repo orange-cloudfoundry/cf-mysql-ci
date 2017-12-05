@@ -1632,8 +1632,6 @@ jobs:
       - test-verify-tuning
       - test-tls
     - get: cf-mysql-ci
-    - get: gcp-bosh-stemcell
-      passed: [test-full-bosh]
     - get: version
       passed:
       - test-full-bosh
@@ -1648,6 +1646,8 @@ jobs:
       - test-verify-no-remote-access
       - test-verify-tuning
       - test-tls
+    - get: gcp-bosh-stemcell
+      passed: [test-full-bosh]
   - aggregate:
     - put: cf-mysql-release-candidate
       params:
@@ -1723,15 +1723,15 @@ jobs:
     - aggregate:
       - get: cf-mysql-release
         passed:
-        - promote-to-rc
+        - deploy-to-a1
         - create-and-compile-release
       - get: cf-mysql-deployment
-        passed: [promote-to-rc]
+        passed: [deploy-to-a1]
       - get: gcp-bosh-stemcell
-        passed: [promote-to-rc]
+        passed: [deploy-to-a1]
       - get: version
         trigger: true
-        passed: [promote-to-rc]
+        passed: [deploy-to-a1]
       - get: cf-mysql-ci
       - get: a1-env
       - get: deployments-configuration
