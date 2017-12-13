@@ -1,0 +1,9 @@
+platform: linux
+image_resource:
+  type: docker-image
+  source:
+    repository: pivotalcf/mysql-restore
+inputs:
+- name: cf-mysql-release
+run:
+  path: cf-mysql-release/scripts/test-integration
