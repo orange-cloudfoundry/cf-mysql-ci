@@ -13,9 +13,9 @@ ACCEPTANCE_TESTS_DIR="${CHANGED_RELEASE_DIR}/src/github.com/cloudfoundry-incubat
 git config --global user.name "${GIT_AUTHOR_NAME:?}"
 git config --global user.email "${GIT_AUTHOR_EMAIL:?}"
 
-AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-}"
-AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-}"
-BLOBS_BUCKET_NAME="${BLOBS_BUCKET_NAME:-}"
+AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:?}"
+AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:?}"
+BLOBS_BUCKET_NAME="${BLOBS_BUCKET_NAME:?}"
 
 # First argument should be path to file
 function write_private_yaml() {

@@ -8,6 +8,7 @@ image_resource:
 
 inputs:
 - name: cf-mysql-release
+- name: cf-mysql-ci
 
 outputs:
 - name: cf-mysql-release-changed
