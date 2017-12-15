@@ -297,6 +297,18 @@ jobs:
       build: cf-mysql-dockerfile/scripts/
       build_args_file: docker-build-args/docker-build-args.json
 
+- name: update-acceptance-tests
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+    - get: cf-mysql-ci
+  - task: build-and-upload-cipher-finder-jar
+    file: cf-mysql-ci/ci/tasks/update-acceptance-tests/build-and-upload-cipher-finder-jar.yml
+    params:
+      BLOBS_BUCKET_NAME: mysql-service-blobs
+      AWS_ACCESS_KEY_ID: {{cf-mysql-publish-blobs-aws-access-key-id}}
+      AWS_SECRET_ACCESS_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
+
 - name: test-unit
   serial_groups: [version_bumper]
   serial: true
