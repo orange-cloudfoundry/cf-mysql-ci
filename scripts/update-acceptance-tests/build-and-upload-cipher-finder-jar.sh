@@ -13,9 +13,11 @@ ACCEPTANCE_TESTS_DIR="${CHANGED_RELEASE_DIR}/src/github.com/cloudfoundry-incubat
 git config --global user.name "${GIT_AUTHOR_NAME:?}"
 git config --global user.email "${GIT_AUTHOR_EMAIL:?}"
 
+set +x
 AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:?}"
 AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:?}"
 BLOBS_BUCKET_NAME="${BLOBS_BUCKET_NAME:?}"
+set -x
 
 # First argument should be path to file
 function write_private_yaml() {
@@ -36,9 +38,11 @@ shopt -s dotglob
 cp -r "${RELEASE_DIR}"/* "${CHANGED_RELEASE_DIR}"
 
 pushd "${CHANGED_RELEASE_DIR}"
+  set +x
   if [[ -n "${AWS_ACCESS_KEY_ID}" && -n "${AWS_SECRET_ACCESS_KEY}" && -n "${BLOBS_BUCKET_NAME}" ]]; then
     write_private_yaml "${PWD}/config/private.yml"
   fi
+  set -x
 
   pushd "${ACCEPTANCE_TESTS_DIR}/assets/cipher_finder"
     ./gradlew build
