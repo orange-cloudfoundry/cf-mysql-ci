@@ -310,11 +310,11 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-ci
+    - get: cf-mysql-release
     - get: cf-mysql-release-cipher-finder
       trigger: true
   - task: build-and-upload-cipher-finder-jar
     file: cf-mysql-ci/ci/tasks/update-acceptance-tests/build-and-upload-cipher-finder-jar.yml
-    input_mapping: {cf-mysql-release: cf-mysql-release-cipher-finder}
     params:
       BLOBS_BUCKET_NAME: mysql-service-blobs
       AWS_ACCESS_KEY_ID: {{cf-mysql-publish-blobs-aws-access-key-id}}
