@@ -3,7 +3,7 @@
 set -eux
 
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-WORKSPACE_DIR="$( cd "${MY_DIR}/../../" && pwd )"
+WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
 RELEASE_DIR="$(cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
 CHANGED_RELEASE_DIR="$(cd "${WORKSPACE_DIR}/cf-mysql-release-changed" && pwd )"
 
@@ -44,7 +44,7 @@ pushd "${CHANGED_RELEASE_DIR}"
     ./gradlew build
   popd
 
-  bosh add-blob "${ACCEPTANCE_TESTS_DIR}/assets/cipher_finder/build/libs/cipher_finder.jar" cipher_finder
+  bosh add-blob "${ACCEPTANCE_TESTS_DIR}/assets/cipher_finder/build/libs/cipher_finder.jar" cipher_finder/cipher_finder.jar
   bosh upload-blobs
 
   git add .

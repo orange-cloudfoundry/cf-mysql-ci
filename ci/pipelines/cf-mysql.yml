@@ -164,6 +164,15 @@ resources:
     branch: develop
     private_key: {{git-writer-private-key}}
 
+- name: cf-mysql-release-cipher-finder
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry/cf-mysql-release.git
+    branch: develop
+    private_key: {{git-writer-private-key}}
+    paths:
+    - src/github.com/cloudfoundry-incubator/cf-mysql-acceptance-tests/assets/cipher_finder/**/*
+
 - name: cf-mysql-master
   type: git
   source:
@@ -300,14 +309,19 @@ jobs:
 - name: update-acceptance-tests
   plan:
   - aggregate:
-    - get: cf-mysql-release
     - get: cf-mysql-ci
+    - get: cf-mysql-release-cipher-finder
+      trigger: true
   - task: build-and-upload-cipher-finder-jar
     file: cf-mysql-ci/ci/tasks/update-acceptance-tests/build-and-upload-cipher-finder-jar.yml
+    input_mapping: {cf-mysql-release: cf-mysql-release-cipher-finder}
     params:
       BLOBS_BUCKET_NAME: mysql-service-blobs
       AWS_ACCESS_KEY_ID: {{cf-mysql-publish-blobs-aws-access-key-id}}
       AWS_SECRET_ACCESS_KEY: {{cf-mysql-publish-blobs-aws-secret-access-key}}
+  - put: cf-mysql-release
+    params:
+      repository: cf-mysql-release-changed
 
 - name: test-unit
   serial_groups: [version_bumper]
