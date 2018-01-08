@@ -2,8 +2,6 @@
 
 set -eu
 
-PIPELINE_SUFFIX="${1:-}"
-
 set_env() {
   MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
   WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
@@ -13,13 +11,42 @@ set_env() {
   fi
 }
 
-set_pipeline_name() {
-  if [[ -z "${PIPELINE_SUFFIX}" ]]; then
-    PIPELINE_NAME=cf-mysql
-  else
-    PIPELINE_NAME=cf-mysql-${PIPELINE_SUFFIX}
-  fi
-  PIPELINE_PATH=${MY_DIR}/pipelines/${PIPELINE_NAME}.yml
+discover_pipeline_filenames() {
+  PIPELINES_DIR="${MY_DIR}/pipelines"
+
+  unset options
+  i=0
+  while IFS= read -r -d $'\0' f; do
+    options[i++]="$f"
+  done < <(find ${PIPELINES_DIR} -maxdepth 1 -type f -name "*.yml" -print0 )
+}
+
+prompt_user_for_pipeline() {
+  echo "Please select a pipeline to 'fly set-pipeline':"
+  echo
+
+  select opt in "${options[@]}" "Exit"; do
+    case $opt in
+      *.yml)
+	PIPELINE_PATH=$opt
+	PIPELINE_FILENAME=$(basename ${PIPELINE_PATH})
+	PIPELINE_NAME="${PIPELINE_FILENAME%.*}"
+	echo
+	echo "Configuring pipeline: ${PIPELINE_NAME} (${PIPELINE_PATH})"
+	break
+	;;
+      "Exit")
+	echo
+	echo "Exiting"
+	exit
+	;;
+      *)
+	echo
+	echo "Invalid choice. Exiting"
+	exit
+	;;
+    esac
+  done
 }
 
 fly_pipeline() {
@@ -31,7 +58,8 @@ fly_pipeline() {
 
 main() {
   set_env
-  set_pipeline_name
+  discover_pipeline_filenames
+  prompt_user_for_pipeline
   fly_pipeline
 }
 
