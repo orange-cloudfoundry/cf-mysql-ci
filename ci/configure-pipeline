@@ -5,10 +5,6 @@ set -eu
 set_env() {
   MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
   WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
-  CREDENTIALS_FILE="${CREDENTIALS_FILE:-deployments-core-services/credentials.yml}"
-  if [[ "${CREDENTIALS_FILE}" != /* ]]; then
-    CREDENTIALS_FILE="${WORKSPACE_DIR}/${CREDENTIALS_FILE}"
-  fi
 }
 
 discover_pipeline_filenames() {
@@ -52,8 +48,7 @@ prompt_user_for_pipeline() {
 fly_pipeline() {
   reconfigure-pipeline -t concourse set-pipeline \
         -p "${PIPELINE_NAME}" \
-        -c "${PIPELINE_PATH}" \
-        -l "${CREDENTIALS_FILE}"
+        -c "${PIPELINE_PATH}"
 }
 
 main() {
