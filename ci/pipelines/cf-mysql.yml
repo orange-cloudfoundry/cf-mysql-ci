@@ -81,7 +81,7 @@ resources:
   type: git
   source:
     uri: git@github.com:pivotal-cf/deployments-core-services
-    private_key: ((core-services-ci-credentials/Notes/git-private-key))
+    private_key: ((core-services-ci-credentials/Notes/pcf-mysql-engine-reader-private-key))
 
 - name: a1-env
   type: git
@@ -193,7 +193,7 @@ resources:
     uri: &pool-uri git@github.com:pivotal-cf-experimental/core-services-oss-env-resource-pool
     branch: master
     pool: full-bosh
-    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
+    private_key: ((core-services-ci-credentials/Notes/pcf-mysql-engine-writer-private-key))
 
 - name: compiled-packages-lock
   type: pool
@@ -201,7 +201,8 @@ resources:
     uri: *pool-uri
     branch: master
     pool: compiled-packages
-    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
+    private_key: ((core-services-ci-credentials/Notes/pcf-mysql-engine-writer-private-key))
+
 
 - name: cf-mysql-rc-artifacts
   type: s3
