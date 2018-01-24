@@ -33,6 +33,7 @@ bosh interpolate "${BOSH_DEPLOYMENT_DIR}/bosh.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/external-ip-not-recommended.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/jumpbox-user.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/uaa.yml" \
+  -o "${BOSH_DEPLOYMENT_DIR}/external-ip-not-recommended-uaa.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/credhub.yml" \
   -o "${bosh_lite_dir}/dynamic-network.yml" \
   -o "${bosh_lite_dir}/instance.yml" \
