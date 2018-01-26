@@ -343,6 +343,8 @@ jobs:
       attempts: 5
     - task: test-mariadb-ctrl-integration
       file: cf-mysql-ci/ci/tasks/test-integration.yml
+    - task: test-quota-enforcer-integration
+      file: cf-mysql-ci/ci/tasks/test-integration-quota-enforcer.yml
     - task: test-broker
       file: cf-mysql-ci/ci/tasks/test-broker.yml
     - task: test-broker-dependencies
