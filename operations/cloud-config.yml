@@ -15,8 +15,3 @@
       ports:
       - host: 8080 # is this necessary?
       - host: 3306
-
-- type: replace
-  path: /vm_types/-
-  value:
-    name: default
