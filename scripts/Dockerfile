@@ -87,7 +87,7 @@ RUN wget https://github.com/Pyppe/phantomjs2.0-ubuntu14.04x64/raw/master/bin/pha
           mv phantomjs /usr/bin/phantomjs
 
 # Install go
-RUN curl https://storage.googleapis.com/golang/go1.8.3.linux-amd64.tar.gz | tar xvz -C /usr/local/
+RUN curl https://storage.googleapis.com/golang/go1.9.4.linux-amd64.tar.gz | tar xvz -C /usr/local/
 
 # Add golang environment variables
 ENV GOPATH /usr/local/go
