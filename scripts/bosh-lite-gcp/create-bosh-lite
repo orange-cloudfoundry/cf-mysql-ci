@@ -27,6 +27,7 @@ pushd "${bosh_lite_dir}" > /dev/null
 popd > /dev/null
 
 bosh interpolate "${BOSH_DEPLOYMENT_DIR}/bosh.yml" \
+  -o "${workspace_dir}/cf-mysql-ci/operations/enable-bosh-dns.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/gcp/cpi.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/bosh-lite.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/bosh-lite-runc.yml" \
@@ -67,6 +68,12 @@ bosh -n upload-stemcell "${stemcell_dir}"/*.tgz \
   --ca-cert "${OUTPUT_DIR}/ca-cert"
 
 bosh -n update-cloud-config "${cf_mysql_deployment_dir}/bosh-lite/cloud-config.yml" \
+  -e "$(cat "${OUTPUT_DIR}/external-ip")" \
+  --client admin \
+  --client-secret "${BOSH_CLIENT_SECRET}" \
+  --ca-cert "${OUTPUT_DIR}/ca-cert"
+
+bosh -n update-runtime-config "${BOSH_DEPLOYMENT_DIR}/runtime-configs/dns.yml" \
   -e "$(cat "${OUTPUT_DIR}/external-ip")" \
   --client admin \
   --client-secret "${BOSH_CLIENT_SECRET}" \
