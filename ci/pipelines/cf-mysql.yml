@@ -1692,6 +1692,7 @@ jobs:
             path: cf-mysql-ci/scripts/bosh-lite-gcp/update-cloud-config
     - do:
       - task: create-release
+        attempts: 3
         file: cf-mysql-ci/ci/tasks/create-release.yml
         input_mapping: {release-repo: pxc-release}
         params:
