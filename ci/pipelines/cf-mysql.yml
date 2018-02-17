@@ -110,7 +110,7 @@ resources:
 - name: pxc-release
   type: git
   source:
-    uri: https://github.com/cloudfoundry/-incubator/pxc-release.git
+    uri: https://github.com/cloudfoundry-incubator/pxc-release.git
     branch: master
 
 - name: consul-release
@@ -1606,12 +1606,16 @@ jobs:
   - aggregate:
     - get: pxc-release
     - get: cf-mysql-ci
+    - get: cf-mysql-deployment
+      passed: [create-and-compile-release]
     - get: bosh-deployment
       resource: bosh-deployment-repo
     - get: deployments
       resource: deployments-configuration
     - get: stemcell
       resource: bosh-lite-stemcell
+      passed: [create-and-compile-release]
+    - get: gcp-bosh-stemcell
       passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
@@ -1692,6 +1696,9 @@ jobs:
         input_mapping: {release-repo: pxc-release}
         params:
           RELEASE_NAME: pxc
+      - put: compiled-packages-lock
+        params:
+          acquire: true
       - *compile-release
   - put: cf-bosh-deployment
     params:
@@ -1711,7 +1718,7 @@ jobs:
         - name: url
         - name: varstore
       run:
-        path: cf-mysql-ci/scripts/bosh-lite/run_cats
+        path: cf-mysql-ci/scripts/bosh-lite/run-cats
   - task: delete-cf-deployment
     config:
       platform: *platform

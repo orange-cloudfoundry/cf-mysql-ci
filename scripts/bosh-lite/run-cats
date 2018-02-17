@@ -40,7 +40,12 @@ cat > integration_config.json <<EOF
   "include_zipkin": false
 }
 EOF
-export CONFIG=$PWD/integration_config.json
 
-cd cf-acceptance-tests
-./bin/test -nodes=2
+dir=go/src/github.com/cloudfoundry
+export CONFIG=$PWD/integration_config.json
+mkdir -p $dir
+
+cp -R cf-acceptance-tests $dir
+cd $dir/cf-acceptance-tests
+
+./bin/test -nodes=2 -failFast -slowSpecThreshold=180
