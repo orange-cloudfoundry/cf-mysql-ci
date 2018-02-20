@@ -77,6 +77,11 @@ resources:
   source:
     name: bosh-google-kvm-ubuntu-trusty-go_agent
 
+- name: aws-bosh-stemcell
+  type: bosh-io-stemcell
+  source:
+    name: bosh-aws-xen-hvm-ubuntu-trusty-go_agent
+
 - name: deployments-configuration
   type: git
   source:
@@ -1695,8 +1700,7 @@ jobs:
         - create-and-compile-release
       - get: cf-mysql-deployment
         passed: [promote-to-rc]
-      - get: gcp-bosh-stemcell
-        passed: [promote-to-rc]
+      - get: aws-bosh-stemcell
       - get: version
         trigger: true
         passed: [promote-to-rc]
@@ -1744,7 +1748,7 @@ jobs:
         releases:
         - routing-release/*.tgz
         - compiled-release-tarball/*.tgz
-        stemcells: [gcp-bosh-stemcell/*.tgz]
+        stemcells: [aws-bosh-stemcell/*.tgz]
 
 - name: deploy-to-a1-standalone
   serial: true
@@ -1756,8 +1760,7 @@ jobs:
         - create-and-compile-release
       - get: cf-mysql-deployment
         passed: [deploy-to-a1]
-      - get: gcp-bosh-stemcell
-        passed: [deploy-to-a1]
+      - get: aws-bosh-stemcell
       - get: version
         trigger: true
         passed: [deploy-to-a1]
@@ -1805,7 +1808,7 @@ jobs:
         releases:
         - consul-release/*.tgz
         - compiled-release-tarball/*.tgz
-        stemcells: [gcp-bosh-stemcell/*.tgz]
+        stemcells: [aws-bosh-stemcell/*.tgz]
 
 - name: final-release
   serial_groups: [version-bumper]
