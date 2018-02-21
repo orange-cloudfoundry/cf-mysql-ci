@@ -32,16 +32,24 @@ blobstore:
 EOF
 }
 
-version=$(cat ${WORKSPACE_DIR}/version/version)
-echo "Final release ${version}" > commit-message/commit-message
+create_release_command="bosh -n create-release --name ${RELEASE_NAME} --force"
 
-tarball_path="${tarball_dir}/${RELEASE_NAME}-${version}.tgz"
-
-create_release_command="bosh -n create-release --name ${RELEASE_NAME} --version ${version} --tarball ${tarball_path} --force"
+tarball_path="${tarball_dir}/${RELEASE_NAME}-dev.tgz"
 
 if [ -n "${FINAL}" ]; then
   create_release_command="${create_release_command} --final"
 fi
+
+if [ -e "${WORKSPACE_DIR}/version/version" ]; then
+  version=$(cat ${WORKSPACE_DIR}/version/version)
+  echo "Final release ${version}" > commit-message/commit-message
+
+  tarball_path="${tarball_dir}/${RELEASE_NAME}-${version}.tgz"
+
+  create_release_command="${create_release_command}  --version ${version}"
+fi
+
+create_release_command="${create_release_command} --tarball ${tarball_path}"
 
 # copy all files, including hidden (e.g. .git/)
 shopt -s dotglob
