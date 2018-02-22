@@ -30,6 +30,7 @@ bosh interpolate "${BOSH_DEPLOYMENT_DIR}/bosh.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/gcp/cpi.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/bosh-lite.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/bosh-lite-runc.yml" \
+  -o "${BOSH_DEPLOYMENT_DIR}/bosh-lite-grootfs.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/external-ip-not-recommended.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/jumpbox-user.yml" \
   -o "${BOSH_DEPLOYMENT_DIR}/uaa.yml" \
