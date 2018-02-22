@@ -45,19 +45,24 @@ resources:
     uri: https://github.com/cloudfoundry-incubator/pxc-release.git
     branch: master
 
+- name: pxc-release-release-candidate
+  type: git
+  source:
+    uri: git@github.com:cloudfoundry-incubator/pxc-release.git
+    branch: release-candidate
+    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
+
 - name: cf-deployment-develop
   type: git
   source:
     uri: https://github.com/cloudfoundry/cf-deployment.git
     branch: develop
-    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
 
 - name: cf-mysql-deployment
   type: git
   source:
-    uri: git@github.com:cloudfoundry/cf-mysql-deployment.git
+    uri: https://github.com/cloudfoundry/cf-mysql-deployment.git
     branch: develop
-    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
 
 - name: compiled-packages-lock
   type: pool
@@ -284,6 +289,9 @@ jobs:
         - name: varstore
       run:
         path: cf-mysql-ci/scripts/bosh-lite/run-cats
+  - put: pxc-release-release-candidate
+    params:
+      repository: pxc-release
   - task: delete-cf-deployment
     config:
       platform: linux
