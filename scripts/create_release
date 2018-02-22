@@ -46,7 +46,9 @@ if [ -e "${WORKSPACE_DIR}/version/version" ]; then
 
   tarball_path="${tarball_dir}/${RELEASE_NAME}-${version}.tgz"
 
-  create_release_command="${create_release_command}  --version ${version}"
+  create_release_command="${create_release_command} --version ${version}"
+else
+  create_release_command="${create_release_command} --timestamp-version"
 fi
 
 create_release_command="${create_release_command} --tarball ${tarball_path}"
