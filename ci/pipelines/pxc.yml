@@ -278,6 +278,16 @@ jobs:
       stemcells:
       - stemcell/*.tgz
       source_file: bosh-lite-info/bosh-deployment-resource-source-file
+  - task: test-galera-encryption
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
+        - name: cf-mysql-ci
+        - name: url
+        - name: varstore
+      run:
+        path: cf-mysql-ci/scripts/tls/test-galera-encryption
   - task: run-cats
     config:
       platform: linux
