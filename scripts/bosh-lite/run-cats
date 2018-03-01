@@ -48,4 +48,4 @@ mkdir -p $dir
 cp -R cf-acceptance-tests $dir
 cd $dir/cf-acceptance-tests
 
-./bin/test -nodes=2 -slowSpecThreshold=180
+./bin/test -nodes=1 -slowSpecThreshold=180
