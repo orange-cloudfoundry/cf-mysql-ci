@@ -284,7 +284,7 @@ jobs:
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
-        - name: url
+        - name: bosh-lite-info
         - name: varstore
       run:
         path: cf-mysql-ci/scripts/tls/test-galera-encryption

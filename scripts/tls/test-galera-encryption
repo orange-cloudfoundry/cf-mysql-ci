@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -eu
 
-url=$(cat url/url)
+mysql_host=$(cat bosh-lite-info/external-ip)
 mysql_pass=$(bosh int --path /cf_mysql_mysql_admin_password varstore/deployment-vars.yml)
 
-mysql -uroot -p${mysql_pass} -h ${url} -e "show global variables like '%wsrep_provider_options%';" | \
+mysql -uroot -p${mysql_pass} -h ${mysql_host} -e "show global variables like '%wsrep_provider_options%';" | \
   grep 'socket.ssl = YES; socket.ssl_ca = /var/vcap/jobs/mysql/certificates/galera-ca.pem; socket.ssl_cert = /var/vcap/jobs/mysql/certificates/galera-cert.pem'
