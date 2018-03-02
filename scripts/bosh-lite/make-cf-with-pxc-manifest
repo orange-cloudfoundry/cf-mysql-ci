@@ -2,19 +2,27 @@
 
 set -eux
 
+: "${PROXY_LB:=false}"
+
 my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 workspace_dir="$( cd "${my_dir}/../../../" && pwd )"
 cd ${workspace_dir}
+
+extras=""
+
+if ${PROXY_LB}; then
+    extras="$extras -v proxy_vm_extension=mysql-proxy-lb"
+    extras="$extras -o ./pxc-release/operations/proxy-elb.yml"
+fi
 
 bosh int \
     ./cf-deployment/cf-deployment.yml \
     --vars-store ./varstore/deployment-vars.yml \
     -v system_domain="$(cat "./url/url")" \
-    -v proxy_vm_extension=mysql-proxy-lb \
     -o ./cf-deployment/operations/use-compiled-releases.yml \
     -o ./cf-deployment/operations/bosh-lite.yml \
     -o ./cf-deployment/operations/scale-database-cluster.yml \
     -o ./pxc-release/operations/cf-deployment-use-pxc.yml \
     -o ./pxc-release/operations/enable-remote-admin-access.yml \
-    -o ./pxc-release/operations/proxy-elb.yml \
+    ${extras} \
     > ./cf-deployment-manifest/cf.yml

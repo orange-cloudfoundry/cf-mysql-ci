@@ -249,6 +249,8 @@ jobs:
         outputs:
         - name: cf-deployment-manifest
         - name: varstore
+        params:
+          PROXY_LB: true
         run:
           path: cf-mysql-ci/scripts/bosh-lite/make-cf-with-pxc-manifest
     - do:
