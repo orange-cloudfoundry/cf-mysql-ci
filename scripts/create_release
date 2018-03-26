@@ -40,6 +40,10 @@ if [ -n "${FINAL}" ]; then
   create_release_command="${create_release_command} --final"
 fi
 
+if [ -n "${SHA2}" ]; then
+  export BOSH_SHA2=true
+fi
+
 if [ -e "${WORKSPACE_DIR}/version/version" ]; then
   version=$(cat ${WORKSPACE_DIR}/version/version)
   echo "Final release ${version}" > commit-message/commit-message
