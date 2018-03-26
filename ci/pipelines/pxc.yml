@@ -108,6 +108,7 @@ resources:
 
 jobs:
 - name: bump-version
+  serial_groups: [version-bumper]
   plan:
   - aggregate:
     - get: bosh-lite-stemcell
@@ -338,3 +339,51 @@ jobs:
         path: deployments-core-services
       run:
         path: cf-mysql-ci/scripts/bosh-lite-gcp/delete-dns
+
+- name: final-release
+  serial_groups: [version-bumper]
+  plan:
+    - aggregate:
+      - get: pxc-release
+        passed: [test-pxc]
+      - get: cf-mysql-ci
+      - get: version
+        passed: [test-pxc]
+        params:
+          bump: final
+    - task: create-release
+      file: cf-mysql-ci/ci/tasks/create-release.yml
+      input_mapping: {release-repo: pxc-release}
+      output_mapping: {release-repo-modified: pxc-release-final}
+      params:
+        RELEASE_NAME: pxc
+        BLOBS_BUCKET_NAME: ((pxc-release-private.yml/Notes/blobstore/options/bucket_name))
+        FINAL: true
+        SHA2: true
+        AWS_ACCESS_KEY_ID: ((pxc-release-private.yml/Notes/blobstore/options/access_key_id))
+        AWS_SECRET_ACCESS_KEY: ((pxc-release-private.yml/Notes/blobstore/options/secret_access_key))
+    - task: commit-final-release-changes
+      config:
+        platform: *platform
+        image_resource: *image_resource
+        inputs:
+        - name: cf-mysql-ci
+        - name: pxc-release-final
+        - name: commit-message
+        outputs:
+        - name: pxc-release-committed
+        params:
+          GIT_COMMIT_MESSAGE: commit-message/commit-message
+          REPO_DIR: pxc-release-final
+          OUTPUT_DIR: pxc-release-committed
+        run:
+          path: cf-mysql-ci/scripts/publish/git-commit-changes
+    - put: pxc-release
+      params:
+        repository: pxc-release-committed/pxc-release-final
+        tag: version/version
+        tag_prefix: v
+    - put: version
+      params:
+        bump: minor
+        pre: rc
