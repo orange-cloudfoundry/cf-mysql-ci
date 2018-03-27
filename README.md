@@ -3,16 +3,16 @@ Contains Concourse CI scripts and configuration we use to test [cf-mysql-release
 
 #### Configure a pipeline
 ```
-fly configure -c pipelines/cf-mysql.yml --vars-from YOUR_CREDS_FILE.yml cf-mysql
+ $ ./ci/configure-pipeline
 ```
+Select the number of the pipeline you wish to set.
+
+This script uses the reconfigure-pipeline tool from https://github.com/pivotal-cf/reconfigure-pipeline
+which automatically pulls creds from lastpass by name (but not folder).
 
 #### Credentials
 
-The pipeline config files are parametrized to allow private credentials to be stored outside this repo.
-If your credentials file (`YOUR_CREDS_FILE.yml`) is missing a required field, `fly` will report it as an error, e.g.:
-```
-* unbound variable in template: 'cf-docker-username'
-```
+The pipeline config files are parametrized to allow private credentials to be stored outside this repo. The configure-pipeline script will pull creds from lastpass, based on the access of whoever is logged into lpass.
 
 #### Environment Config Files
 
