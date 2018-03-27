@@ -42,8 +42,9 @@ resources:
 - name: pxc-release
   type: git
   source:
-    uri: https://github.com/cloudfoundry-incubator/pxc-release.git
+    uri: git@github.com:cloudfoundry-incubator/pxc-release.git
     branch: master
+    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
 
 - name: pxc-release-release-candidate
   type: git
@@ -357,11 +358,11 @@ jobs:
       output_mapping: {release-repo-modified: pxc-release-final}
       params:
         RELEASE_NAME: pxc
-        BLOBS_BUCKET_NAME: ((pxc-release-private.yml/Notes/blobstore/options/bucket_name))
+        BLOBS_BUCKET_NAME: ((pxc-release-private.yml/Notes/bucket_name))
         FINAL: true
         SHA2: true
-        AWS_ACCESS_KEY_ID: ((pxc-release-private.yml/Notes/blobstore/options/access_key_id))
-        AWS_SECRET_ACCESS_KEY: ((pxc-release-private.yml/Notes/blobstore/options/secret_access_key))
+        AWS_ACCESS_KEY_ID: ((pxc-release-private.yml/Notes/access_key_id))
+        AWS_SECRET_ACCESS_KEY: ((pxc-release-private.yml/Notes/secret_access_key))
     - task: commit-final-release-changes
       config:
         platform: *platform
