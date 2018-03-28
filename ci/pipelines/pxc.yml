@@ -91,6 +91,7 @@ resources:
     access_key_id: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-access-key-id))
     secret_access_key: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-secret-access-key))
     key: version
+    initial_version: 0.1.0
 
 - name: weekly-trigger
   type: time
