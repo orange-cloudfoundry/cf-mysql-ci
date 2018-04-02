@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -eux
+
+my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+workspace_dir="$( cd "${my_dir}/../../../" && pwd )"
+cd ${workspace_dir}
+
+system_domain="$( bosh int ./cf-deployment-manifest/cf.yml --path=/instance_groups/name=api/jobs/name=cloud_controller_ng/properties/system_domain)"
+export CF_API_URL="api.${system_domain}"
+export CF_USERNAME="admin"
+export CF_PASSWORD="$( bosh int ./cf-deployment-manifest/cf.yml --path=/instance_groups/name=uaa/jobs/name=uaa/properties/uaa/scim/users/name=admin/password)"
+
+cf api "$CF_API_URL" --skip-ssl-validation
+cf auth "$CF_USERNAME" "$CF_PASSWORD"
+cf -v
+
+cf create-org pipeline-test-org
+cf orgs
+cf target -o "pipeline-test-org"
+
