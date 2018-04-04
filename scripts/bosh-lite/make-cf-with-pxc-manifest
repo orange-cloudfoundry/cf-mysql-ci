@@ -28,7 +28,7 @@ bosh int \
     --vars-store ./varstore/deployment-vars.yml \
     -o ./cf-deployment/operations/use-compiled-releases.yml \
     -o ./cf-deployment/operations/bosh-lite.yml \
-    -o ./cf-mysql-ci/operations/cf-deployment/enable-remote-admin-access.yml \
     -v system_domain="$(cat "./url/url")" \
     ${extras} \
+    -o ./cf-mysql-ci/operations/cf-deployment/enable-remote-admin-access.yml \
     > ./cf-deployment-manifest/cf.yml
