@@ -493,7 +493,7 @@ jobs:
   - put: deploy-cf-upgrade-to-pxc
     resource: cf-bosh-deployment
     params:
-      manifest: cf-deployment-migrated-manifest/cf.yml
+      manifest: cf-deployment-manifest/cf.yml
       releases:
       - pxc-compiled-release/*.tgz
       - compiled-release-tarball/*.tgz
@@ -506,7 +506,6 @@ jobs:
       platform: linux
       image_resource: *image_resource
       inputs:
-        - name: cf-deployment-migrated-manifest
         - name: varstore # so we can refactor and utils.sh will work
         - name: url # utils.sh
         - name: cf-mysql-ci # utils.sh
