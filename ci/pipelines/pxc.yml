@@ -65,6 +65,14 @@ resources:
     uri: https://github.com/cloudfoundry/cf-mysql-deployment.git
     branch: develop
 
+- name: cf-mysql-release-candidate
+  type: s3
+  source:
+    bucket: cf-mysql-releases
+    regexp: release-candidate/cf-mysql-(.*-rc.*)\.tgz
+    access_key_id: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-access-key-id))
+    secret_access_key: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-secret-access-key))
+
 - name: compiled-packages-lock
   type: pool
   source:
@@ -180,7 +188,7 @@ jobs:
     params:
       file: compiled-release-tarball/*.tgz
 
-- name: test-pxc
+- name: test-clean-install-pxc
   plan:
   - aggregate:
     - get: pxc-release
@@ -305,9 +313,6 @@ jobs:
         - name: varstore
       run:
         path: cf-mysql-ci/scripts/bosh-lite/run-cats
-  - put: pxc-release-release-candidate
-    params:
-      repository: pxc-release
   - task: delete-cf-deployment
     config:
       platform: linux
@@ -342,15 +347,244 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/bosh-lite-gcp/delete-dns
 
+- name: test-migrate-to-pxc
+  plan:
+  - aggregate:
+    - get: pxc-release
+      passed: [create-and-compile-release]
+    - get: pxc-compiled-release
+    - get: cf-mysql-ci
+    - get: bosh-deployment
+      resource: bosh-deployment-repo
+    - get: deployments
+      resource: deployments-configuration
+    - get: stemcell
+      resource: bosh-lite-stemcell
+      passed: [create-and-compile-release]
+    - get: gcp-bosh-stemcell
+      passed: [create-and-compile-release]
+    - get: version
+      passed: [create-and-compile-release]
+      trigger: true
+    - get: cf-deployment
+      resource: cf-deployment-develop
+    - get: cf-deployment-concourse-tasks
+    - get: cf-acceptance-tests
+    - get: cf-mysql-deployment
+    - get: cf-mysql-release-candidate
+  - aggregate: # pre-deploy prep
+    - do: # setup bosh-lite
+      - task: apply-terraform
+        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+      - task: create-bosh-lite
+        file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+        input_mapping: {deployments: deployments-terraformed}
+        params:
+          PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
+          ZONE: ((core-services-ci-credentials/Notes/gcp-bosh-lite-zone))
+          NETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-network))
+          SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
+          BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+      - aggregate:
+        - task: create-dns
+          config:
+            platform: linux
+            image_resource: &image_resource
+              type: docker-image
+              source:
+                repository: cloudfoundry/cf-mysql-ci
+            inputs:
+            - name: cf-mysql-ci
+            - name: bosh-lite-info
+            - name: deployments
+              path: deployments-core-services
+            outputs:
+            - name: url
+            run:
+              path: cf-mysql-ci/scripts/bosh-lite-gcp/create-dns
+        - task: delete-stemcell
+          file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
+      - aggregate:
+        - task: bosh-upload-stemcell-from-cf-deployment
+          file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+          input_mapping: {bbl-state: bosh-lite-info}
+          params:
+            INFRASTRUCTURE: bosh-lite
+        - task: make-cf-with-cf-mysql-manifest # make the manifest without pxc
+          file: cf-mysql-ci/ci/tasks/make-cf-manifest.yml
+      - do:
+        - task: generate-cloud-config
+          file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
+        - task: update-cloud-config
+          config:
+            platform: linux
+            image_resource: *image_resource
+            inputs:
+            - name: cf-mysql-ci
+            - name: cloud-config
+            - name: bosh-lite-info
+            params:
+              BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
+              BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+              ENV_TARGET_FILE: bosh-lite-info/director-url
+              BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
+              CLOUD_CONFIG: cloud-config/cloud-config.yml
+            run:
+              path: cf-mysql-ci/scripts/bosh-lite-gcp/update-cloud-config
+    - do: # compile cf-mysql-release
+      - put: compiled-packages-lock
+        params:
+          acquire: true
+      - task: compile-cf-mysql-release
+        input_mapping: {release-tarball: cf-mysql-release-candidate}
+        file: cf-mysql-ci/ci/tasks/compile-release.yml
+        params:
+          BOSH_CLIENT: ((concourse-compilation-director/Notes/BOSH_CLIENT))
+          BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
+          BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
+          BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
+      ensure:
+        put: compiled-packages-lock
+        params:
+          release: compiled-packages-lock
+  # deploy cf with cf-mysql
+  - put: deploy-cf-with-cf-mysql
+    resource: cf-bosh-deployment
+    params:
+      manifest: cf-deployment-manifest/cf.yml
+      releases:
+      - compiled-release-tarball/*.tgz
+      stemcells:
+      - stemcell/*.tgz
+      source_file: bosh-lite-info/bosh-deployment-resource-source-file
+  - aggregate:
+    # write an org to cf and output the org name
+    - task: cf-create-org
+      config:
+        platform: linux
+        image_resource: *image_resource
+        inputs:
+          - name: cf-deployment-manifest
+          - name: varstore # so we can refactor and utils.sh will work
+          - name: url # utils.sh
+          - name: cf-mysql-ci # utils.sh
+        outputs:
+          - name: org-name
+        run:
+          path: cf-mysql-ci/scripts/cf/create-org
+    # make the manifest with pxc
+    - task: make-cf-manifest-with-migration
+      config:
+        platform: linux
+        image_resource: *image_resource
+        inputs:
+        - name: cf-deployment
+        - name: cf-mysql-ci
+        - name: pxc-release
+        - name: url
+        - name: varstore
+        outputs:
+        - name: cf-deployment-manifest
+        params:
+          MIGRATE: true
+        run:
+          path: cf-mysql-ci/scripts/bosh-lite/make-cf-with-pxc-manifest
+  # deploy cf with pxc as the database, and pxc turned "on"
+  - put: deploy-cf-upgrade-to-pxc
+    resource: cf-bosh-deployment
+    params:
+      manifest: cf-deployment-migrated-manifest/cf.yml
+      releases:
+      - pxc-compiled-release/*.tgz
+      - compiled-release-tarball/*.tgz
+      stemcells:
+      - stemcell/*.tgz
+      source_file: bosh-lite-info/bosh-deployment-resource-source-file
+  # input the org name and try to read it from cf (aka test that data is persisted across the migration)
+  - task: check-if-org-exists-pxc
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
+        - name: cf-deployment-migrated-manifest
+        - name: varstore # so we can refactor and utils.sh will work
+        - name: url # utils.sh
+        - name: cf-mysql-ci # utils.sh
+      outputs:
+        - name: org-name
+      run:
+        path: cf-mysql-ci/scripts/cf/check-if-org-exists-pxc
+  - task: run-cats
+    attempts: 3
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
+        - name: cf-mysql-ci
+        - name: cf-acceptance-tests
+        - name: url
+        - name: varstore
+      run:
+        path: cf-mysql-ci/scripts/bosh-lite/run-cats
+  - task: delete-cf-deployment
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: bosh-lite-info
+      params:
+        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
+        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_DEPLOYMENT: cf
+        BOSH_CA_CERT: bosh-lite-info/ca-cert
+        ENV_TARGET_FILE: bosh-lite-info/external-ip
+      run:
+        path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
+  - task: destroy-bosh-lite
+    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite.yml
+    input_mapping: {bosh-lite-info: bosh-lite-info-stemcell-deleted}
+  - task: destroy-terraform
+    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
+    input_mapping: {deployments: deployments-terraformed}
+  - task: delete-dns
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: bosh-lite-info
+      - name: url
+      - name: deployments
+        path: deployments-core-services
+      run:
+        path: cf-mysql-ci/scripts/bosh-lite-gcp/delete-dns
+
+- name: promote-release-candidate
+  plan:
+  - do:
+    - get: pxc-release
+      passed:
+      - test-clean-install-pxc
+      - test-migrate-to-pxc
+    - get: version
+      trigger: true
+      passed:
+      - test-clean-install-pxc
+      - test-migrate-to-pxc
+    - put: pxc-release-release-candidate
+      params:
+        repository: pxc-release
+
 - name: final-release
   serial_groups: [version-bumper]
   plan:
     - aggregate:
       - get: pxc-release
-        passed: [test-pxc]
+        passed: [promote-release-candidate]
       - get: cf-mysql-ci
       - get: version
-        passed: [test-pxc]
+        passed: [promote-release-candidate]
         params:
           bump: final
     - task: create-release

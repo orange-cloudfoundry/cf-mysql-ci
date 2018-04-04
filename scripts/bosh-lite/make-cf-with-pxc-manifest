@@ -3,6 +3,7 @@
 set -eux
 
 : "${PROXY_LB:=false}"
+: "${MIGRATE:=false}"
 
 my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 workspace_dir="$( cd "${my_dir}/../../../" && pwd )"
@@ -15,15 +16,19 @@ if ${PROXY_LB}; then
     extras="$extras -o ./cf-mysql-ci/operations/cf-deployment/add-database-vm-extension.yml"
 fi
 
+if ${MIGRATE}; then
+    extras="$extras -o ./pxc-release/operations/migrate-cf-deployment-to-pxc.yml"
+else
+    extras="$extras -o ./cf-deployment/operations/scale-database-cluster.yml"
+    extras="$extras -o ./pxc-release/operations/cf-deployment-use-pxc.yml"
+fi
+
 bosh int \
     ./cf-deployment/cf-deployment.yml \
     --vars-store ./varstore/deployment-vars.yml \
-    -v system_domain="$(cat "./url/url")" \
     -o ./cf-deployment/operations/use-compiled-releases.yml \
     -o ./cf-deployment/operations/bosh-lite.yml \
-    -o ./cf-deployment/operations/scale-database-cluster.yml \
-    -o ./pxc-release/operations/cf-deployment-use-pxc.yml \
-    -o ./pxc-release/operations/use-latest-pxc.yml \
     -o ./cf-mysql-ci/operations/cf-deployment/enable-remote-admin-access.yml \
+    -v system_domain="$(cat "./url/url")" \
     ${extras} \
     > ./cf-deployment-manifest/cf.yml

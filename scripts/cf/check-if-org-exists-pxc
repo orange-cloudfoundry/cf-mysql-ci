@@ -1,20 +1,14 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -eux
 
 my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-workspace_dir="$( cd "${my_dir}/../../../" && pwd )"
-cd ${workspace_dir}
+ci_dir="${my_dir}/../../"
+workspace_dir="${ci_dir}/../"
 
-system_domain="$( bosh int ./cf-deployment-migrated-manifest/cf.yml --path=/instance_groups/name=api/jobs/name=cloud_controller_ng/properties/system_domain)"
-export CF_API_URL="api.${system_domain}"
-export CF_USERNAME="admin"
-export CF_PASSWORD="$( bosh int ./cf-deployment-migrated-manifest/cf.yml --path=/instance_groups/name=uaa/jobs/name=uaa/properties/uaa/scim/users/name=admin/password)"
+source ${ci_dir}/scripts/utils.sh
 
-cf api "$CF_API_URL" --skip-ssl-validation
-cf auth "$CF_USERNAME" "$CF_PASSWORD"
-cf -v
+api_url="api.$(cf_domain)"
+cf login -a ${api_url} -u $(cf_admin_username) -p $(cf_admin_password) --skip-ssl-validation
 
 cf orgs | grep pipeline
-
-
