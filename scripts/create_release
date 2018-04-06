@@ -69,7 +69,7 @@ pushd "${release_repo_modified}"
       write_private_yaml "${PWD}/config/private.yml"
     fi
     if [[ -n "${PRIVATE_YAML}" ]]; then
-      echo "${2}" > "${PWD}/config/private.yml"
+      echo "${PRIVATE_YAML}" > "${PWD}/config/private.yml"
     fi
 
     set +e
