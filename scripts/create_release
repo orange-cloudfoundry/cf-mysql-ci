@@ -9,6 +9,7 @@ WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 : "${RELEASE_NAME:?}"
 FINAL=${FINAL:-}
 SHA2=${SHA2:-}
+PRIVATE_YAML=${PRIVATE_YAML:-}
 AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-}"
 AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-}"
 BLOBS_BUCKET_NAME="${BLOBS_BUCKET_NAME:-}"
@@ -66,6 +67,9 @@ cp -r "${release_repo}"/* "${release_repo_modified}"
 pushd "${release_repo_modified}"
     if [[ -n "${AWS_ACCESS_KEY_ID}" && -n "${AWS_SECRET_ACCESS_KEY}" && -n "${BLOBS_BUCKET_NAME}" ]]; then
       write_private_yaml "${PWD}/config/private.yml"
+    fi
+    if [[ -n "${PRIVATE_YAML}" ]]; then
+      echo "${2}" > "${PWD}/config/private.yml"
     fi
 
     set +e
