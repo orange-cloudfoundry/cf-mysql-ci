@@ -1,3 +1,10 @@
+---
+anchors:
+  image_resource: &image_resource
+    type: docker-image
+    source:
+      repository: cloudfoundry/cf-mysql-ci
+
 resource_types:
 - name: bosh-deployment
   type: docker-image
@@ -162,11 +169,8 @@ jobs:
       acquire: true
   - task: compile-release
     config:
-      platform: &platform linux
-      image_resource: &image_resource
-        type: docker-image
-        source:
-          repository: cloudfoundry/cf-mysql-ci
+      platform: linux
+      image_resource: *image_resource
       inputs:
       - name: cf-mysql-ci
       - name: release-tarball
@@ -227,10 +231,7 @@ jobs:
     - task: create-dns
       config:
         platform: linux
-        image_resource: &image_resource
-          type: docker-image
-          source:
-            repository: cloudfoundry/cf-mysql-ci
+        image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-info
@@ -389,10 +390,7 @@ jobs:
         - task: create-dns
           config:
             platform: linux
-            image_resource: &image_resource
-              type: docker-image
-              source:
-                repository: cloudfoundry/cf-mysql-ci
+            image_resource: *image_resource
             inputs:
             - name: cf-mysql-ci
             - name: bosh-lite-info
@@ -599,7 +597,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ((pxc-release-private.yml/Notes/secret_access_key))
     - task: commit-final-release-changes
       config:
-        platform: *platform
+        platform: linux
         image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
