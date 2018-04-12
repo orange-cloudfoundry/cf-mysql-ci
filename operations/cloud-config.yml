@@ -13,7 +13,7 @@
     name: mysql-proxy-lb
     cloud_properties:
       ports:
-      - host: 8080 # is this necessary?
+      - host: 8080
       - host: 3306
 
 - type: replace
