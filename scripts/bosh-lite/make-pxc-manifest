@@ -10,6 +10,7 @@ cd ${workspace_dir}
 bosh int \
     ./pxc-release/pxc-deployment.yml \
     --vars-store ./varstore/deployment-vars.yml \
+    -o ./pxc-release/operations/use-clustered.yml \
     -o ./cf-mysql-ci/operations/pxc/add-proxy-load-balancer.yml \
     -o ./cf-mysql-ci/operations/pxc/allow-http-proxy-access.yml \
     -o ./cf-mysql-ci/operations/pxc/enable-remote-admin-access.yml \
