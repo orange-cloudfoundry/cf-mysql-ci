@@ -162,7 +162,6 @@ jobs:
       passed: [bump-version]
   - aggregate:
     - task: test-unit
-      attempts: 5
       config:
         platform: linux
         image_resource: *image_resource
