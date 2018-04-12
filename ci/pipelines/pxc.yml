@@ -405,7 +405,7 @@ jobs:
       passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
-#      trigger: true
+      trigger: true
     - get: cf-deployment
       resource: cf-deployment-develop
     - get: cf-deployment-concourse-tasks
