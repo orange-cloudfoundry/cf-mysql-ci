@@ -149,8 +149,6 @@ jobs:
     params:
       pre: rc
 
-# TODO: make create and compile release step have passed constraint on test-unit-and-integration
-# Not doing this now to leave pipeline unblocked
 - name: test-unit-and-integration
   serial: true
   plan:
@@ -189,13 +187,13 @@ jobs:
   plan:
   - aggregate:
     - get: pxc-release
-      passed: [bump-version]
+      passed: [bump-version, test-unit-and-integration]
     - get: gcp-bosh-stemcell
       passed: [bump-version]
     - get: bosh-lite-stemcell
       passed: [bump-version]
     - get: version
-      passed: [bump-version]
+      passed: [bump-version, test-unit-and-integration]
       trigger: true
     - get: cf-mysql-ci
   - task: create-release
