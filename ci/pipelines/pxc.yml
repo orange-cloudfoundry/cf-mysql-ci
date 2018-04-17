@@ -201,6 +201,7 @@ jobs:
     input_mapping: {release-repo: pxc-release}
     params:
       RELEASE_NAME: pxc
+      BOSH_SHA2: true
   - put: compiled-packages-lock
     params:
       acquire: true
@@ -748,7 +749,7 @@ jobs:
         RELEASE_NAME: pxc
         BLOBS_BUCKET_NAME: ((pxc-release-private.yml/Notes/bucket_name))
         FINAL: true
-        SHA2: true
+        BOSH_SHA2: true
         AWS_ACCESS_KEY_ID: ((pxc-release-private.yml/Notes/access_key_id))
         AWS_SECRET_ACCESS_KEY: ((pxc-release-private.yml/Notes/secret_access_key))
     - task: commit-final-release-changes
