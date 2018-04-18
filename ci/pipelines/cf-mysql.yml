@@ -1273,14 +1273,9 @@ jobs:
   - *ondemand-teardown
 
 ### STANDALONE FOR BOOTSTRAP
-- name: test-bootstrap-on-standalone
+- name: test-bootstrap
   plan:
   - *ondemand-setup
-  - task: make-manifest-with-standalone
-    file: cf-mysql-ci/ci/tasks/make-manifest.yml
-    params:
-      ENABLE_REMOTE_ADMIN_ACCESS: true
-  - *ondemand-deploy-manifest
   - task: persistence-test-data-write
     config:
       platform: *platform
@@ -1604,7 +1599,7 @@ jobs:
       - test-verify-cluster-schemas
       - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
+      - test-bootstrap
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
       - test-verify-no-remote-access
@@ -1620,7 +1615,7 @@ jobs:
       - test-verify-cluster-schemas
       - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
+      - test-bootstrap
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
       - test-verify-no-remote-access
@@ -1642,7 +1637,7 @@ jobs:
       - test-verify-cluster-schemas
       - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
+      - test-bootstrap
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
       - test-verify-no-remote-access
@@ -1659,7 +1654,7 @@ jobs:
       - test-verify-cluster-schemas
       - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
+      - test-bootstrap
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
       - test-verify-no-remote-access
@@ -1674,7 +1669,7 @@ jobs:
       - test-verify-cluster-schemas
       - test-interruptor-prevents-data-loss
       - test-interruptor-can-be-disabled
-      - test-bootstrap-on-standalone
+      - test-bootstrap
       - test-upgrade-from-previous
       - test-arb-to-full-scaling
       - test-verify-no-remote-access
