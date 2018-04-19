@@ -629,7 +629,6 @@ jobs:
         - name: pxc-release
         - name: varstore
       params:
-        BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
         BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
         BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
         BOSH_DEPLOYMENT: pxc
@@ -687,7 +686,6 @@ jobs:
         - name: pxc-release
         - name: varstore
       params:
-        BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
         BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
         BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
         BOSH_DEPLOYMENT: pxc
@@ -710,6 +708,64 @@ jobs:
         path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
   - do: *teardown-bosh-lite
 
+- name: test-bootstrap
+  plan:
+  - aggregate:
+    - get: pxc-release
+      passed: [create-and-compile-release]
+    - get: cf-mysql-ci
+    - get: bosh-deployment
+      resource: bosh-deployment-repo
+    - get: deployments
+      resource: deployments-configuration
+    - get: stemcell
+      resource: bosh-lite-stemcell
+      passed: [create-and-compile-release]
+    - get: version
+      passed: [create-and-compile-release]
+      trigger: true
+    - get: cf-deployment
+      resource: cf-deployment-develop
+    - get: cf-deployment-concourse-tasks
+    - get: cf-acceptance-tests
+    - get: cf-mysql-deployment
+    - get: compiled-release-tarball
+      resource: pxc-compiled-release
+      passed: [create-and-compile-release]
+  - do: *deploy-pxc-to-new-bosh-lite
+  - task: test-bootstrap
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
+        - name: cf-mysql-ci
+        - name: bosh-lite-info
+        - name: pxc-release
+        - name: varstore
+      params:
+        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
+        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_DEPLOYMENT: pxc
+      run:
+        path: cf-mysql-ci/scripts/bootstrap/pxc-bootstrap-test
+  - task: delete-deployment
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: bosh-lite-info
+      params:
+        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
+        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_DEPLOYMENT: pxc
+        BOSH_CA_CERT: bosh-lite-info/ca-cert
+        ENV_TARGET_FILE: bosh-lite-info/external-ip
+      run:
+        path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
+  - do: *teardown-bosh-lite
+
+
 - name: promote-release-candidate
   plan:
   - do:
@@ -719,6 +775,7 @@ jobs:
       - test-migrate-to-pxc
       - test-failover
       - test-scaling
+      - test-bootstrap
     - get: version
       trigger: true
       passed:
@@ -726,6 +783,7 @@ jobs:
       - test-migrate-to-pxc
       - test-failover
       - test-scaling
+      - test-bootstrap
     - put: pxc-release-release-candidate
       params:
         repository: pxc-release

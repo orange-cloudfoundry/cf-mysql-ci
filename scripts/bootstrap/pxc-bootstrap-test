@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -eux
 
@@ -10,15 +10,14 @@ export BOSH_ENVIRONMENT=$(cat bosh-lite-info/external-ip)
 export BOSH_CA_CERT_PATH="${WORKSPACE_DIR}/bosh-lite-info/ca-cert"
 export MYSQL_USERNAME=root
 export MYSQL_PASSWORD=$(bosh int varstore/deployment-vars.yml --path /cf_mysql_mysql_admin_password)
-export PROXY_USERNAME=proxy
-export PROXY_PASSWORD=$(bosh int varstore/deployment-vars.yml --path /cf_mysql_proxy_api_password)
-
-bosh update-resurrection off
-# turn off the resurrector so that `scan-and-fix` tasks don't collide with our tests
+export GALERA_AGENT_USERNAME=galera-agent
+export GALERA_AGENT_PASSWORD=$(bosh int varstore/deployment-vars.yml --path /cf_mysql_mysql_galera_healthcheck_endpoint_password)
+export BOSH_GW_PRIVATE_KEY_PATH="${WORKSPACE_DIR}/bosh-lite-info/jumpbox-private-key"
+export BOSH_GW_USER=jumpbox
 
 source ${RELEASE_DIR}/.envrc # To set GOPATH to release dir
 go install -v github.com/onsi/ginkgo/ginkgo
 pushd ${RELEASE_DIR}/src/specs/integration
   echo "Running tests ..."
-  ginkgo failover
+  ginkgo bootstrap
 popd

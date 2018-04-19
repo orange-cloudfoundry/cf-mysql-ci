@@ -7,7 +7,7 @@ WORKSPACE_DIR="${MY_DIR}/../../../"
 RELEASE_DIR="${WORKSPACE_DIR}/pxc-release"
 
 export BOSH_ENVIRONMENT=$(cat bosh-lite-info/external-ip)
-export BOSH_CA_CERT="$(cat "${BOSH_CA_CERT_PATH}")"
+export BOSH_CA_CERT_PATH="${WORKSPACE_DIR}/bosh-lite-info/ca-cert"
 export MYSQL_USERNAME=root
 export MYSQL_PASSWORD=$(bosh int varstore/deployment-vars.yml --path /cf_mysql_mysql_admin_password)
 
