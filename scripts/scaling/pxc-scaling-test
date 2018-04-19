@@ -11,9 +11,6 @@ export BOSH_CA_CERT_PATH="${WORKSPACE_DIR}/bosh-lite-info/ca-cert"
 export MYSQL_USERNAME=root
 export MYSQL_PASSWORD=$(bosh int varstore/deployment-vars.yml --path /cf_mysql_mysql_admin_password)
 
-bosh update-resurrection off
-# turn off the resurrector so that `scan-and-fix` tasks don't collide with our tests
-
 source ${RELEASE_DIR}/.envrc # To set GOPATH to release dir
 go install -v github.com/onsi/ginkgo/ginkgo
 pushd ${RELEASE_DIR}/src/specs/integration
