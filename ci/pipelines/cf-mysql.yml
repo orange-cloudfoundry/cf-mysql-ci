@@ -788,6 +788,7 @@ jobs:
         BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
     - aggregate:
       - task: create-dns
+        attempts: 2
         config:
           platform: *platform
           image_resource: *image_resource
@@ -997,6 +998,7 @@ jobs:
         BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
     - aggregate:
       - task: create-dns
+        attempts: 2
         config:
           platform: *platform
           image_resource: *image_resource
