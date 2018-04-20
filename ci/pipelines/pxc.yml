@@ -282,6 +282,25 @@ jobs:
             path: cf-mysql-ci/scripts/bosh-lite-gcp/create-dns
       - task: delete-stemcell
         file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
+      - do:
+        - task: generate-cloud-config
+          file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
+        - task: update-cloud-config
+          config:
+            platform: linux
+            image_resource: *image_resource
+            inputs:
+            - name: cf-mysql-ci
+            - name: cloud-config
+            - name: bosh-lite-info
+            params:
+              BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
+              BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+              ENV_TARGET_FILE: bosh-lite-info/director-url
+              BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
+              CLOUD_CONFIG: cloud-config/cloud-config.yml
+            run:
+              path: cf-mysql-ci/scripts/bosh-lite-gcp/update-cloud-config
   - aggregate:
     - task: bosh-upload-stemcell-from-cf-deployment
       file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
@@ -304,25 +323,6 @@ jobs:
           PROXY_LB: true
         run:
           path: cf-mysql-ci/scripts/bosh-lite/make-cf-with-pxc-manifest
-    - do:
-      - task: generate-cloud-config
-        file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
-      - task: update-cloud-config
-        config:
-          platform: linux
-          image_resource: *image_resource
-          inputs:
-          - name: cf-mysql-ci
-          - name: cloud-config
-          - name: bosh-lite-info
-          params:
-            BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-            BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-            ENV_TARGET_FILE: bosh-lite-info/director-url
-            BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-            CLOUD_CONFIG: cloud-config/cloud-config.yml
-          run:
-            path: cf-mysql-ci/scripts/bosh-lite-gcp/update-cloud-config
   - put: cf-bosh-deployment
     params:
       manifest: cf-deployment-manifest/cf.yml
@@ -424,25 +424,6 @@ jobs:
             INFRASTRUCTURE: bosh-lite
         - task: make-cf-with-cf-mysql-manifest # make the manifest without pxc
           file: cf-mysql-ci/ci/tasks/make-cf-manifest.yml
-      - do:
-        - task: generate-cloud-config
-          file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
-        - task: update-cloud-config
-          config:
-            platform: linux
-            image_resource: *image_resource
-            inputs:
-            - name: cf-mysql-ci
-            - name: cloud-config
-            - name: bosh-lite-info
-            params:
-              BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-              BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-              ENV_TARGET_FILE: bosh-lite-info/director-url
-              BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-              CLOUD_CONFIG: cloud-config/cloud-config.yml
-            run:
-              path: cf-mysql-ci/scripts/bosh-lite-gcp/update-cloud-config
     - do: # compile cf-mysql-release
       - put: compiled-packages-lock
         params:
@@ -592,25 +573,6 @@ jobs:
         - name: varstore
         run:
           path: cf-mysql-ci/scripts/bosh-lite/make-pxc-manifest
-    - do:
-      - task: generate-cloud-config
-        file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
-      - task: update-cloud-config
-        config:
-          platform: linux
-          image_resource: *image_resource
-          inputs:
-          - name: cf-mysql-ci
-          - name: cloud-config
-          - name: bosh-lite-info
-          params:
-            BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-            BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-            ENV_TARGET_FILE: bosh-lite-info/director-url
-            BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-            CLOUD_CONFIG: cloud-config/cloud-config.yml
-          run:
-            path: cf-mysql-ci/scripts/bosh-lite-gcp/update-cloud-config
     - put: pxc-bosh-deployment
       params:
         manifest: pxc-manifest/pxc.yml
