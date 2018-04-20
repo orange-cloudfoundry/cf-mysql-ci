@@ -559,21 +559,20 @@ jobs:
     - get: compiled-release-tarball
       resource: pxc-compiled-release
       passed: [create-and-compile-release]
-  - do: deploy-pxc-to-new-bosh-lite
-    - do: *create-bosh-lite
-    - put: pxc-bosh-deployment
-      params:
-        manifest: pxc-release/pxc-deployment.yml
-        releases:
-        - compiled-release-tarball/*.tgz
-        stemcells:
-        - stemcell/*.tgz
-        source_file: bosh-lite-info/bosh-deployment-resource-source-file
-        ops_files:
-        - pxc-release/operations/use-clustered.yml
-        - cf-mysql-ci/operations/pxc/add-proxy-load-balancer.yml
-        - cf-mysql-ci/operations/pxc/allow-http-proxy-access.yml
-        - cf-mysql-ci/operations/pxc/enable-remote-admin-access.yml
+  - do: *create-bosh-lite
+  - put: pxc-bosh-deployment
+    params:
+      manifest: pxc-release/pxc-deployment.yml
+      releases:
+      - compiled-release-tarball/*.tgz
+      stemcells:
+      - stemcell/*.tgz
+      source_file: bosh-lite-info/bosh-deployment-resource-source-file
+      ops_files:
+      - pxc-release/operations/use-clustered.yml
+      - cf-mysql-ci/operations/pxc/add-proxy-load-balancer.yml
+      - cf-mysql-ci/operations/pxc/allow-http-proxy-access.yml
+      - cf-mysql-ci/operations/pxc/enable-remote-admin-access.yml
   - task: test-failover
     config:
       platform: linux
