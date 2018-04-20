@@ -134,7 +134,7 @@ RUN wget "https://github.com/cloudfoundry/bosh-bootloader/releases/download/${BB
 
 # Install credhub cli
 RUN wget -O - "https://github.com/cloudfoundry-incubator/credhub-cli/releases/download/${CREDHUB_CLI_VERSION}/credhub-linux-${CREDHUB_CLI_VERSION}.tgz" \
-    | tar -xv -C /usr/local/bin/
+    | tar -xzv -C /usr/local/bin/
 
 # Install jq 1.5
 RUN wget -O /usr/local/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 && \
