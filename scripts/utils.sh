@@ -115,3 +115,18 @@ cf_uaa_admin_client_secret() {
     fi
 
 }
+
+credhub_login() {
+  credhub_secret=$(bosh int "${WORKSPACE_DIR}/bosh-lite-info/credentials.yml" --path /credhub_admin_client_secret)
+
+  credhub api --server "$(cat ${WORKSPACE_DIR}/bosh-lite-info/external-ip):8844" --ca-cert "${WORKSPACE_DIR}/bosh-lite-info/credhub.ca" --ca-cert "${WORKSPACE_DIR}/bosh-lite-info/uaa.ca"
+
+  credhub login --client-name=credhub-admin --client-secret=${credhub_secret}
+}
+
+credhub_value() {
+  # var_path should be in the format of /bosh-name/deployment-name/variable-name
+  var_path=$1
+
+  credhub get -n ${var_path} -j | jq -r .value
+}

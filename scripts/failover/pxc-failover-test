@@ -6,19 +6,17 @@ MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKSPACE_DIR="${MY_DIR}/../../../"
 RELEASE_DIR="${WORKSPACE_DIR}/pxc-release"
 
+source "${WORKSPACE_DIR}/cf-mysql-ci/scripts/utils.sh"
+
+credhub_login
+
 export BOSH_ENVIRONMENT=$(cat bosh-lite-info/external-ip)
 export BOSH_CA_CERT_PATH="${WORKSPACE_DIR}/bosh-lite-info/ca-cert"
 export BOSH_CA_CERT=${BOSH_CA_CERT_PATH}
-export CREDHUB_SECRET=$(bosh int bosh-lite-info/credentials.yml --path /credhub_admin_client_secret)
-
-credhub api --server ${BOSH_ENVIRONMENT}:8844 --ca-cert "${WORKSPACE_DIR}/bosh-lite-info/credhub.ca" --ca-cert "${WORKSPACE_DIR}/bosh-lite-info/uaa.ca"
-
-credhub login --client-name=credhub-admin --client-secret=${CREDHUB_SECRET}
-
 export MYSQL_USERNAME=root
-export MYSQL_PASSWORD=$(credhub get -n /lite/pxc/cf_mysql_mysql_admin_password -j | jq -r .value)
+export MYSQL_PASSWORD=$(credhub_value /lite/pxc/cf_mysql_mysql_admin_password)
 export PROXY_USERNAME=proxy
-export PROXY_PASSWORD=$(credhub get -n /lite/pxc/cf_mysql_proxy_api_password -j | jq -r .value)
+export PROXY_PASSWORD=$(credhub_value /lite/pxc/cf_mysql_proxy_api_password)
 
 bosh update-resurrection off
 # turn off the resurrector so that `scan-and-fix` tasks don't collide with our tests
