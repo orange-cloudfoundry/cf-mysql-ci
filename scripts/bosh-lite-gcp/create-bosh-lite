@@ -61,6 +61,12 @@ bosh -n interpolate "${OUTPUT_DIR}/credentials.yml" \
   --path /jumpbox_ssh/private_key > "${OUTPUT_DIR}/jumpbox-private-key"
 chmod 600 "${OUTPUT_DIR}/jumpbox-private-key"
 
+bosh -n interpolate "${OUTPUT_DIR}/credentials.yml" \
+  --path /credhub_ca/ca > "${OUTPUT_DIR}/credhub.ca"
+
+bosh -n interpolate "${OUTPUT_DIR}/credentials.yml" \
+  --path /uaa_ssl/ca > "${OUTPUT_DIR}/uaa.ca"
+
 bosh -n upload-stemcell "${stemcell_dir}"/*.tgz \
   -e "$(cat "${OUTPUT_DIR}/external-ip")" \
   --client admin \
