@@ -60,6 +60,13 @@ resources:
     repository: bosh-cli
     access_token: ((core-services-ci-credentials/Notes/pcf-core-services-github-api-token))
 
+- name: credhub-cli-github-release
+  type: github-release
+  source:
+    owner: cloudfoundry-incubator
+    repository: credhub-cli
+    access_token: ((core-services-ci-credentials/Notes/pcf-core-services-github-api-token))
+
 - name: terraform-github-release
   type: github-release
   source:
@@ -299,6 +306,8 @@ jobs:
     - get: cf-mysql-dockerfile
       trigger: true
     - get: bbl-github-release
+      trigger: true
+    - get: credhub-cli-github-release
       trigger: true
     - get: bosh-cli-github-release
       trigger: true

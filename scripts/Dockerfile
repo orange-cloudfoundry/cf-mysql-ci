@@ -5,6 +5,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 ARG BBL_GIT_TAG
 ARG BOSH_CLI_VERSION
+ARG CREDHUB_CLI_VERSION
 ARG TERRAFORM_VERSION
 
 # libmysqlclient-dev is used for pre-packaging cf-mysql-broker
@@ -130,6 +131,10 @@ RUN wget "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terrafor
 RUN wget "https://github.com/cloudfoundry/bosh-bootloader/releases/download/${BBL_GIT_TAG}/bbl-${BBL_GIT_TAG}_linux_x86-64" \
       -O /usr/local/bin/bbl && \
       chmod +x /usr/local/bin/bbl
+
+# Install credhub cli
+RUN wget -O - "https://github.com/cloudfoundry-incubator/credhub-cli/releases/download/${CREDHUB_CLI_VERSION}/credhub-linux-${CREDHUB_CLI_VERSION}.tgz" \
+    | tar -xv -C /usr/local/bin/
 
 # Install jq 1.5
 RUN wget -O /usr/local/bin/jq https://github.com/stedolan/jq/releases/download/jq-1.5/jq-linux64 && \
