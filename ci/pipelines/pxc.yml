@@ -632,7 +632,7 @@ jobs:
   - do: *create-bosh-lite
   - put: pxc-bosh-deployment
     params:
-      manifest: pxc-manifest/pxc.yml
+      manifest: pxc-release/pxc-deployment.yml
       releases:
       - compiled-release-tarball/*.tgz
       stemcells:
