@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -eux
+
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+WORKSPACE_DIR="${MY_DIR}/../../../"
+RELEASE_DIR="${WORKSPACE_DIR}/pxc-release"
+
+source "${WORKSPACE_DIR}/cf-mysql-ci/scripts/utils.sh"
+
+credhub_login
+
+export MYSQL_USERNAME=root
+export MYSQL_PASSWORD=$(credhub_value /lite/pxc/cf_mysql_mysql_admin_password)
+
+source ${RELEASE_DIR}/.envrc # To set GOPATH to release dir
+go install -v github.com/onsi/ginkgo/ginkgo
+pushd ${RELEASE_DIR}/src/specs/integration
+  echo "Running tests ..."
+  ginkgo no_remote_access
+popd
