@@ -574,6 +574,23 @@ jobs:
       - cf-mysql-ci/operations/pxc/add-proxy-load-balancer.yml
       - cf-mysql-ci/operations/pxc/allow-http-proxy-access.yml
       - cf-mysql-ci/operations/pxc/enable-remote-admin-access.yml
+  - &smoke-tests
+    task: smoke-tests
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
+        - name: cf-mysql-ci
+        - name: bosh-lite-info
+      params:
+        BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
+        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
+        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        ENV_TARGET_FILE: bosh-lite-info/director-url
+        ERRAND: smoke-tests
+        BOSH_DEPLOYMENT: pxc
+      run:
+        path: cf-mysql-ci/scripts/bosh/run_errand
   - task: test-failover
     config:
       platform: linux
@@ -643,6 +660,7 @@ jobs:
       - cf-mysql-ci/operations/pxc/add-proxy-load-balancer.yml
       - cf-mysql-ci/operations/pxc/allow-http-proxy-access.yml
       - cf-mysql-ci/operations/pxc/enable-remote-admin-access.yml
+  - *smoke-tests
   - task: test-scaling
     config:
       platform: linux
@@ -712,6 +730,7 @@ jobs:
       - cf-mysql-ci/operations/pxc/add-proxy-load-balancer.yml
       - cf-mysql-ci/operations/pxc/allow-http-proxy-access.yml
       - cf-mysql-ci/operations/pxc/enable-remote-admin-access.yml
+  - *smoke-tests
   - task: test-bootstrap
     config:
       platform: linux
