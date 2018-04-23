@@ -10,7 +10,7 @@ source "${WORKSPACE_DIR}/cf-mysql-ci/scripts/utils.sh"
 
 credhub_login
 
-export BOSH_ENVIRONMENT=$(cat bosh-lite-info/external-ip)
+export MYSQL_HOST=$(cat bosh-lite-info/external-ip)
 export MYSQL_USERNAME=root
 export MYSQL_PASSWORD=$(credhub_value /lite/pxc/cf_mysql_mysql_admin_password)
 
