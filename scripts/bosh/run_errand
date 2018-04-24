@@ -10,6 +10,13 @@ source "${ci_dir}/scripts/utils.sh"
 
 : "${ENV_TARGET_FILE:?}"
 : "${ERRAND:?}"
+: "${INSTANCE:=}"
+
+options=""
+
+if [[ ! -z "${INSTANCE}" ]]; then
+  options="--instance=${INSTANCE}"
+fi
 
 BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
 BOSH_ENVIRONMENT="$(sslip_from_ip "${BOSH_ENVIRONMENT}")"
@@ -30,4 +37,5 @@ export BOSH_DEPLOYMENT
 bosh \
     -n \
     run-errand \
+    ${options} \
     ${ERRAND}

@@ -589,6 +589,7 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-info/director-url
         ERRAND: smoke-tests
         BOSH_DEPLOYMENT: pxc
+        INSTANCE: mysql/0
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
   - task: test-failover
