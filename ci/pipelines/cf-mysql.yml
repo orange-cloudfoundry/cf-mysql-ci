@@ -1062,6 +1062,8 @@ jobs:
       params:
         manifest: cf-deployment-manifest/cf.yml
         releases: []
+        ops_files:
+        - cf-mysql-ci/operations/cf-increase-proxy-healthcheck-timeout.yml
         stemcells:
         - stemcell/*.tgz
         source_file: bosh-lite-info/bosh-deployment-resource-source-file

@@ -1,0 +1,3 @@
+- type: replace
+  path: /instance_groups/name=database/jobs/name=proxy/properties/cf_mysql/proxy/healthcheck_timeout_millis?
+  value: 10000
