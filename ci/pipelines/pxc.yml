@@ -453,7 +453,6 @@ jobs:
       platform: linux
       image_resource: *image_resource
       inputs:
-        - name: cf-deployment-manifest
         - name: url # utils.sh
         - name: cf-mysql-ci # utils.sh
       outputs:
