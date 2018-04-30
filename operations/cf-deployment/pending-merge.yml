@@ -24,3 +24,7 @@
 - type: replace
   path: /instance_groups/name=database/jobs/name=proxy/properties/api_uri?
   value: *proxy_base_uri
+
+- type: replace
+  path: /variables/name=galera_server_certificate/options/common_name?
+  value: galera-internal.service.cf.internal
