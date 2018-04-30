@@ -23,4 +23,5 @@ gcloud dns record-sets transaction add --zone bosh-lite --name "${wildcard_url}"
 gcloud dns record-sets transaction execute --zone bosh-lite
 
 echo "${url}" > "${workspace_dir}/url/url"
+echo "system_domain: ${url}" > "${workspace_dir}/url/url-vars.yml"
 echo "${wildcard_url}" > "${workspace_dir}/url/wildcard_url"

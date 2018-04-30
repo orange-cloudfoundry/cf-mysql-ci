@@ -302,35 +302,30 @@ jobs:
               CLOUD_CONFIG: cloud-config/cloud-config.yml
             run:
               path: cf-mysql-ci/scripts/bosh-lite-gcp/update-cloud-config
-  - aggregate:
-    - task: bosh-upload-stemcell-from-cf-deployment
-      file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-      input_mapping: {bbl-state: bosh-lite-info}
-      params:
-        INFRASTRUCTURE: bosh-lite
-    - task: make-cf-manifest
-      config:
-        platform: linux
-        image_resource: *image_resource
-        inputs:
-        - name: cf-deployment
-        - name: cf-mysql-ci
-        - name: pxc-release
-        - name: url
-        outputs:
-        - name: cf-deployment-manifest
-        - name: varstore
-        params:
-          PROXY_LB: true
-        run:
-          path: cf-mysql-ci/scripts/bosh-lite/make-cf-with-pxc-manifest
+  - task: bosh-upload-stemcell-from-cf-deployment
+    file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+    input_mapping: {bbl-state: bosh-lite-info}
+    params:
+      INFRASTRUCTURE: bosh-lite
   - put: cf-bosh-deployment
     params:
-      manifest: cf-deployment-manifest/cf.yml
+      manifest: cf-deployment/cf-deployment.yml
       releases:
       - compiled-release-tarball/*.tgz
       stemcells:
       - stemcell/*.tgz
+      ops_files:
+      - cf-mysql-ci/operations/cf-deployment/add-database-vm-extension.yml
+      - cf-deployment/operations/use-compiled-releases.yml
+      - cf-deployment/operations/bosh-lite.yml
+      - cf-deployment/operations/scale-database-cluster.yml
+      - cf-deployment/operations/experimental/use-pxc.yml
+      - cf-mysql-ci/operations/cf-deployment/pending-merge.yml
+      - cf-mysql-ci/operations/cf-deployment/enable-remote-admin-access.yml
+      vars_files:
+      - url/url-vars.yml
+      vars:
+        vm_extension: mysql-proxy-lb
       source_file: bosh-lite-info/bosh-deployment-resource-source-file
   - task: test-galera-encryption
     config:
@@ -339,7 +334,6 @@ jobs:
       inputs:
         - name: cf-mysql-ci
         - name: bosh-lite-info
-        - name: varstore
       run:
         path: cf-mysql-ci/scripts/tls/test-galera-encryption
   - task: run-cats
@@ -351,7 +345,6 @@ jobs:
         - name: cf-mysql-ci
         - name: cf-acceptance-tests
         - name: url
-        - name: varstore
       run:
         path: cf-mysql-ci/scripts/bosh-lite/run-cats
   - task: delete-cf-deployment
@@ -417,14 +410,11 @@ jobs:
   - aggregate: # pre-deploy prep
     - do: # setup bosh-lite
       - do: *create-bosh-lite
-      - aggregate:
-        - task: bosh-upload-stemcell-from-cf-deployment
-          file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-          input_mapping: {bbl-state: bosh-lite-info}
-          params:
-            INFRASTRUCTURE: bosh-lite
-        - task: make-cf-with-cf-mysql-manifest # make the manifest without pxc
-          file: cf-mysql-ci/ci/tasks/make-cf-manifest.yml
+      - task: bosh-upload-stemcell-from-cf-deployment
+        file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+        input_mapping: {bbl-state: bosh-lite-info}
+        params:
+          INFRASTRUCTURE: bosh-lite
     - do: # compile cf-mysql-release
       - put: compiled-packages-lock
         params:
@@ -445,54 +435,46 @@ jobs:
   - put: deploy-cf-with-cf-mysql
     resource: cf-bosh-deployment
     params:
-      manifest: cf-deployment-manifest/cf.yml
+      manifest: cf-deployment/cf-deployment.yml
       releases:
       - compiled-release-tarball/*.tgz
       stemcells:
       - stemcell/*.tgz
+      ops_files:
+      - cf-deployment/operations/use-compiled-releases.yml
+      - cf-deployment/operations/bosh-lite.yml
+      - cf-mysql-ci/operations/cf-allow-apps-access-to-mysql.yml
+      vars_files:
+      - url/url-vars.yml
       source_file: bosh-lite-info/bosh-deployment-resource-source-file
-  - aggregate:
     # write an org to cf and output the org name
-    - task: cf-create-org
-      config:
-        platform: linux
-        image_resource: *image_resource
-        inputs:
-          - name: cf-deployment-manifest
-          - name: varstore # so we can refactor and utils.sh will work
-          - name: url # utils.sh
-          - name: cf-mysql-ci # utils.sh
-        outputs:
-          - name: org-name
-        run:
-          path: cf-mysql-ci/scripts/cf/create-org
-    # make the manifest with pxc
-    - task: make-cf-manifest-with-migration
-      config:
-        platform: linux
-        image_resource: *image_resource
-        inputs:
-        - name: cf-deployment
-        - name: cf-mysql-ci
-        - name: pxc-release
-        - name: url
-        - name: varstore
-        outputs:
+  - task: cf-create-org
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
         - name: cf-deployment-manifest
-        params:
-          MIGRATE: true
-        run:
-          path: cf-mysql-ci/scripts/bosh-lite/make-cf-with-pxc-manifest
+        - name: url # utils.sh
+        - name: cf-mysql-ci # utils.sh
+      outputs:
+        - name: org-name
+      run:
+        path: cf-mysql-ci/scripts/cf/create-org
   # deploy cf with pxc as the database, and pxc turned "on"
-  - put: deploy-cf-upgrade-to-pxc
-    resource: cf-bosh-deployment
+  - put: cf-bosh-deployment
     params:
-      manifest: cf-deployment-manifest/cf.yml
+      manifest: cf-deployment/cf-deployment.yml
       releases:
       - pxc-compiled-release/*.tgz
-      - compiled-release-tarball/*.tgz
       stemcells:
       - stemcell/*.tgz
+      ops_files:
+      - cf-deployment/operations/use-compiled-releases.yml
+      - cf-deployment/operations/bosh-lite.yml
+      - cf-deployment/operations/experimental/migrate-cf-mysql-to-pxc.yml
+      - cf-mysql-ci/operations/cf-deployment/pending-merge.yml
+      vars_files:
+      - url/url-vars.yml
       source_file: bosh-lite-info/bosh-deployment-resource-source-file
   # input the org name and try to read it from cf (aka test that data is persisted across the migration)
   - task: check-if-org-exists-pxc
@@ -500,7 +482,6 @@ jobs:
       platform: linux
       image_resource: *image_resource
       inputs:
-        - name: varstore # so we can refactor and utils.sh will work
         - name: url # utils.sh
         - name: cf-mysql-ci # utils.sh
       outputs:
@@ -516,7 +497,6 @@ jobs:
         - name: cf-mysql-ci
         - name: cf-acceptance-tests
         - name: url
-        - name: varstore
       run:
         path: cf-mysql-ci/scripts/bosh-lite/run-cats
   - task: delete-cf-deployment
@@ -860,6 +840,7 @@ jobs:
       ops_files:
       - pxc-release/operations/use-clustered.yml
       - cf-mysql-ci/operations/pxc/add-proxy-load-balancer.yml
+      - cf-mysql-ci/operations/pxc/enable-remote-admin-access.yml
   - task: test-autotune
     config:
       platform: linux

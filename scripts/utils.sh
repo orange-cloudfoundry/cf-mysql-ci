@@ -94,8 +94,10 @@ cf_admin_username() {
 cf_admin_password() {
     if [ -n "${ENV_METADATA:-}" ]; then
       echo "$(jq_val "cf_api_password" "${ENV_METADATA}")"
-    else
+    elif [ -d "varstore" ]; then
       echo "$(bosh int varstore/deployment-vars.yml --path /cf_admin_password)"
+    else
+      echo "$(credhub_value /lite/cf/cf_admin_password)"
     fi
 }
 

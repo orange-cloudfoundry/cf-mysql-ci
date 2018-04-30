@@ -2,8 +2,11 @@
 
 set -eux
 
+source "cf-mysql-ci/scripts/utils.sh"
+
+credhub_login
 system_domain=$(cat url/url)
-admin_password=$(bosh int varstore/deployment-vars.yml --path /cf_admin_password)
+admin_password=$(credhub_value /lite/cf/cf_admin_password)
 
 cat > integration_config.json <<EOF
 {
