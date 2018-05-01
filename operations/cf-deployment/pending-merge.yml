@@ -28,3 +28,8 @@
 - type: replace
   path: /variables/name=galera_server_certificate/options/common_name?
   value: galera_server_certificate
+
+- type: replace
+  path: /instance_groups/name=database/jobs/name=bootstrap/consumes?/mysql
+  value:
+    from: mysql-clustered

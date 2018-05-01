@@ -342,6 +342,7 @@ jobs:
       platform: linux
       image_resource: *image_resource
       inputs:
+        - name: bosh-lite-info
         - name: cf-mysql-ci
         - name: cf-acceptance-tests
         - name: url
@@ -494,6 +495,7 @@ jobs:
       platform: linux
       image_resource: *image_resource
       inputs:
+        - name: bosh-lite-info
         - name: cf-mysql-ci
         - name: cf-acceptance-tests
         - name: url
