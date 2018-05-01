@@ -33,3 +33,8 @@
   path: /instance_groups/name=database/jobs/name=bootstrap/consumes?/mysql
   value:
     from: mysql-clustered
+
+- type: replace
+  path: /instance_groups/name=database/jobs/name=mysql-clustered/provides?/mysql
+  value:
+    as: mysql-clustered
