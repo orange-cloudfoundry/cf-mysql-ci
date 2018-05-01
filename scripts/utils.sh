@@ -119,9 +119,10 @@ cf_uaa_admin_client_secret() {
 }
 
 credhub_login() {
-  credhub_secret=$(bosh int "${WORKSPACE_DIR}/bosh-lite-info/credentials.yml" --path /credhub_admin_client_secret)
+  local local_workspace="${workspace_dir-${WORKSPACE_DIR}}"
+  credhub_secret=$(bosh int "${local_workspace}/bosh-lite-info/credentials.yml" --path /credhub_admin_client_secret)
 
-  credhub api --server "$(cat ${WORKSPACE_DIR}/bosh-lite-info/external-ip):8844" --ca-cert "${WORKSPACE_DIR}/bosh-lite-info/credhub.ca" --ca-cert "${WORKSPACE_DIR}/bosh-lite-info/uaa.ca"
+  credhub api --server "$(cat ${local_workspace}/bosh-lite-info/external-ip):8844" --ca-cert "${local_workspace}/bosh-lite-info/credhub.ca" --ca-cert "${local_workspace}/bosh-lite-info/uaa.ca"
 
   credhub login --client-name=credhub-admin --client-secret=${credhub_secret}
 }
