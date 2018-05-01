@@ -10,7 +10,7 @@
       route_registrar:
         routes:
         - name: cf-mysql-proxy
-          port: 8080
+          port: 8083
           registration_interval: 10s
           uris:
           - &proxy_base_uri proxy.((system_domain))
@@ -20,6 +20,10 @@
           registration_interval: 10s
           uris:
           - *proxy_base_uri
+
+- type: replace
+  path: /instance_groups/name=database/jobs/name=proxy/properties/api_port?
+  value: 8083
 
 - type: replace
   path: /instance_groups/name=database/jobs/name=proxy/properties/api_uri?
