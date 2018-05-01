@@ -7,6 +7,7 @@ ci_dir="${my_dir}/../../"
 workspace_dir="${ci_dir}/../"
 
 source ${ci_dir}/scripts/utils.sh
+credhub_login
 
 api_url="api.$(cf_domain)"
 
