@@ -453,8 +453,9 @@ jobs:
       platform: linux
       image_resource: *image_resource
       inputs:
-        - name: url # utils.sh
+        - name: bosh-lite-info
         - name: cf-mysql-ci # utils.sh
+        - name: url # utils.sh
       outputs:
         - name: org-name
       run:
