@@ -268,7 +268,7 @@ jobs:
         BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
     - aggregate:
       - task: create-dns
-        attempts: 2
+        attempts: 5
         config:
           platform: linux
           image_resource: *image_resource
@@ -371,6 +371,7 @@ jobs:
       file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
       input_mapping: {deployments: deployments-terraformed}
     - task: delete-dns
+      attempts: 5
       config:
         platform: linux
         image_resource: *image_resource
