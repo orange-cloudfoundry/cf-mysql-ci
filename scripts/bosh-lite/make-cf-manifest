@@ -30,6 +30,7 @@ bosh int \
     -o ${workspace_dir}/cf-deployment/operations/use-compiled-releases.yml \
     -o ${workspace_dir}/cf-deployment/operations/bosh-lite.yml \
     -o ${workspace_dir}/cf-mysql-ci/operations/cf-allow-apps-access-to-mysql.yml \
+    -o ${workspace_dir}/cf-mysql-ci/operations/cf-deployment/increase-proxy-healthcheck-timeout.yml \
     ${operations} \
     -v system_domain="$(cat "$DNS_NAME")" \
     > "${OUTPUT_FILE}"
