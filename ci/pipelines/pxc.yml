@@ -585,7 +585,7 @@ jobs:
   - put: deploy-last-pxc-release
     resource: pxc-bosh-deployment
     params:
-      manifest: last-pxc-release-sourc/pxc-deployment.yml
+      manifest: last-pxc-release-source/pxc-deployment.yml
       ops_files:
       - last-pxc-release-source/operations/use-clustered.yml
       releases:

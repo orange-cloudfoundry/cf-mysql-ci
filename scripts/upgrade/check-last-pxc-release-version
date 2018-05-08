@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 
+set -eu
+
 my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 workspace_dir="$( cd "${my_dir}/../.." && pwd )"
 
-source "${my_dir}/utils.sh"
+source "${my_dir}/../utils.sh"
 
 bosh_release_version="$(cat last-pxc-release-bosh-release/version)"
 github_release_version="$(cat last-pxc-release-source/version)"
