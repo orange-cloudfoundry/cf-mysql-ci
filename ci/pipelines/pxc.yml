@@ -575,7 +575,7 @@ jobs:
       - name: last-pxc-release-source
       - name: last-pxc-release-bosh-release
       run:
-        path: cf-mysql-ci/scripts/bosh-lite-gcp/update-cloud-config
+        path: cf-mysql-ci/scripts/upgrade/check-last-pxc-release-version
 #  - do: &create-bosh-lite
 #    - task: apply-terraform
 #      file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
