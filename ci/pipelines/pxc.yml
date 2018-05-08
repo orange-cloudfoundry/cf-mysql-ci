@@ -576,79 +576,23 @@ jobs:
       - name: last-pxc-release-bosh-release
       run:
         path: cf-mysql-ci/scripts/upgrade/check-last-pxc-release-version
-#  - do: &create-bosh-lite
-#    - task: apply-terraform
-#      file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
-#    - task: create-bosh-lite
-#      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
-#      input_mapping: {deployments: deployments-terraformed}
-#      params:
-#        PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
-#        ZONE: ((core-services-ci-credentials/Notes/gcp-bosh-lite-zone))
-#        NETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-network))
-#        SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
-#        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-#    - aggregate:
-#      - task: create-dns
-#        attempts: 5
-#        config:
-#          platform: linux
-#          image_resource: *image_resource
-#          inputs:
-#          - name: cf-mysql-ci
-#          - name: bosh-lite-info
-#          - name: deployments
-#            path: deployments-core-services
-#          outputs:
-#          - name: url
-#          run:
-#            path: cf-mysql-ci/scripts/bosh-lite-gcp/create-dns
-#      - task: delete-stemcell
-#        file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
-#      - do:
-#        - task: generate-cloud-config
-#          file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
-#        - task: update-cloud-config
-#          config:
-#            platform: linux
-#            image_resource: *image_resource
-#            inputs:
-#            - name: cf-mysql-ci
-#            - name: cloud-config
-#            - name: bosh-lite-info
-#            params:
-#              BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-#              BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-#              ENV_TARGET_FILE: bosh-lite-info/director-url
-#              BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-#              CLOUD_CONFIG: cloud-config/cloud-config.yml
-#            run:
-#              path: cf-mysql-ci/scripts/bosh-lite-gcp/update-cloud-config
-#  - task: bosh-upload-stemcell-from-cf-deployment
-#    file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-#    input_mapping: {bbl-state: bosh-lite-info}
-#    params:
-#      INFRASTRUCTURE: bosh-lite
-#  - put: cf-bosh-deployment
-#    params:
-#      manifest: cf-deployment/cf-deployment.yml
-#      releases:
-#      - compiled-release-tarball/*.tgz
-#      stemcells:
-#      - stemcell/*.tgz
-#      ops_files:
-#      - cf-mysql-ci/operations/cf-deployment/add-database-vm-extension.yml
-#      - cf-deployment/operations/use-compiled-releases.yml
-#      - cf-deployment/operations/bosh-lite.yml
-#      - cf-deployment/operations/scale-database-cluster.yml
-#      - cf-deployment/operations/experimental/use-pxc.yml
-#      - cf-mysql-ci/operations/cf-deployment/pending-merge.yml
-#      - cf-mysql-ci/operations/cf-deployment/enable-remote-admin-access.yml
-#      vars_files:
-#      - url/url-vars.yml
-#      vars:
-#        vm_extension: mysql-proxy-lb
-#      source_file: bosh-lite-info/bosh-deployment-resource-source-file
+  - do: *create-bosh-lite
+  - task: bosh-upload-stemcell-from-cf-deployment
+    file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+    input_mapping: {bbl-state: bosh-lite-info}
+    params:
+      INFRASTRUCTURE: bosh-lite
+  - put: deploy-last-pxc-release
+    resource: pxc-bosh-deployment
+    params:
+      manifest: last-pxc-release-sourc/pxc-deployment.yml
+      ops_files:
+      - last-pxc-release-source/operations/use-clustered.yml
+      releases:
+      - last-pxc-release-bosh-release/*.tgz
+      stemcells:
+      - stemcell/*.tgz
+      source_file: bosh-lite-info/bosh-deployment-resource-source-file
 #  - task: test-galera-encryption
 #    config:
 #      platform: linux
@@ -685,26 +629,7 @@ jobs:
 #        ENV_TARGET_FILE: bosh-lite-info/external-ip
 #      run:
 #        path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
-#  - do: &teardown-bosh-lite
-#    - task: destroy-bosh-lite
-#      file: cf-mysql-ci/ci/tasks/destroy-bosh-lite.yml
-#      input_mapping: {bosh-lite-info: bosh-lite-info-stemcell-deleted}
-#    - task: destroy-terraform
-#      file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
-#      input_mapping: {deployments: deployments-terraformed}
-#    - task: delete-dns
-#      attempts: 5
-#      config:
-#        platform: linux
-#        image_resource: *image_resource
-#        inputs:
-#        - name: cf-mysql-ci
-#        - name: bosh-lite-info
-#        - name: url
-#        - name: deployments
-#          path: deployments-core-services
-#        run:
-#          path: cf-mysql-ci/scripts/bosh-lite-gcp/delete-dns
+  - do: *teardown-bosh-lite
 
 - name: test-failover
   plan:
