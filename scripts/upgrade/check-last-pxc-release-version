@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 
+my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+workspace_dir="$( cd "${my_dir}/../.." && pwd )"
+
+source "${my_dir}/utils.sh"
+
 bosh_release_version="$(cat last-pxc-release-bosh-release/version)"
 github_release_version="$(cat last-pxc-release-source/version)"
 
 if [ "$bosh_release_version" != "$github_release_version" ]; then
-  echo "Fetched mismatched last pxc release version"
-  echo "bosh.io release version: $bosh_release_version"
-  echo "github release version: $github_release_version"
-  echo
-  echo "This may mean that the release was tagged on github but not promoted as a github release"
+  err "Fetched mismatched last pxc release version"
+  err "bosh.io release version: $bosh_release_version"
+  err "github release version: $github_release_version"
+  err "This may mean that the release was tagged on github but not promoted as a github release"
   exit 1
 fi

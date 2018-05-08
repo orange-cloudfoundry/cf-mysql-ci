@@ -133,3 +133,8 @@ credhub_value() {
 
   credhub get -n ${var_path} -j | jq -r .value
 }
+
+err() {
+  echo "$(date +"%Y-%m-%d %T%z"): %@" >&2
+
+}
