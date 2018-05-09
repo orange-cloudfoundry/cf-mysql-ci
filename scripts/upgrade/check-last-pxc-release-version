@@ -9,7 +9,7 @@ source "${my_dir}/../utils.sh"
 
 bosh_release_version="$(cat "${workspace_dir}/last-pxc-release-bosh-release/version")"
 pushd "${workspace_dir}/last-pxc-release-source"
-  github_release_version="$(git tag -l --points-at HEAD)"
+  github_release_version="$(git tag -l --points-at HEAD | cut -c 2-)"
 popd
 if [ "$bosh_release_version" != "$github_release_version" ]; then
   err "Fetched mismatched last pxc release version"

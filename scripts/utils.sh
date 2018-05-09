@@ -135,6 +135,6 @@ credhub_value() {
 }
 
 err() {
-  echo "$(date +"%Y-%m-%d %T%z"): %@" >&2
+  echo "$(date +"%Y-%m-%d %T%z"): $@" >&2
 
 }
