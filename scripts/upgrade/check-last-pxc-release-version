@@ -7,13 +7,13 @@ workspace_dir="$( cd "${my_dir}/../.." && pwd )"
 
 source "${my_dir}/../utils.sh"
 
-bosh_release_version="$(cat last-pxc-release-bosh-release/version)"
-github_release_version="$(cat last-pxc-release-source/version)"
-
+bosh_release_version="$(cat "${workspace_dir}/last-pxc-release-bosh-release/version")"
+pushd "${workspace_dir}/last-pxc-release-source"
+  github_release_version="$(git tag -l --points-at HEAD)"
+popd
 if [ "$bosh_release_version" != "$github_release_version" ]; then
   err "Fetched mismatched last pxc release version"
   err "bosh.io release version: $bosh_release_version"
   err "github release version: $github_release_version"
-  err "This may mean that the release was tagged on github but not promoted as a github release"
   exit 1
 fi

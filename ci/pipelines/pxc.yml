@@ -61,11 +61,11 @@ resources:
     private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
 
 - name: last-pxc-release-source
-  type: github-release
+  type: git
   source:
-    owner: cloudfoundry-incubator
-    repository: pxc-release
-    access_token: ((core-services-ci-credentials/Notes/pcf-core-services-github-api-token))
+    uri: git@github.com:cloudfoundry-incubator/pxc-release.git
+    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
+    tag_filter: "v*.*.*"
 
 - name: last-pxc-release-bosh-release
   type: bosh-io-release
@@ -544,9 +544,11 @@ jobs:
   - aggregate:
     - get: last-pxc-release-source
     - get: last-pxc-release-bosh-release
+      trigger: true
     - get: latest-pxc-release
       resource: pxc-release
       passed: [create-and-compile-release]
+      trigger: true
     - get: cf-mysql-ci
     - get: bosh-deployment
       resource: bosh-deployment-repo
