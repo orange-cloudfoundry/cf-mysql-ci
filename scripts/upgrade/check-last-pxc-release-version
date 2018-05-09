@@ -3,7 +3,7 @@
 set -eu
 
 my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-workspace_dir="$( cd "${my_dir}/../.." && pwd )"
+workspace_dir="$( cd "${my_dir}/../../.." && pwd )"
 
 source "${my_dir}/../utils.sh"
 
