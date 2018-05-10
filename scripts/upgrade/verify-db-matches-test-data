@@ -32,12 +32,12 @@ pushd ${SQL_QUERY_DIR}
   set -e
 
   if [ "${FILES_MATCH}" -ne "0" ]; then
-    echo "Data in database does not match test data"
+    err "Data in database does not match test data"
 
-    echo "**** Expected Test Data ****"
-    cat ./test-data.csv
-    echo "**** Actual Test Data ****"
-    cat /tmp/exported-test-data.csv
+    err "**** Expected Test Data ****"
+    cat ./test-data.csv >&2
+    err "**** Actual Test Data ****"
+    cat /tmp/exported-test-data.csv >&2
     exit 1
   else
     # removing tmp file
