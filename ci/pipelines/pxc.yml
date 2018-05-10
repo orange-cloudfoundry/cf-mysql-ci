@@ -53,13 +53,6 @@ resources:
     branch: master
     private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
 
-- name: pxc-release-latest-published-version
-  type: git
-  source:
-    uri: git@github.com:cloudfoundry-incubator/pxc-release.git
-    branch: latest-published-version
-    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
-
 - name: last-pxc-release-source
   type: git
   source:
@@ -1027,7 +1020,6 @@ jobs:
     - aggregate:
       - get: pxc-release
         passed: [promote-release-candidate]
-      - get: pxc-release-latest-published-version
       - get: cf-mysql-ci
       - get: version
         passed: [promote-release-candidate]
@@ -1065,9 +1057,6 @@ jobs:
         repository: pxc-release-committed/pxc-release-final
         tag: version/version
         tag_prefix: v
-    - put: pxc-release-latest-published-version
-      params:
-        repository: pxc-release-committed/pxc-release-final
     - put: version
       params:
         bump: minor
