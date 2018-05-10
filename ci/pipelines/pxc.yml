@@ -545,7 +545,7 @@ jobs:
     - get: last-pxc-release-source
     - get: last-pxc-release-bosh-release
       trigger: true
-    - get: latest-pxc-release
+    - get: dev-pxc-release-source
       resource: pxc-release
       passed: [create-and-compile-release]
       trigger: true
@@ -554,19 +554,18 @@ jobs:
       resource: bosh-deployment-repo
     - get: deployments
       resource: deployments-configuration
+    - get: cf-mysql-deployment # used for it's cloud config
     - get: stemcell
       resource: bosh-lite-stemcell
       passed: [create-and-compile-release]
+    - get: gcp-bosh-stemcell
+      passed: [create-and-compile-release]
+    - get: cf-deployment
+      resource: cf-deployment-develop
     - get: version
       passed: [create-and-compile-release]
       trigger: true
-    - get: cf-deployment
-      resource: cf-deployment-develop
-    - get: cf-deployment-concourse-tasks
-    - get: cf-acceptance-tests
-    - get: cf-mysql-deployment
-    - get: compiled-release-tarball
-      resource: pxc-compiled-release
+    - get: pxc-compiled-release
       passed: [create-and-compile-release]
   - task: check-last-pxc-release-version
     config:
@@ -578,12 +577,25 @@ jobs:
       - name: last-pxc-release-bosh-release
       run:
         path: cf-mysql-ci/scripts/upgrade/check-last-pxc-release-version
-  - do: *create-bosh-lite
-  - task: bosh-upload-stemcell-from-cf-deployment
-    file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-    input_mapping: {bbl-state: bosh-lite-info}
-    params:
-      INFRASTRUCTURE: bosh-lite
+  - aggregate:
+    - do: # compile cf-mysql-release
+      - put: compiled-packages-lock
+        params:
+          acquire: true
+      - task: compile-last-pxc-release
+        input_mapping: {release-tarball: last-pxc-release-bosh-release}
+        output_mapping: {compiled-release-tarball: compiled-last-pxc-release}
+        file: cf-mysql-ci/ci/tasks/compile-release.yml
+        params:
+          BOSH_CLIENT: ((concourse-compilation-director/Notes/BOSH_CLIENT))
+          BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
+          BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
+          BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
+      ensure:
+        put: compiled-packages-lock
+        params:
+          release: compiled-packages-lock
+    - do: *create-bosh-lite
   - put: deploy-last-pxc-release
     resource: pxc-bosh-deployment
     params:
@@ -591,46 +603,57 @@ jobs:
       ops_files:
       - last-pxc-release-source/operations/use-clustered.yml
       releases:
-      - last-pxc-release-bosh-release/*.tgz
+      - compiled-last-pxc-release/*.tgz
       stemcells:
       - stemcell/*.tgz
       source_file: bosh-lite-info/bosh-deployment-resource-source-file
-#  - task: test-galera-encryption
-#    config:
-#      platform: linux
-#      image_resource: *image_resource
-#      inputs:
-#        - name: cf-mysql-ci
-#        - name: bosh-lite-info
-#      run:
-#        path: cf-mysql-ci/scripts/tls/test-galera-encryption
-#  - task: run-cats
-#    attempts: 3
-#    config:
-#      platform: linux
-#      image_resource: *image_resource
-#      inputs:
-#        - name: bosh-lite-info
-#        - name: cf-mysql-ci
-#        - name: cf-acceptance-tests
-#        - name: url
-#      run:
-#        path: cf-mysql-ci/scripts/bosh-lite/run-cats
-#  - task: delete-cf-deployment
-#    config:
-#      platform: linux
-#      image_resource: *image_resource
-#      inputs:
-#      - name: cf-mysql-ci
-#      - name: bosh-lite-info
-#      params:
-#        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-#        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-#        BOSH_DEPLOYMENT: cf
-#        BOSH_CA_CERT: bosh-lite-info/ca-cert
-#        ENV_TARGET_FILE: bosh-lite-info/external-ip
-#      run:
-#        path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
+  - task: write-test-data
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
+        - name: cf-mysql-ci
+        - name: bosh-lite-info
+      run:
+        path: cf-mysql-ci/scripts/upgrade/load-test-data
+  - put: upgrade-to-dev-pxc-release
+    resource: pxc-bosh-deployment
+    params:
+      manifest: dev-pxc-release-source/pxc-deployment.yml
+      ops_files:
+      - dev-pxc-release-source/operations/use-clustered.yml
+      releases:
+      - pxc-compiled-release/*.tgz
+      stemcells:
+      - stemcell/*.tgz
+      source_file: bosh-lite-info/bosh-deployment-resource-source-file
+  - task: write-test-data
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
+        - name: cf-mysql-ci
+        - name: bosh-lite-info
+      run:
+        path: cf-mysql-ci/scripts/upgrade/verify-db-matches-test-data
+  - &smoke-tests
+    task: smoke-tests
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
+        - name: cf-mysql-ci
+        - name: bosh-lite-info
+      params:
+        BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
+        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
+        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        ENV_TARGET_FILE: bosh-lite-info/director-url
+        ERRAND: smoke-tests
+        BOSH_DEPLOYMENT: pxc
+        INSTANCE: mysql/0
+      run:
+        path: cf-mysql-ci/scripts/bosh/run_errand
   - do: *teardown-bosh-lite
 
 - name: test-failover
@@ -671,24 +694,7 @@ jobs:
       - cf-mysql-ci/operations/pxc/add-proxy-load-balancer.yml
       - cf-mysql-ci/operations/pxc/allow-http-proxy-access.yml
       - cf-mysql-ci/operations/pxc/enable-remote-admin-access.yml
-  - &smoke-tests
-    task: smoke-tests
-    config:
-      platform: linux
-      image_resource: *image_resource
-      inputs:
-        - name: cf-mysql-ci
-        - name: bosh-lite-info
-      params:
-        BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-        ENV_TARGET_FILE: bosh-lite-info/director-url
-        ERRAND: smoke-tests
-        BOSH_DEPLOYMENT: pxc
-        INSTANCE: mysql/0
-      run:
-        path: cf-mysql-ci/scripts/bosh/run_errand
+  - *smoke-tests
   - task: test-failover
     config:
       platform: linux
