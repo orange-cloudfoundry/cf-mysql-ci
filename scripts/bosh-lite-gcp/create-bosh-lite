@@ -85,6 +85,12 @@ bosh -n -e "$(cat "${OUTPUT_DIR}/external-ip")" \
   --ca-cert "${OUTPUT_DIR}/ca-cert" \
   update-config --type=runtime --name=dns ${BOSH_DEPLOYMENT_DIR}/runtime-configs/dns.yml
 
+bosh -n -e "$(cat "${OUTPUT_DIR}/external-ip")" \
+  --client admin \
+  --client-secret "${BOSH_CLIENT_SECRET}" \
+  --ca-cert "${OUTPUT_DIR}/ca-cert" \
+  upload-release $(bosh int ${BOSH_DEPLOYMENT_DIR}/runtime-configs/dns.yml --path=/releases/name=bosh-dns/url)
+
 director_url="https://$(cat "${OUTPUT_DIR}/external-ip")"
 escaped_ca_cert="$(cat ${OUTPUT_DIR}/ca-cert | sed ':a;N;$!ba;s/\n/\\n/g')"
 
