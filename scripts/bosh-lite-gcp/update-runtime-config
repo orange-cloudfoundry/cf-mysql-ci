@@ -1,0 +1,6 @@
+#!/bin/bash
+set -eux
+
+export BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
+
+bosh -n update-runtime-config "${RUNTIME_CONFIG}"
