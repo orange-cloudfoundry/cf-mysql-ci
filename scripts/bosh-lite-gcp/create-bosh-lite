@@ -96,6 +96,18 @@ cat <<HEREDOC > "${OUTPUT_DIR}/bosh-deployment-resource-source-file"
 }
 HEREDOC
 
+# Create a bbl state file with credentials so that scripts can target the director with `bbl print-env`
+cat <<HEREDOC > "${OUTPUT_DIR}/bbl-state.json"
+{
+  "version": 3,
+  "bosh": {
+    "directorUsername": "admin",
+    "directorPassword": "${BOSH_CLIENT_SECRET}",
+    "directorAddress": "${director_url}",
+    "directorSSLCA": "${escaped_ca_cert}"
+  }
+}
+
 # Create a file which can be sourced in order to get all the env vars to talk to the bosh director
 cat <<HEREDOC > "${OUTPUT_DIR}/source_me"
 export BOSH_ENVIRONMENT=$(cat external-ip)
