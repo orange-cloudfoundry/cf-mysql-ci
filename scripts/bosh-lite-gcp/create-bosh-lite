@@ -110,7 +110,7 @@ cat <<HEREDOC > "${OUTPUT_DIR}/bbl-state.json"
 
 # Create a file which can be sourced in order to get all the env vars to talk to the bosh director
 cat <<HEREDOC > "${OUTPUT_DIR}/source_me"
-export BOSH_ENVIRONMENT=$(cat external-ip)
+export BOSH_ENVIRONMENT=$(cat "${OUTPUT_DIR}/external-ip")
 export BOSH_CA_CERT=ca-cert
 export BOSH_CLIENT=admin
 export BOSH_CLIENT_SECRET=${BOSH_CLIENT_SECRET}
