@@ -107,6 +107,7 @@ cat <<HEREDOC > "${OUTPUT_DIR}/bbl-state.json"
     "directorSSLCA": "${escaped_ca_cert}"
   }
 }
+HEREDOC
 
 # Create a file which can be sourced in order to get all the env vars to talk to the bosh director
 cat <<HEREDOC > "${OUTPUT_DIR}/source_me"
