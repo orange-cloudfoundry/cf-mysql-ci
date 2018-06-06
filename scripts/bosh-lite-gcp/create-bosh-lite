@@ -115,4 +115,5 @@ export BOSH_ENVIRONMENT=$(cat "${OUTPUT_DIR}/external-ip")
 export BOSH_CA_CERT=ca-cert
 export BOSH_CLIENT=admin
 export BOSH_CLIENT_SECRET=${BOSH_CLIENT_SECRET}
+export BOSH_GW_PRIVATE_KEY=jumpbox-private-key
 HEREDOC
