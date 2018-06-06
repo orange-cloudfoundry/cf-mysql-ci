@@ -14,7 +14,7 @@ discover_pipeline_filenames() {
   i=0
   while IFS= read -r -d $'\0' f; do
     options[i++]="$f"
-  done < <(find ${PIPELINES_DIR} -maxdepth 1 -type f -name "*.yml" -print0 )
+  done < <(find ${PIPELINES_DIR} -maxdepth 2 -type f -name "*.yml" -print0 )
 }
 
 prompt_user_for_pipeline() {
@@ -24,31 +24,38 @@ prompt_user_for_pipeline() {
   select opt in "${options[@]}" "Exit"; do
     case $opt in
       *.yml)
-	PIPELINE_PATH=$opt
-	PIPELINE_FILENAME=$(basename ${PIPELINE_PATH})
-	PIPELINE_NAME="${PIPELINE_FILENAME%.*}"
-	echo
-	echo "Configuring pipeline: ${PIPELINE_NAME} (${PIPELINE_PATH})"
-	break
-	;;
+  PIPELINE_PATH=$opt
+  PIPELINE_FILENAME=$(basename ${PIPELINE_PATH})
+  PIPELINE_NAME="${PIPELINE_FILENAME%.*}"
+  echo
+  echo "Configuring pipeline: ${PIPELINE_NAME} (${PIPELINE_PATH})"
+  break
+  ;;
       "Exit")
-	echo
-	echo "Exiting"
-	exit
-	;;
+  echo
+  echo "Exiting"
+  exit
+  ;;
       *)
-	echo
-	echo "Invalid choice. Exiting"
-	exit
-	;;
+  echo
+  echo "Invalid choice. Exiting"
+  exit
+  ;;
     esac
   done
 }
 
 fly_pipeline() {
-  reconfigure-pipeline -t concourse set-pipeline \
-        -p "${PIPELINE_NAME}" \
-        -c "${PIPELINE_PATH}"
+  FLY_TARGET="concourse"
+  # if target is pws, don't use reconfigure-pipeline, since all credentials are in credhub
+  if [[ ${PIPELINE_PATH} = *"/pws/"* ]]; then
+    FLY_TARGET="pws"
+  fi
+
+  reconfigure-pipeline -t ${FLY_TARGET} set-pipeline \
+    -p "${PIPELINE_NAME}" \
+    -c "${PIPELINE_PATH}"
+
 }
 
 main() {
