@@ -22,6 +22,16 @@ resources:
   source:
     name: bosh-google-kvm-ubuntu-trusty-go_agent
 
+- name: xenial-bosh-lite-stemcell
+  type: bosh-io-stemcell
+  source:
+    name: bosh-warden-boshlite-ubuntu-xenial-go_agent
+
+- name: xenial-gcp-bosh-stemcell
+  type: bosh-io-stemcell
+  source:
+    name: bosh-google-kvm-ubuntu-xenial-go_agent
+
 - name: deployments-configuration
   type: git
   source:
@@ -991,6 +1001,70 @@ jobs:
         ENV_TARGET_FILE: bosh-lite-info/external-ip
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
+  - do: *teardown-bosh-lite
+
+- name: test-xenial
+  plan:
+  - aggregate:
+    - get: pxc-release
+      passed: [create-and-compile-release]
+      trigger: true
+    - get: cf-mysql-ci
+    - get: cf-mysql-deployment
+    - get: bosh-deployment
+      resource: bosh-deployment-repo
+    - get: deployments
+      resource: deployments-configuration
+    - get: stemcell
+      resource: xenial-bosh-lite-stemcell
+    - get: gcp-bosh-stemcell
+      resource: xenial-gcp-bosh-stemcell
+    - get: cf-deployment
+      resource: cf-deployment-develop
+    - get: version
+      passed: [create-and-compile-release]
+      trigger: true
+    - get: pxc-compiled-release
+      passed: [create-and-compile-release]
+  - task: gate-on-stemcells
+    input_mapping: {bosh-lite-stemcell: stemcell}
+    file: cf-mysql-ci/ci/tasks/create-and-compile-release/gate-on-stemcells.yml
+  - aggregate:
+    - do:
+      - task: create-release
+        attempts: 3
+        file: cf-mysql-ci/ci/tasks/create-release.yml
+        input_mapping: {release-repo: pxc-release}
+        params:
+          RELEASE_NAME: pxc
+          BOSH_SHA2: true
+      - put: compiled-packages-lock
+        params:
+          acquire: true
+      - task: compile-pxc-release
+        file: cf-mysql-ci/ci/tasks/compile-release.yml
+        params:
+          BOSH_CLIENT: ((concourse-compilation-director/Notes/BOSH_CLIENT))
+          BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
+          BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
+          BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
+          STEMCELL_LINE: ubuntu-xenial
+      ensure:
+        put: compiled-packages-lock
+        params:
+          release: compiled-packages-lock
+    - do: *create-bosh-lite
+  - put: pxc-bosh-deployment
+    params:
+      manifest: pxc-release/pxc-deployment.yml
+      releases:
+      - compiled-release-tarball/*.tgz
+      stemcells:
+      - stemcell/*.tgz
+      source_file: bosh-lite-info/bosh-deployment-resource-source-file
+      ops_files:
+      - pxc-release/operations/use-clustered.yml
+  - *smoke-tests
   - do: *teardown-bosh-lite
 
 - name: promote-release-candidate

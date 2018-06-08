@@ -14,6 +14,7 @@ RELEASE_TARBALL_DIR="${WORKSPACE_DIR}/${RELEASE_TARBALL_DIR}"
 export RELEASE_TARBALL_DIR
 
 RELEASE_FILENAME=${RELEASE_FILENAME:-tgz}
+STEMCELL_LINE=${STEMCELL_LINE:-ubuntu-trusty}
 
 RELEASE_FILE=$(ls ${RELEASE_TARBALL_DIR}/ | grep ${RELEASE_FILENAME})
 export RELEASE_FILE
@@ -36,7 +37,7 @@ releases:
 
 stemcells:
 - alias: default
-  os: ubuntu-trusty
+  os: ${STEMCELL_LINE}
   version: "${stemcell_version}"
 
 instance_groups: []
@@ -51,7 +52,7 @@ EOF
   bosh upload-stemcell *stemcell/*.tgz
   bosh -n -d ${DEPLOYMENT_NAME} deploy deployment.yml
 
-  bosh -d ${DEPLOYMENT_NAME} export-release --dir ${OUTPUT_DIR} ${name}/${version} ubuntu-trusty/${stemcell_version}
+  bosh -d ${DEPLOYMENT_NAME} export-release --dir ${OUTPUT_DIR} ${name}/${version} ${STEMCELL_LINE}/${stemcell_version}
 
   bosh -d ${DEPLOYMENT_NAME} -n delete-deployment
 popd
