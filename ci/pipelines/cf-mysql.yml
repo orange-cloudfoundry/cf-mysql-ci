@@ -84,6 +84,16 @@ resources:
   source:
     name: bosh-google-kvm-ubuntu-trusty-go_agent
 
+- name: xenial-bosh-lite-stemcell
+  type: bosh-io-stemcell
+  source:
+    name: bosh-warden-boshlite-ubuntu-xenial-go_agent
+
+- name: xenial-gcp-bosh-stemcell
+  type: bosh-io-stemcell
+  source:
+    name: bosh-google-kvm-ubuntu-xenial-go_agent
+
 - name: deployments-configuration
   type: git
   source:
@@ -441,7 +451,7 @@ jobs:
   - try:
       task: run-deregister-and-purge-instances
       config:
-        platform: *platform
+        platform: linux
         image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
@@ -458,7 +468,7 @@ jobs:
           path: cf-mysql-ci/scripts/bosh/run_errand_gcp
   - task: delete-deployment
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
       - name: cf-mysql-ci
@@ -473,7 +483,7 @@ jobs:
         path: cf-mysql-ci/scripts/bosh/delete_deployment_gcp
   - task: make-manifest
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
       - name: deployments-configuration
@@ -499,7 +509,7 @@ jobs:
       stemcells: [gcp-bosh-stemcell/*.tgz]
   - task: run-broker-registrar
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -515,7 +525,7 @@ jobs:
         path: cf-mysql-ci/scripts/bosh/run_errand_gcp
   - task: run-smoke-tests
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -532,7 +542,7 @@ jobs:
   - task: acceptance-test
     attempts: 3
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-release
@@ -552,7 +562,7 @@ jobs:
   - try:
       task: run-deregister-and-purge-instances
       config:
-        platform: *platform
+        platform: linux
         image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
@@ -569,7 +579,7 @@ jobs:
           path: cf-mysql-ci/scripts/bosh/run_errand_gcp
   - task: delete-deployment
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
       - name: cf-mysql-ci
@@ -641,7 +651,7 @@ jobs:
   - &run-smoke-tests-ondemand
     task: run-smoke-tests
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -657,7 +667,7 @@ jobs:
         path: cf-mysql-ci/scripts/bosh/run_errand
   - task: run-scaling-tests
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -676,7 +686,7 @@ jobs:
       do:
       - task: delete-deployment
         config:
-          platform: *platform
+          platform: linux
           image_resource: *image_resource
           inputs:
           - name: cf-mysql-ci
@@ -704,7 +714,7 @@ jobs:
   - *run-smoke-tests-ondemand
   - task: run-arb-to-full-scaling-tests
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -764,7 +774,7 @@ jobs:
       - task: create-dns
         attempts: 2
         config:
-          platform: *platform
+          platform: linux
           image_resource: *image_resource
           inputs:
           - name: cf-mysql-ci
@@ -843,7 +853,7 @@ jobs:
         source_file: bosh-lite-info/bosh-deployment-resource-source-file
   - task: run-broker-registrar
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -859,7 +869,7 @@ jobs:
         path: cf-mysql-ci/scripts/bosh/run_errand
   - task: test-tls
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
       - name: cf-mysql-ci
@@ -869,7 +879,7 @@ jobs:
         path: cf-mysql-ci/scripts/tls/verify-tls-enabled
   - task: run-smoke-tests
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -885,7 +895,7 @@ jobs:
         path: cf-mysql-ci/scripts/bosh/run_errand
   - task: delete-cf-mysql-deployment
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
       - name: cf-mysql-ci
@@ -900,7 +910,7 @@ jobs:
         path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
   - task: delete-cf-deployment
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
       - name: cf-mysql-ci
@@ -921,7 +931,7 @@ jobs:
     input_mapping: {deployments: deployments-terraformed}
   - task: delete-dns
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
       - name: cf-mysql-ci
@@ -974,7 +984,7 @@ jobs:
       - task: create-dns
         attempts: 2
         config:
-          platform: *platform
+          platform: linux
           image_resource: *image_resource
           inputs:
           - name: cf-mysql-ci
@@ -1050,7 +1060,7 @@ jobs:
         source_file: bosh-lite-info/bosh-deployment-resource-source-file
   - task: run-broker-registrar
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -1066,7 +1076,7 @@ jobs:
         path: cf-mysql-ci/scripts/bosh/run_errand
   - task: run-smoke-tests
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -1082,7 +1092,7 @@ jobs:
         path: cf-mysql-ci/scripts/bosh/run_errand
   - task: run-failover-tests
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -1100,7 +1110,7 @@ jobs:
         path: cf-mysql-ci/scripts/failover/failover-test
   - task: delete-cf-mysql-deployment
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
       - name: cf-mysql-ci
@@ -1115,7 +1125,7 @@ jobs:
         path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
   - task: delete-cf-deployment
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
       - name: cf-mysql-ci
@@ -1136,7 +1146,7 @@ jobs:
     input_mapping: {deployments: deployments-terraformed}
   - task: delete-dns
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
       - name: cf-mysql-ci
@@ -1206,7 +1216,7 @@ jobs:
 
   - task: persistence-test-data-write
     config:
-      platform: *platform
+      platform: linux
       image_resource:
         type: docker-image
         source:
@@ -1240,7 +1250,7 @@ jobs:
 
   - task: persistence-test-data-read
     config:
-      platform: *platform
+      platform: linux
       image_resource:
         type: docker-image
         source:
@@ -1263,7 +1273,7 @@ jobs:
   - *ondemand-setup
   - task: persistence-test-data-write
     config:
-      platform: *platform
+      platform: linux
       image_resource:
         type: docker-image
         source:
@@ -1280,7 +1290,7 @@ jobs:
         path: cf-mysql-ci/scripts/persistence/load-test-data
   - task: break-mysql-cluster
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
       - name: cf-mysql-ci
@@ -1294,7 +1304,7 @@ jobs:
         path: cf-mysql-ci/scripts/bootstrap/break-mysql-cluster
   - task: bootstrap
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
       - name: bosh-lite-info
@@ -1310,7 +1320,7 @@ jobs:
         path: cf-mysql-ci/scripts/bosh/run_errand
   - task: persistence-test-data-read
     config:
-      platform: *platform
+      platform: linux
       image_resource:
         type: docker-image
         source:
@@ -1336,7 +1346,7 @@ jobs:
   - *ondemand-deploy-manifest
   - task: run-data-loss-tests
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -1351,7 +1361,7 @@ jobs:
         path: cf-mysql-ci/scripts/data-loss/force-sst-test
   - task: run-rejoin-unsafe-errand
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -1379,7 +1389,7 @@ jobs:
   - *ondemand-deploy-manifest
   - task: run-data-loss-tests # leaves cluster in broken state with node z2 down
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -1400,7 +1410,7 @@ jobs:
   - task: restart-broken-node
     attempts: 5
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -1426,7 +1436,7 @@ jobs:
   - *ondemand-deploy-manifest
   - task: run-verify-cluster-schemas-tests
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -1491,7 +1501,7 @@ jobs:
   - *ondemand-deploy-manifest
   - task: run-verify-no-remote-access
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -1553,7 +1563,7 @@ jobs:
   - *ondemand-deploy-manifest
   - task: run-verify-tuning
     config:
-      platform: *platform
+      platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-ci
@@ -1573,6 +1583,87 @@ jobs:
         path: cf-mysql-ci/scripts/tuning/verify-tuning
   - *ondemand-teardown
 
+### XENIAL
+- name: test-xenial
+  plan:
+  - aggregate:
+    - get: cf-mysql-release
+      passed: [create-and-compile-release]
+    - get: cf-mysql-deployment
+      passed: [create-and-compile-release]
+      trigger: true
+    - get: cf-mysql-ci
+    - get: bosh-deployment
+      resource: bosh-deployment-repo
+    - get: deployments
+      resource: deployments-configuration
+    - get: stemcell
+      resource: xenial-bosh-lite-stemcell
+    - get: gcp-bosh-stemcell
+      resource: xenial-gcp-bosh-stemcell
+    - get: version
+      passed: [create-and-compile-release]
+      trigger: true
+  - task: gate-on-stemcells
+    input_mapping: {bosh-lite-stemcell: stemcell}
+    file: cf-mysql-ci/ci/tasks/create-and-compile-release/gate-on-stemcells.yml
+  - aggregate:
+    - do:
+      - task: apply-terraform
+        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+      - task: create-bosh-lite
+        file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+        input_mapping: {deployments: deployments-terraformed}
+        params:
+          PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
+          ZONE: ((core-services-ci-credentials/Notes/gcp-bosh-lite-zone))
+          NETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-network))
+          SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
+          BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+      - task: delete-stemcell
+        file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
+    - do:
+      - *create-release
+      - put: compiled-packages-lock
+        params:
+          acquire: true
+      - task: compile-release
+        config:
+          platform: linux
+          image_resource: *image_resource
+          inputs:
+          - name: cf-mysql-ci
+          - name: release-tarball
+          - name: gcp-bosh-stemcell
+          outputs:
+          - name: compiled-release-tarball
+          params:
+            BOSH_CLIENT: ((concourse-compilation-director/Notes/BOSH_CLIENT))
+            BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
+            BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
+            BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
+            STEMCELL_LINE: ubuntu-xenial
+          run:
+            path: cf-mysql-ci/scripts/compile_release
+        ensure:
+          put: compiled-packages-lock
+          params:
+            release: compiled-packages-lock
+  - put: cf-mysql-bosh-deployment
+    params:
+      manifest: cf-mysql-deployment/cf-mysql-deployment.yml
+      ops_files:
+      - cf-mysql-ci/operations/increase-proxy-healthcheck-timeout.yml
+      - cf-mysql-ci/operations/minimal-mode.yml
+      - cf-mysql-deployment/operations/xenial-stemcell.yml
+      releases:
+      - compiled-release-tarball/*.tgz
+      stemcells:
+      - stemcell/*.tgz
+      source_file: bosh-lite-info/bosh-deployment-resource-source-file
+  - *run-smoke-tests-ondemand
+  - *ondemand-teardown
+
 - name: upload-rc-artifacts
   plan:
   - aggregate:
@@ -1590,6 +1681,7 @@ jobs:
       - test-verify-no-remote-access
       - test-verify-tuning
       - test-tls
+      - test-xenial
       trigger: true
     - get: cf-mysql-ci
     - get: version
@@ -1606,6 +1698,7 @@ jobs:
       - test-verify-no-remote-access
       - test-verify-tuning
       - test-tls
+      - test-xenial
   - *create-release
   - put: cf-mysql-rc-artifacts
     params:
@@ -1628,6 +1721,7 @@ jobs:
       - test-verify-no-remote-access
       - test-verify-tuning
       - test-tls
+      - test-xenial
       trigger: true
       params:
         fetch: [release-candidate]
@@ -1645,6 +1739,7 @@ jobs:
       - test-verify-no-remote-access
       - test-verify-tuning
       - test-tls
+      - test-xenial
     - get: cf-mysql-ci
     - get: version
       passed:
@@ -1660,6 +1755,7 @@ jobs:
       - test-verify-no-remote-access
       - test-verify-tuning
       - test-tls
+      - test-xenial
     - get: gcp-bosh-stemcell
       passed: [test-full-bosh]
   - aggregate:
@@ -1698,7 +1794,7 @@ jobs:
         AWS_SECRET_ACCESS_KEY: ((core-services-ci-credentials/Notes/cf-mysql-publish-blobs-aws-secret-access-key))
     - task: commit-final-release-changes
       config:
-        platform: *platform
+        platform: linux
         image_resource: *image_resource
         inputs:
         - name: cf-mysql-ci
@@ -1714,7 +1810,7 @@ jobs:
           path: cf-mysql-ci/scripts/publish/git-commit-changes
     - task: prep-github-release
       config:
-        platform: *platform
+        platform: linux
         image_resource: *image_resource
         inputs:
         - name: release-notes

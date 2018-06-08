@@ -1024,8 +1024,6 @@ jobs:
     - get: version
       passed: [create-and-compile-release]
       trigger: true
-    - get: pxc-compiled-release
-      passed: [create-and-compile-release]
   - task: gate-on-stemcells
     input_mapping: {bosh-lite-stemcell: stemcell}
     file: cf-mysql-ci/ci/tasks/create-and-compile-release/gate-on-stemcells.yml
@@ -1064,6 +1062,7 @@ jobs:
       source_file: bosh-lite-info/bosh-deployment-resource-source-file
       ops_files:
       - pxc-release/operations/use-clustered.yml
+      - pxc-release/operations/xenial-stemcell.yml
   - *smoke-tests
   - do: *teardown-bosh-lite
 
@@ -1079,6 +1078,7 @@ jobs:
       - test-bootstrap
       - test-no-remote-admin-access
       - test-autotune
+      - test-xenial
     - get: version
       trigger: true
       passed:
@@ -1089,6 +1089,7 @@ jobs:
       - test-bootstrap
       - test-no-remote-admin-access
       - test-autotune
+      - test-xenial
     - put: pxc-release-release-candidate
       params:
         repository: pxc-release
