@@ -85,8 +85,8 @@ resources:
 - name: cf-deployment-develop
   type: git
   source:
-    uri: https://github.com/jpalermo/cf-deployment.git
-    branch: rename-mysql-clustered-to-pxc-mysql
+    uri: https://github.com/cloudfoundry/cf-deployment.git
+    branch: develop
 
 - name: cf-mysql-deployment
   type: git
