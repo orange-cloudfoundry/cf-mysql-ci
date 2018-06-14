@@ -1,1 +1,12 @@
 ---
+- type: replace
+  path: /instance_groups/name=database/jobs/-
+  value:
+    name: galera-agent
+    properties:
+      endpoint_password: ((cf_mysql_mysql_galera_healthcheck_endpoint_password))
+      db_password: ((cf_mysql_mysql_galera_healthcheck_db_password))
+    release: pxc
+
+- type: remove
+  path: /instance_groups/name=database/jobs/name=pxc-mysql/properties/galera_agent

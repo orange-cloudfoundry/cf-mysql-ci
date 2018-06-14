@@ -1,0 +1,6 @@
+---
+- type: replace
+  path: /instance_groups/name=database/jobs/name=galera-agent/consumes?
+  value:
+    mysql:
+      from: pxc-mysql
