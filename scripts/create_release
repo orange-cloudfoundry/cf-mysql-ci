@@ -40,6 +40,8 @@ tarball_path="${tarball_dir}/${RELEASE_NAME}-dev.tgz"
 
 if [ -n "${FINAL}" ]; then
   create_release_command="${create_release_command} --final"
+else
+  mkdir -p "${release_repo_modified}"
 fi
 
 if [ -n "${SHA2}" ]; then
