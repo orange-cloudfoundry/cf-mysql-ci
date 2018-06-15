@@ -5,7 +5,7 @@
     name: galera-agent
     properties:
       endpoint_password: ((cf_mysql_mysql_galera_healthcheck_endpoint_password))
-      db_password: ((cf_mysql_mysql_galera_healthcheck_db_password))
+      db_password: ((cf_mysql_mysql_galera_healthcheck_password))
     release: pxc
 
 - type: remove
