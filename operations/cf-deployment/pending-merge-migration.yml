@@ -4,3 +4,6 @@
   value:
     mysql:
       from: pxc-mysql
+
+- type: remove
+  path: /instance_groups/name=database/jobs/name=bootstrap/consumes
