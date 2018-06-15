@@ -112,9 +112,13 @@ HEREDOC
 
 # Create a file which can be sourced in order to get all the env vars to talk to the bosh director
 cat <<HEREDOC > "${OUTPUT_DIR}/source_me"
+#!/usr/bin/env bash
+
+bosh_lite_info_dir="\$( cd "\$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
+
 export BOSH_ENVIRONMENT=$(cat "${OUTPUT_DIR}/external-ip")
-export BOSH_CA_CERT=${workspace_dir}/bosh-lite-info/ca-cert
+export BOSH_CA_CERT=\${bosh_lite_info_dir}/ca-cert
 export BOSH_CLIENT=admin
 export BOSH_CLIENT_SECRET=${BOSH_CLIENT_SECRET}
-export BOSH_GW_PRIVATE_KEY=${workspace_dir}/bosh-lite-info/jumpbox-private-key
+export BOSH_GW_PRIVATE_KEY=\${bosh_lite_info_dir}/jumpbox-private-key
 HEREDOC
