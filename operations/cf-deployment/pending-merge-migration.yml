@@ -5,5 +5,17 @@
     mysql:
       from: pxc-mysql
 
+- type: replace
+  path: /instance_groups/name=database/jobs/name=gra-log-purger/consumes?
+  value:
+    mysql:
+      from: pxc-mysql
+
+- type: replace
+  path: /instance_groups/name=database/jobs/name=cluster-health-logger/consumes?
+  value:
+    mysql:
+      from: pxc-mysql
+
 - type: remove
   path: /instance_groups/name=database/jobs/name=bootstrap/consumes

@@ -10,3 +10,20 @@
 
 - type: remove
   path: /instance_groups/name=database/jobs/name=pxc-mysql/properties/galera_agent
+
+- type: replace
+  path: /instance_groups/name=database/jobs/-
+  value:
+    name: gra-log-purger
+    release: pxc
+
+- type: replace
+  path: /instance_groups/name=database/jobs/-
+  value:
+    name: cluster-health-logger
+    release: pxc
+    properties:
+      db_password: ((cf_mysql_mysql_cluster_health_password))
+
+- type: remove
+  path: /instance_groups/name=database/jobs/name=pxc-mysql/properties/cluster_health
