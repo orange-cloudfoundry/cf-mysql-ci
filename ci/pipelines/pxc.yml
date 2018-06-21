@@ -527,6 +527,24 @@ jobs:
         - name: url
       run:
         path: cf-mysql-ci/scripts/bosh-lite/run-cats
+  # redeploy to test bosh lifecycle scripts
+  - put: cf-bosh-deployment
+    params:
+      manifest: cf-deployment/cf-deployment.yml
+      recreate: true
+      releases:
+      - pxc-compiled-release/*.tgz
+      stemcells:
+      - stemcell/*.tgz
+      ops_files:
+      - cf-deployment/operations/use-compiled-releases.yml
+      - cf-deployment/operations/bosh-lite.yml
+      - cf-deployment/operations/experimental/migrate-cf-mysql-to-pxc.yml
+      - cf-mysql-ci/operations/cf-deployment/pending-merge.yml
+      - cf-mysql-ci/operations/cf-deployment/pending-merge-migration.yml
+      vars_files:
+      - url/url-vars.yml
+      source_file: bosh-lite-info/bosh-deployment-resource-source-file
   - task: delete-cf-deployment
     config:
       platform: linux
