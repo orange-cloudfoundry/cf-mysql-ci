@@ -34,7 +34,10 @@
     consul:
       agent:
         services:
-          sql-db: {}
+          sql-db:
+            check:
+              http: "http://localhost:1936"
+              interval: 3s
 
 - type: remove
   path: /instance_groups/name=database/jobs/name=proxy/properties/consul_enabled
