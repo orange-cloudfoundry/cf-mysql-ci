@@ -27,3 +27,17 @@
 
 - type: remove
   path: /instance_groups/name=database/jobs/name=pxc-mysql/properties/cluster_health
+
+- type: replace
+  path: /instance_groups/name=database/jobs/name=consul_agent/properties?
+  value:
+    consul:
+      agent:
+        services:
+          sql-db: {}
+
+- type: remove
+  path: /instance_groups/name=database/jobs/name=proxy/properties/consul_enabled
+
+- type: remove
+  path: /instance_groups/name=database/jobs/name=proxy/properties/consul_service_name
