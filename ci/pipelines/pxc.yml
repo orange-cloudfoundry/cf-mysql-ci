@@ -150,6 +150,21 @@ resources:
     secret_access_key: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-secret-access-key))
     versioned_file: compiled-releases/pxc-ubuntu-trusty.tgz
 
+- name: publish-github-release
+  type: github-release
+  source:
+    user: cloudfoundry-incubator
+    repository: pxc-release
+    access_token: ((core-services-ci-credentials/Notes/git-writer-github-access-token))
+
+- name: release-notes
+  type: s3
+  source:
+    bucket: pxc-release-notes
+    regexp: RELEASE_NOTES_v(.*)
+    access_key_id: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-access-key-id))
+    secret_access_key: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-secret-access-key))
+
 jobs:
 - name: bump-version
   serial_groups: [version-bumper]
@@ -1174,6 +1189,7 @@ jobs:
       - get: pxc-release
         passed: [promote-release-candidate]
       - get: cf-mysql-ci
+      - get: release-notes
       - get: version
         passed: [promote-release-candidate]
         params:
@@ -1205,12 +1221,32 @@ jobs:
           OUTPUT_DIR: pxc-release-committed
         run:
           path: cf-mysql-ci/scripts/publish/git-commit-changes
+    - task: prep-github-release
+      config:
+        platform: linux
+        image_resource: *image_resource
+        params:
+          RELEASE_DIR: pxc-release
+        inputs:
+        - name: release-notes
+        - name: cf-mysql-ci
+        - name: pxc-release-committed
+        - name: version
+        outputs:
+        - name: output-release-dir
+        run:
+          path: cf-mysql-ci/scripts/publish/prep-github-release
     - put: pxc-release
       params:
         repository: pxc-release-committed/pxc-release-final
-        tag: version/version
-        tag_prefix: v
+        tag: output-release-dir/release-tag
     - put: version
       params:
         bump: minor
         pre: rc
+    - put: publish-github-release
+      params:
+        name: output-release-dir/release-tag
+        tag: output-release-dir/release-tag
+        body: output-release-dir/generated-release-notes
+        commitish: output-release-dir/git-commit

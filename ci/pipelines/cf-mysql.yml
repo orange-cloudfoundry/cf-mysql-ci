@@ -1801,21 +1801,23 @@ jobs:
         - name: cf-mysql-release-final
         - name: commit-message
         outputs:
-        - name: cf-mysql-committed
+        - name: cf-mysql-release-committed
         params:
           GIT_COMMIT_MESSAGE: commit-message/commit-message
           REPO_DIR: cf-mysql-release-final
-          OUTPUT_DIR: cf-mysql-committed
+          OUTPUT_DIR: cf-mysql-release-committed
         run:
           path: cf-mysql-ci/scripts/publish/git-commit-changes
     - task: prep-github-release
       config:
         platform: linux
         image_resource: *image_resource
+        params:
+          RELEASE_DIR: cf-mysql-release
         inputs:
         - name: release-notes
         - name: cf-mysql-ci
-        - name: cf-mysql-committed
+        - name: cf-mysql-release-committed
         - name: version
         outputs:
         - name: output-release-dir
@@ -1823,8 +1825,8 @@ jobs:
           path: cf-mysql-ci/scripts/publish/prep-github-release
     - put: cf-mysql-master
       params:
-        repository: cf-mysql-committed/cf-mysql-release-final
-        tag: output-release-dir/cf-mysql-tag
+        repository: cf-mysql-release-committed/cf-mysql-release-final
+        tag: output-release-dir/release-tag
     - put: version
       params:
         bump: minor
@@ -1834,8 +1836,8 @@ jobs:
         file: release-tarball/cf-mysql-*.tgz
     - put: publish-github-release
       params:
-        name: output-release-dir/cf-mysql-tag
-        tag: output-release-dir/cf-mysql-tag
+        name: output-release-dir/release-tag
+        tag: output-release-dir/release-tag
         body: output-release-dir/generated-release-notes
         commitish: output-release-dir/git-commit
 

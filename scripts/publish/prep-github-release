@@ -3,8 +3,8 @@
 ROOT_DIR=$PWD
 
 cp ${ROOT_DIR}/release-notes/RELEASE_NOTES_v* "${ROOT_DIR}/output-release-dir/generated-release-notes"
-echo "v$(cat ${ROOT_DIR}/version/version)" > "${ROOT_DIR}/output-release-dir/cf-mysql-tag"
+echo "v$(cat ${ROOT_DIR}/version/version)" > "${ROOT_DIR}/output-release-dir/release-tag"
 
-pushd "${ROOT_DIR}/cf-mysql-committed/cf-mysql-release-final"
+pushd "${ROOT_DIR}/${RELEASE_DIR}-committed/${RELEASE_DIR}-final"
   git rev-parse HEAD > "${ROOT_DIR}/output-release-dir/git-commit"
 popd
