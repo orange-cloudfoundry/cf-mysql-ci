@@ -344,7 +344,7 @@ jobs:
       - cf-deployment/operations/experimental/use-pxc.yml
       - cf-mysql-ci/operations/cf-deployment/pending-merge.yml
       - cf-mysql-ci/operations/cf-deployment/enable-remote-admin-access.yml
-      - cf-mysql-ci/operations/cf-deployment/increase-proxy-healthcheck-timeout.yml
+      - cf-mysql-ci/operations/cf-deployment/increase-pxc-proxy-healthcheck-timeout.yml
       vars_files:
       - url/url-vars.yml
       vars:
@@ -500,7 +500,7 @@ jobs:
       - cf-deployment/operations/experimental/migrate-cf-mysql-to-pxc.yml
       - cf-mysql-ci/operations/cf-deployment/pending-merge.yml
       - cf-mysql-ci/operations/cf-deployment/pending-merge-migration.yml
-      - cf-mysql-ci/operations/cf-deployment/increase-proxy-healthcheck-timeout.yml
+      - cf-mysql-ci/operations/cf-deployment/increase-pxc-proxy-healthcheck-timeout.yml
       vars_files:
       - url/url-vars.yml
       source_file: bosh-lite-info/bosh-deployment-resource-source-file
@@ -544,7 +544,7 @@ jobs:
       - cf-deployment/operations/experimental/migrate-cf-mysql-to-pxc.yml
       - cf-mysql-ci/operations/cf-deployment/pending-merge.yml
       - cf-mysql-ci/operations/cf-deployment/pending-merge-migration.yml
-      - cf-mysql-ci/operations/cf-deployment/increase-proxy-healthcheck-timeout.yml
+      - cf-mysql-ci/operations/cf-deployment/increase-pxc-proxy-healthcheck-timeout.yml
       vars_files:
       - url/url-vars.yml
       source_file: bosh-lite-info/bosh-deployment-resource-source-file
