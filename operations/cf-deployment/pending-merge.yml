@@ -3,6 +3,13 @@
   path: /instance_groups/name=database/jobs/name=pxc-mysql/properties/engine_config?/galera/enabled
   value: true
 
+- type: remove
+  path: /instance_groups/name=database/jobs/name=pxc-mysql/properties/binlog_enabled
+
+- type: replace
+  path: /instance_groups/name=database/jobs/name=pxc-mysql/properties/engine_config?/binlog/enabled
+  value: false
+
 - type: replace
   path: /instance_groups/name=database/jobs/-
   value:
