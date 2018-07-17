@@ -22,5 +22,6 @@ params:
   OUTPUT_FILE: cf-deployment-manifest/cf.yml
   DNS_NAME: url/url
   DEPLOY_WITH_DIEGO_CA_CERT: false
+  DEPLOY_WITH_BOSH_DNS: false
   REMOTE_ADMIN_ACCESS:
   PROXY_LB:

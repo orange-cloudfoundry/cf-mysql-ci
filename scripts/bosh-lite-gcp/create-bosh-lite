@@ -17,7 +17,7 @@ stemcell_dir="${workspace_dir}/stemcell"
 : "${NETWORK}"
 : "${SUBNETWORK}"
 : "${BOSH_CLIENT_SECRET}"
-DISABLE_BOSH_DNS="${DISABLE_BOSH_DNS:-false}"
+: "${DISABLE_BOSH_DNS:=false}"
 
 source "${scripts_dir}/create_release_override"
 
