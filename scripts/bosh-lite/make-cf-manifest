@@ -26,7 +26,7 @@ if ${PROXY_LB}; then
 fi
 
 if ${DEPLOY_WITH_BOSH_DNS}; then
-    operations="$operations -o ./cf-deployment/operations/use-bosh-dns.yml"
+    operations="$operations -o ./cf-deployment/operations/experimental/use-bosh-dns.yml"
 fi
 
 bosh int \
