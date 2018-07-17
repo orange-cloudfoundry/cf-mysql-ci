@@ -40,6 +40,7 @@ bosh interpolate "${BOSH_DEPLOYMENT_DIR}/bosh.yml" \
   -o "${bosh_lite_dir}/instance.yml" \
   -o "${bosh_lite_dir}/external-ip-not-recommended-credhub.yml" \
   -o "${bosh_lite_dir}/remove-blobstore.yml" \
+  -o "${workspace_dir}/cf-mysql-ci/operations/enable-bosh-dns.yml" \
   --vars-store "${OUTPUT_DIR}/credentials.yml" \
   -v director_name=lite \
   -v internal_ip=127.0.0.1 \
@@ -80,13 +81,12 @@ bosh -n update-cloud-config "${cf_mysql_deployment_dir}/bosh-lite/cloud-config.y
   --client-secret "${BOSH_CLIENT_SECRET}" \
   --ca-cert "${OUTPUT_DIR}/ca-cert"
 
-if [ "${USE_BOSH_DNS}" = true ] ; then
-bosh -n update-runtime-config "${BOSH_DEPLOYMENT_DIR}/runtime-configs/dns.yml" \
+bosh -n update-config --type=runtime --name=dns \
+  "${BOSH_DEPLOYMENT_DIR}/runtime-configs/dns.yml" \
   -e "$(cat "${OUTPUT_DIR}/external-ip")" \
   --client admin \
   --client-secret "${BOSH_CLIENT_SECRET}" \
   --ca-cert "${OUTPUT_DIR}/ca-cert"
-fi
 
 director_url="https://$(cat "${OUTPUT_DIR}/external-ip")"
 escaped_ca_cert="$(cat ${OUTPUT_DIR}/ca-cert | sed ':a;N;$!ba;s/\n/\\n/g')"
