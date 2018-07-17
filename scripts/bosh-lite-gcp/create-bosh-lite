@@ -81,8 +81,7 @@ bosh -n update-cloud-config "${cf_mysql_deployment_dir}/bosh-lite/cloud-config.y
   --client-secret "${BOSH_CLIENT_SECRET}" \
   --ca-cert "${OUTPUT_DIR}/ca-cert"
 
-bosh -n update-config --type=runtime --name=dns \
-  "${BOSH_DEPLOYMENT_DIR}/runtime-configs/dns.yml" \
+bosh -n update-runtime-config "${BOSH_DEPLOYMENT_DIR}/runtime-configs/dns.yml" \
   -e "$(cat "${OUTPUT_DIR}/external-ip")" \
   --client admin \
   --client-secret "${BOSH_CLIENT_SECRET}" \
