@@ -27,6 +27,7 @@ fi
 
 if ${DEPLOY_WITH_BOSH_DNS}; then
     operations="$operations -o ./cf-deployment/operations/use-bosh-dns.yml"
+    operations="$operations -o ./cf-deployment/operations/use-bosh-dns-for-containers.yml"
 fi
 
 bosh int \
