@@ -1213,22 +1213,26 @@ jobs:
       passed:
       - test-clean-install-pxc
       - test-migrate-to-pxc
+      - test-upgrade-pxc
       - test-failover
       - test-scaling
       - test-bootstrap
       - test-no-remote-admin-access
       - test-autotune
+      - test-single-node
       - test-xenial
     - get: version
       trigger: true
       passed:
       - test-clean-install-pxc
       - test-migrate-to-pxc
+      - test-upgrade-pxc
       - test-failover
       - test-scaling
       - test-bootstrap
       - test-no-remote-admin-access
       - test-autotune
+      - test-single-node
       - test-xenial
     - put: pxc-release-release-candidate
       params:
