@@ -28,4 +28,3 @@ params:
   ZONE:
   NETWORK:
   SUBNETWORK:
-  DISABLE_BOSH_DNS:

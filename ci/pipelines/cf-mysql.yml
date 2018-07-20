@@ -770,7 +770,6 @@ jobs:
         NETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-network))
         SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
         BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-        DISABLE_BOSH_DNS: true
     - aggregate:
       - task: create-dns
         attempts: 2
@@ -981,7 +980,6 @@ jobs:
         NETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-network))
         SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
         BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-        DISABLE_BOSH_DNS: true
     - aggregate:
       - task: create-dns
         attempts: 2

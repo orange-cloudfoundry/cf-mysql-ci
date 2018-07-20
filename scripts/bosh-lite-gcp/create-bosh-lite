@@ -17,7 +17,6 @@ stemcell_dir="${workspace_dir}/stemcell"
 : "${NETWORK}"
 : "${SUBNETWORK}"
 : "${BOSH_CLIENT_SECRET}"
-: "${DISABLE_BOSH_DNS:=false}"
 
 source "${scripts_dir}/create_release_override"
 
@@ -82,13 +81,11 @@ bosh -n update-cloud-config "${cf_mysql_deployment_dir}/bosh-lite/cloud-config.y
   --client-secret "${BOSH_CLIENT_SECRET}" \
   --ca-cert "${OUTPUT_DIR}/ca-cert"
 
-if [ "${DISABLE_BOSH_DNS}" = false ]; then
-  bosh -n update-runtime-config "${BOSH_DEPLOYMENT_DIR}/runtime-configs/dns.yml" \
-    -e "$(cat "${OUTPUT_DIR}/external-ip")" \
-    --client admin \
-    --client-secret "${BOSH_CLIENT_SECRET}" \
-    --ca-cert "${OUTPUT_DIR}/ca-cert"
-fi
+bosh -n update-runtime-config "${BOSH_DEPLOYMENT_DIR}/runtime-configs/dns.yml" \
+  -e "$(cat "${OUTPUT_DIR}/external-ip")" \
+  --client admin \
+  --client-secret "${BOSH_CLIENT_SECRET}" \
+  --ca-cert "${OUTPUT_DIR}/ca-cert"
 
 director_url="https://$(cat "${OUTPUT_DIR}/external-ip")"
 escaped_ca_cert="$(cat ${OUTPUT_DIR}/ca-cert | sed ':a;N;$!ba;s/\n/\\n/g')"
