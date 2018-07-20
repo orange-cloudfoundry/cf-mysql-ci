@@ -797,7 +797,6 @@ jobs:
       - task: make-cf-manifest
         file: cf-mysql-ci/ci/tasks/make-cf-manifest.yml
         params:
-          DEPLOY_WITH_BOSH_DNS: true
           DEPLOY_WITH_DIEGO_CA_CERT: true
       - do:
         - task: generate-cloud-config
@@ -1008,8 +1007,6 @@ jobs:
           INFRASTRUCTURE: bosh-lite
       - task: make-cf-manifest
         file: cf-mysql-ci/ci/tasks/make-cf-manifest.yml
-        params:
-          DEPLOY_WITH_BOSH_DNS: true
       - do:
         - task: generate-cloud-config
           file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml

@@ -291,7 +291,7 @@ jobs:
     - get: compiled-release-tarball
       resource: pxc-compiled-release
       passed: [create-and-compile-release]
-  - do: &create-bosh-lite-without-bosh-dns
+  - do: &create-bosh-lite
     - task: apply-terraform
       file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
     - task: create-bosh-lite
@@ -303,7 +303,6 @@ jobs:
         NETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-network))
         SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
         BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-        DISABLE_BOSH_DNS: true
     - aggregate:
       - task: create-dns
         attempts: 5
@@ -355,7 +354,6 @@ jobs:
       ops_files:
       - cf-mysql-ci/operations/cf-deployment/add-database-vm-extension.yml
       - cf-deployment/operations/use-compiled-releases.yml
-      - cf-deployment/operations/use-bosh-dns.yml
       - cf-deployment/operations/bosh-lite.yml
       - cf-deployment/operations/scale-database-cluster.yml
       - cf-deployment/operations/experimental/use-pxc.yml
@@ -451,7 +449,7 @@ jobs:
     - get: cf-mysql-release-candidate
   - aggregate: # pre-deploy prep
     - do: # setup bosh-lite
-      - do: *create-bosh-lite-without-bosh-dns
+      - do: *create-bosh-lite
       - task: bosh-upload-stemcell-from-cf-deployment
         file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
         input_mapping: {bbl-state: bosh-lite-info}
@@ -484,7 +482,6 @@ jobs:
       - stemcell/*.tgz
       ops_files:
       - cf-deployment/operations/use-compiled-releases.yml
-      - cf-deployment/operations/use-bosh-dns.yml
       - cf-deployment/operations/bosh-lite.yml
       - cf-mysql-ci/operations/cf-allow-apps-access-to-mysql.yml
       - cf-mysql-ci/operations/cf-deployment/increase-proxy-healthcheck-timeout.yml
@@ -514,7 +511,6 @@ jobs:
       - stemcell/*.tgz
       ops_files:
       - cf-deployment/operations/use-compiled-releases.yml
-      - cf-deployment/operations/use-bosh-dns.yml
       - cf-deployment/operations/bosh-lite.yml
       - cf-deployment/operations/experimental/migrate-cf-mysql-to-pxc.yml
       - cf-mysql-ci/operations/cf-deployment/pending-merge.yml
@@ -559,7 +555,6 @@ jobs:
       - stemcell/*.tgz
       ops_files:
       - cf-deployment/operations/use-compiled-releases.yml
-      - cf-deployment/operations/use-bosh-dns.yml
       - cf-deployment/operations/bosh-lite.yml
       - cf-deployment/operations/experimental/migrate-cf-mysql-to-pxc.yml
       - cf-mysql-ci/operations/cf-deployment/pending-merge.yml
@@ -641,54 +636,7 @@ jobs:
         put: compiled-packages-lock
         params:
           release: compiled-packages-lock
-    - do: &create-bosh-lite
-      - task: apply-terraform
-        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
-      - task: create-bosh-lite
-        file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
-        input_mapping: {deployments: deployments-terraformed}
-        params:
-          PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
-          ZONE: ((core-services-ci-credentials/Notes/gcp-bosh-lite-zone))
-          NETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-network))
-          SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
-          BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-      - aggregate:
-        - task: create-dns
-          attempts: 5
-          config:
-            platform: linux
-            image_resource: *image_resource
-            inputs:
-            - name: cf-mysql-ci
-            - name: bosh-lite-info
-            - name: deployments
-              path: deployments-core-services
-            outputs:
-            - name: url
-            run:
-              path: cf-mysql-ci/scripts/bosh-lite-gcp/create-dns
-        - task: delete-stemcell
-          file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
-        - do:
-          - task: generate-cloud-config
-            file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
-          - task: update-cloud-config
-            config:
-              platform: linux
-              image_resource: *image_resource
-              inputs:
-              - name: cf-mysql-ci
-              - name: cloud-config
-              - name: bosh-lite-info
-              params:
-                BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-                BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-                ENV_TARGET_FILE: bosh-lite-info/director-url
-                BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-                CLOUD_CONFIG: cloud-config/cloud-config.yml
-              run:
-                path: cf-mysql-ci/scripts/bosh-lite-gcp/update-cloud-config
+    - do: *create-bosh-lite
   - put: deploy-last-pxc-release
     resource: pxc-bosh-deployment
     params:

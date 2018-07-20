@@ -4,7 +4,6 @@ set -eux
 
 : "${DNS_NAME}"
 : "${PROXY_LB:=false}"
-: "${DEPLOY_WITH_BOSH_DNS:=false}"
 
 my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 workspace_dir="$( cd "${my_dir}/../../../" && pwd )"
@@ -23,11 +22,6 @@ fi
 if ${PROXY_LB}; then
     operations="$operations -v vm_extension=mysql-proxy-lb"
     operations="$operations -o ./cf-mysql-ci/operations/cf-deployment/add-database-vm-extension.yml"
-fi
-
-if ${DEPLOY_WITH_BOSH_DNS}; then
-    operations="$operations -o ./cf-deployment/operations/use-bosh-dns.yml"
-    operations="$operations -o ./cf-deployment/operations/use-bosh-dns-for-containers.yml"
 fi
 
 bosh int \
