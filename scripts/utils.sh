@@ -97,7 +97,7 @@ cf_admin_password() {
     elif [ -d "varstore" ]; then
       echo "$(bosh int varstore/deployment-vars.yml --path /cf_admin_password)"
     else
-      echo "$(credhub_value /lite/cf/cf_admin_password)"
+      echo "$(credhub_value cf/cf_admin_password)"
     fi
 }
 
@@ -120,18 +120,25 @@ cf_uaa_admin_client_secret() {
 
 credhub_login() {
   local local_workspace="${workspace_dir-${WORKSPACE_DIR}}"
-  credhub_secret=$(bosh int "${local_workspace}/bosh-lite-info/bosh-creds.yml" --path /credhub_admin_client_secret)
 
-  credhub api --server "$(cat ${local_workspace}/bosh-lite-info/external-ip):8844" --ca-cert "${local_workspace}/bosh-lite-info/credhub.ca" --ca-cert "${local_workspace}/bosh-lite-info/uaa.ca"
+  local env_dir="${local_workspace}/bosh-lite-info"
+  if [ -d "${local_workspace}/environment" ]; then
+    env_name=$(cat "environment/name")
+    env_dir="${local_workspace}/deployments-core-services/${env_name}"
+  fi
+
+  credhub_secret=$(bosh int "${env_dir}/bosh-creds.yml" --path /credhub_admin_client_secret)
+
+  credhub api --server "$(cat ${env_dir}/external-ip):8844" --ca-cert "${env_dir}/credhub.ca" --ca-cert "${env_dir}/uaa.ca"
 
   credhub login --client-name=credhub-admin --client-secret=${credhub_secret}
 }
 
 credhub_value() {
-  # var_path should be in the format of /bosh-name/deployment-name/variable-name
   var_path=$1
+  key_name=$(credhub find -j -n "${var_path}" | jq -r .credentials[0].name)
 
-  credhub get -n ${var_path} -j | jq -r .value
+  credhub get -n ${key_name} -j | jq -r .value
 }
 
 err() {
