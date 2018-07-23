@@ -120,7 +120,7 @@ cf_uaa_admin_client_secret() {
 
 credhub_login() {
   local local_workspace="${workspace_dir-${WORKSPACE_DIR}}"
-  credhub_secret=$(bosh int "${local_workspace}/bosh-lite-info/credentials.yml" --path /credhub_admin_client_secret)
+  credhub_secret=$(bosh int "${local_workspace}/bosh-lite-info/bosh-creds.yml" --path /credhub_admin_client_secret)
 
   credhub api --server "$(cat ${local_workspace}/bosh-lite-info/external-ip):8844" --ca-cert "${local_workspace}/bosh-lite-info/credhub.ca" --ca-cert "${local_workspace}/bosh-lite-info/uaa.ca"
 
