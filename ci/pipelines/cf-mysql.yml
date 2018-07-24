@@ -481,32 +481,40 @@ jobs:
         BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment_gcp
-  - task: make-manifest
+  - task: create-cf-mysql-vars
+    input_mapping:
+      deployments-core-services: deployments-configuration
+      environment: full-bosh-environment
     config:
       platform: linux
       image_resource: *image_resource
       inputs:
-      - name: deployments-configuration
+      - name: deployments-core-services
       - name: cf-mysql-ci
-      - name: cf-mysql-deployment
-      - name: cf-mysql-release
-      - name: full-bosh-environment
+      - name: environment
       outputs:
-      - name: deployment-manifest
-      params:
-        ENV_NAME_FILE: full-bosh-environment/name
-        ENV_METADATA: full-bosh-environment/metadata
-        DEPLOYMENTS_DIR: deployments-configuration
+      - name: cf-mysql-vars
       run:
-        path: cf-mysql-ci/scripts/bosh/make-manifest-gobosh-gcp
+        path: cf-mysql-ci/scripts/full-bosh/create-cf-mysql-vars
   - put: cf-mysql-bosh-deployment
     params:
       source_file: full-bosh-environment/metadata
-      manifest: deployment-manifest/deployment.yml
+      manifest: cf-mysql-deployment/cf-mysql-deployment.yml
+      ops_files:
+      - cf-mysql-deployment/operations/latest-versions.yml
+      - cf-mysql-deployment/operations/add-broker.yml
+      - cf-mysql-deployment/operations/configure-broker-load-balancer.yml
+      - cf-mysql-deployment/operations/proxy-elb.yml
+      - cf-mysql-deployment/operations/register-proxy-route.yml
+      - cf-mysql-ci/operations/default-vcap-password.yml
+      - cf-mysql-ci/operations/default-vcap-password-broker.yml
+      - cf-mysql-ci/operations/enable-remote-admin-access.yml
       releases:
       - routing-release/*.tgz
       - compiled-release-tarball/*.tgz
       stemcells: [gcp-bosh-stemcell/*.tgz]
+      vars_files:
+      - cf-mysql-vars/cf-mysql-vars.yml
   - task: run-broker-registrar
     config:
       platform: linux
