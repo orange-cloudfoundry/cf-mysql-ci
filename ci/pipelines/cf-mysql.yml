@@ -121,13 +121,6 @@ resources:
   type: git
   source:
     uri: https://github.com/cloudfoundry/cf-deployment.git
-    branch: master
-    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
-
-- name: cf-deployment-develop
-  type: git
-  source:
-    uri: https://github.com/cloudfoundry/cf-deployment.git
     branch: develop
     private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
 
@@ -765,7 +758,6 @@ jobs:
         passed: [create-and-compile-release]
         trigger: true
       - get: cf-deployment
-        resource: cf-deployment-develop
       - get: cf-deployment-concourse-tasks
     - task: apply-terraform
       file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
