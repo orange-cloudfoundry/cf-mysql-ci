@@ -110,8 +110,12 @@ cf_domain() {
 }
 
 cf_uaa_admin_client_secret() {
+    local local_workspace="${workspace_dir-${WORKSPACE_DIR}}"
+
     if [ -f varstore/deployment-vars.yml ]; then
       echo "$(bosh int varstore/deployment-vars.yml --path /uaa_admin_client_secret)"
+    elif [ -d "${local_workspace}/environment" ]; then
+      echo "$(credhub_value cf/uaa_admin_client_secret)"
     else
       echo "admin-secret"
     fi
