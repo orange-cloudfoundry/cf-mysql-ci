@@ -548,7 +548,6 @@ jobs:
       inputs:
         - name: cf-mysql-release
         - name: cf-mysql-ci
-        - name: deployment-manifest
         - name: deployments-configuration
         - name: full-bosh-environment
       params:
