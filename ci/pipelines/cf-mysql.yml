@@ -542,21 +542,19 @@ jobs:
         path: cf-mysql-ci/scripts/bosh/run_errand_gcp
   - task: acceptance-test
     attempts: 3
+    input_mapping:
+      deployments-core-services: deployments-configuration
+      environment: full-bosh-environment
     config:
       platform: linux
       image_resource: *image_resource
       inputs:
         - name: cf-mysql-release
         - name: cf-mysql-ci
-        - name: deployments-configuration
-        - name: full-bosh-environment
+        - name: deployments-core-services
+        - name: environment
       params:
-        ENV_TARGET_FILE: full-bosh-environment/name
-        ENV_METADATA: full-bosh-environment/metadata
         TEST_TYPE: acceptance
-        PROXY_COUNT: 1
-        NEW_STYLE_PROXY_URL: true
-        USE_SMALL_PLANS: true
       run:
         path: cf-mysql-ci/scripts/acceptance-tests
   - try:
