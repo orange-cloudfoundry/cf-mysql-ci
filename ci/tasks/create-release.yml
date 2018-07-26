@@ -22,6 +22,7 @@ params:
   AWS_SECRET_ACCESS_KEY: ~
   FINAL: ~
   SHA2: ~
+  BOSH_SHA2: ~
 
 run:
   path: cf-mysql-ci/scripts/create_release
