@@ -12,4 +12,4 @@ inputs:
 - name: cf-mysql-ci
 
 run:
-  path: cf-mysql-ci/ci/tasks/create-and-compile-release/gate-on-stemcells
+  path: cf-mysql-ci/scripts/create-and-compile-release/gate-on-stemcells
