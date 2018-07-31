@@ -21,7 +21,7 @@ outputs:
 - name: updated-cf-mysql-deployment-master
 
 run:
-  path: cf-mysql-ci/ci/tasks/finalize-cf-mysql-deployment/update-cf-mysql-deployment-with-new-release
+  path: cf-mysql-ci/scripts/finalize-cf-mysql-deployment/update-cf-mysql-deployment-with-new-release
 
 params:
   GIT_AUTHOR_NAME: Concourse CI

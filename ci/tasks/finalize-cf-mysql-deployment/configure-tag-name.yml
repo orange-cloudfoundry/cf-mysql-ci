@@ -14,4 +14,4 @@ outputs:
   - name: tag-name
 
 run:
-  path: cf-mysql-ci/ci/tasks/finalize-cf-mysql-deployment/configure-tag-name
+  path: cf-mysql-ci/scripts/finalize-cf-mysql-deployment/configure-tag-name
