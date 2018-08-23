@@ -105,6 +105,10 @@ cf_domain() {
     if [ -n "${ENV_METADATA:-}" ]; then
       echo "$(jq_val "domain" "${ENV_METADATA}")"
     else
+      if [ ! -f "url/url" ]; then
+        err "cf_domain function requires the file url/url to contain the cf system domain"
+        exit 1
+      fi
       echo "$(cat url/url)"
     fi
 }
