@@ -3,7 +3,7 @@ set -eux
 
 my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 workspace_dir="$( cd "${my_dir}/../../../" && pwd )"
-source "${WORKSPACE_DIR}/cf-mysql-ci/scripts/utils.sh"
+source "${workspace_dir}/cf-mysql-ci/scripts/utils.sh"
 
 service_key="${workspace_dir}/deployments-core-services/bosh-lite-gcp/ci-service-account.json"
 
