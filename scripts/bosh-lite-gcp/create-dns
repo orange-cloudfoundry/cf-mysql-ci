@@ -3,6 +3,7 @@ set -eux
 
 my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 workspace_dir="$( cd "${my_dir}/../../../" && pwd )"
+source "${WORKSPACE_DIR}/cf-mysql-ci/scripts/utils.sh"
 
 service_key="${workspace_dir}/deployments-core-services/bosh-lite-gcp/ci-service-account.json"
 
@@ -25,3 +26,7 @@ gcloud dns record-sets transaction execute --zone bosh-lite
 echo "${url}" > "${workspace_dir}/url/url"
 echo "system_domain: ${url}" > "${workspace_dir}/url/url-vars.yml"
 echo "${wildcard_url}" > "${workspace_dir}/url/wildcard_url"
+
+credhub_login
+credhub set -n /lite/system_domain -t value -v "${url}"
+credhub set -n /lite/wildcard_url -t value -v "${wildcard_url}"
