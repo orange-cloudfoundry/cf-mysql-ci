@@ -378,7 +378,10 @@ jobs:
     attempts: 3
     config:
       platform: linux
-      image_resource: *image_resource
+      image_resource:
+        type: docker-image
+        source:
+          repository: relintdockerhubpushbot/cf-deployment-concourse-tasks
       inputs:
         - name: bosh-lite-info
         - name: cf-mysql-ci
@@ -536,7 +539,10 @@ jobs:
     attempts: 3
     config:
       platform: linux
-      image_resource: *image_resource
+      image_resource:
+        type: docker-image
+        source:
+          repository: relintdockerhubpushbot/cf-deployment-concourse-tasks
       inputs:
         - name: bosh-lite-info
         - name: cf-mysql-ci
