@@ -437,10 +437,9 @@ jobs:
     - get: deployments
       resource: deployments-configuration
     - get: stemcell
-      resource: bosh-lite-stemcell
-      passed: [create-and-compile-release]
+      resource: xenial-bosh-lite-stemcell
     - get: gcp-bosh-stemcell
-      passed: [create-and-compile-release]
+      resource: xenial-gcp-bosh-stemcell
     - get: version
       passed: [create-and-compile-release]
       trigger: true
@@ -603,10 +602,9 @@ jobs:
       resource: deployments-configuration
     - get: cf-mysql-deployment # used for it's cloud config
     - get: stemcell
-      resource: bosh-lite-stemcell
-      passed: [create-and-compile-release]
+      resource: xenial-bosh-lite-stemcell
     - get: gcp-bosh-stemcell
-      passed: [create-and-compile-release]
+      resource: xenial-gcp-bosh-stemcell
     - get: cf-deployment
       resource: cf-deployment-develop
     - get: version
