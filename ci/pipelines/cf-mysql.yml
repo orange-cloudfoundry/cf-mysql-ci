@@ -751,6 +751,7 @@ jobs:
       - get: stemcell
         resource: bosh-lite-stemcell
         passed: [create-and-compile-release]
+      - get: xenial-bosh-lite-stemcell
       - get: version
         passed: [create-and-compile-release]
         trigger: true
@@ -837,7 +838,7 @@ jobs:
         manifest: cf-deployment-manifest/cf.yml
         releases: []
         stemcells:
-        - stemcell/*.tgz
+        - xenial-bosh-lite-stemcell/*.tgz
         source_file: bosh-lite-info/bosh-deployment-resource-source-file
     - put: cf-mysql-bosh-deployment
       params:
@@ -960,6 +961,7 @@ jobs:
       - get: stemcell
         resource: bosh-lite-stemcell
         passed: [create-and-compile-release]
+      - get: xenial-bosh-lite-stemcell
       - get: version
         passed: [create-and-compile-release]
         trigger: true
@@ -1044,7 +1046,7 @@ jobs:
         manifest: cf-deployment-manifest/cf.yml
         releases: []
         stemcells:
-        - stemcell/*.tgz
+        - xenial-bosh-lite-stemcell/*.tgz
         source_file: bosh-lite-info/bosh-deployment-resource-source-file
     - put: cf-mysql-bosh-deployment
       params:
