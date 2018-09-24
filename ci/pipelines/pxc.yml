@@ -150,6 +150,14 @@ resources:
     secret_access_key: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-secret-access-key))
     versioned_file: compiled-releases/pxc-ubuntu-trusty.tgz
 
+- name: pxc-xenial-compiled-release
+  type: s3
+  source:
+    bucket: pxc-releases
+    access_key_id: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-access-key-id))
+    secret_access_key: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-secret-access-key))
+    versioned_file: compiled-releases/pxc-ubuntu-xenial.tgz
+
 - name: publish-github-release
   type: github-release
   source:
@@ -174,6 +182,10 @@ jobs:
       trigger: true
     - get: gcp-bosh-stemcell
       trigger: true
+    - get: xenial-bosh-lite-stemcell
+      trigger: true
+    - get: xenial-gcp-bosh-stemcell
+      trigger: true
     - get: pxc-release
       trigger: true
     - get: weekly-trigger
@@ -181,6 +193,11 @@ jobs:
     - get: version
     - get: cf-mysql-ci
   - task: gate-on-stemcells
+    file: cf-mysql-ci/ci/tasks/create-and-compile-release/gate-on-stemcells.yml
+  - task: gate-on-xenial-stemcells
+    input_mapping:
+      gcp-bosh-stemcell: xenial-gcp-bosh-stemcell
+      bosh-lite-stemcell: xenial-bosh-lite-stemcell
     file: cf-mysql-ci/ci/tasks/create-and-compile-release/gate-on-stemcells.yml
   - put: version
     params:
@@ -228,6 +245,10 @@ jobs:
       passed: [bump-version]
     - get: bosh-lite-stemcell
       passed: [bump-version]
+    - get: xenial-gcp-bosh-stemcell
+      passed: [bump-version]
+    - get: xenial-bosh-lite-stemcell
+      passed: [bump-version]
     - get: version
       passed: [bump-version, test-unit-and-integration]
       trigger: true
@@ -242,7 +263,7 @@ jobs:
   - put: compiled-packages-lock
     params:
       acquire: true
-  - task: compile-release
+  - task: compile-release #compile pxc release on trusty
     config:
       platform: linux
       image_resource: *image_resource
@@ -259,6 +280,24 @@ jobs:
         BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
       run:
         path: cf-mysql-ci/scripts/compile_release
+  - task: xenial-compile-release #compile pxc release on xenial
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: release-tarball
+      - name: xenial-gcp-bosh-stemcell
+      outputs:
+      - name: xenial-compiled-release-tarball
+      params:
+        BOSH_CLIENT: ((concourse-compilation-director/Notes/BOSH_CLIENT))
+        BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
+        BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
+        BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
+        STEMCELL_LINE: ubuntu-xenial
+      run:
+        path: cf-mysql-ci/scripts/compile_release
     ensure:
       put: compiled-packages-lock
       params:
@@ -266,6 +305,9 @@ jobs:
   - put: pxc-compiled-release
     params:
       file: compiled-release-tarball/*.tgz
+  - put: pxc-xenial-compiled-release
+    params:
+      file: xenial-compiled-release-tarball/*.tgz
 
 - name: test-clean-install-pxc
   plan:
@@ -278,7 +320,7 @@ jobs:
     - get: deployments
       resource: deployments-configuration
     - get: stemcell
-      resource: bosh-lite-stemcell
+      resource: xenial-bosh-lite-stemcell
       passed: [create-and-compile-release]
     - get: version
       passed: [create-and-compile-release]
@@ -289,7 +331,7 @@ jobs:
     - get: cf-acceptance-tests
     - get: cf-mysql-deployment
     - get: compiled-release-tarball
-      resource: pxc-compiled-release
+      resource: pxc-xenial-compiled-release
       passed: [create-and-compile-release]
   - do: &create-bosh-lite
     - task: apply-terraform
@@ -430,7 +472,8 @@ jobs:
   - aggregate:
     - get: pxc-release
       passed: [create-and-compile-release]
-    - get: pxc-compiled-release
+    - get: pxc-xenial-compiled-release
+      passed: [create-and-compile-release]
     - get: cf-mysql-ci
     - get: bosh-deployment
       resource: bosh-deployment-repo
@@ -469,6 +512,7 @@ jobs:
           BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
           BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
           BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
+          STEMCELL_LINE: ubuntu-xenial
       ensure:
         put: compiled-packages-lock
         params:
@@ -508,7 +552,7 @@ jobs:
     params:
       manifest: cf-deployment/cf-deployment.yml
       releases:
-      - pxc-compiled-release/*.tgz
+      - pxc-xenial-compiled-release/*.tgz
       stemcells:
       - stemcell/*.tgz
       ops_files:
@@ -555,7 +599,7 @@ jobs:
       manifest: cf-deployment/cf-deployment.yml
       recreate: true
       releases:
-      - pxc-compiled-release/*.tgz
+      - pxc-xenial-compiled-release/*.tgz
       stemcells:
       - stemcell/*.tgz
       ops_files:
@@ -602,9 +646,10 @@ jobs:
       resource: deployments-configuration
     - get: cf-mysql-deployment # used for it's cloud config
     - get: stemcell
-      resource: xenial-bosh-lite-stemcell
+      resource: bosh-lite-stemcell
+      passed: [create-and-compile-release]
     - get: gcp-bosh-stemcell
-      resource: xenial-gcp-bosh-stemcell
+      passed: [create-and-compile-release]
     - get: cf-deployment
       resource: cf-deployment-develop
     - get: version
@@ -636,6 +681,7 @@ jobs:
           BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
           BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
           BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
+          STEMCELL_LINE: ubuntu-xenial
       ensure:
         put: compiled-packages-lock
         params:
