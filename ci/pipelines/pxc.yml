@@ -82,11 +82,11 @@ resources:
     branch: release-candidate
     private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
 
-- name: cf-deployment-develop
+- name: cf-deployment-release-candidate
   type: git
   source:
     uri: https://github.com/cloudfoundry/cf-deployment.git
-    branch: develop
+    branch: release-candidate
 
 - name: cf-mysql-deployment
   type: git
@@ -327,7 +327,7 @@ jobs:
       passed: [create-and-compile-release]
       trigger: true
     - get: cf-deployment
-      resource: cf-deployment-develop
+      resource: cf-deployment-release-candidate
     - get: cf-deployment-concourse-tasks
     - get: cf-acceptance-tests
     - get: cf-mysql-deployment
@@ -488,7 +488,7 @@ jobs:
       passed: [create-and-compile-release]
       trigger: true
     - get: cf-deployment
-      resource: cf-deployment-develop
+      resource: cf-deployment-release-candidate
     - get: cf-deployment-concourse-tasks
     - get: cf-acceptance-tests
     - get: cf-mysql-deployment
@@ -652,7 +652,7 @@ jobs:
     - get: gcp-bosh-stemcell
       passed: [create-and-compile-release]
     - get: cf-deployment
-      resource: cf-deployment-develop
+      resource: cf-deployment-release-candidate
     - get: version
       passed: [create-and-compile-release]
       trigger: true
@@ -769,7 +769,7 @@ jobs:
       passed: [create-and-compile-release]
       trigger: true
     - get: cf-deployment
-      resource: cf-deployment-develop
+      resource: cf-deployment-release-candidate
     - get: cf-deployment-concourse-tasks
     - get: cf-acceptance-tests
     - get: cf-mysql-deployment
@@ -839,7 +839,7 @@ jobs:
       passed: [create-and-compile-release]
       trigger: true
     - get: cf-deployment
-      resource: cf-deployment-develop
+      resource: cf-deployment-release-candidate
     - get: cf-deployment-concourse-tasks
     - get: cf-acceptance-tests
     - get: cf-mysql-deployment
@@ -908,7 +908,7 @@ jobs:
       passed: [create-and-compile-release]
       trigger: true
     - get: cf-deployment
-      resource: cf-deployment-develop
+      resource: cf-deployment-release-candidate
     - get: cf-deployment-concourse-tasks
     - get: cf-acceptance-tests
     - get: cf-mysql-deployment
@@ -977,7 +977,7 @@ jobs:
       passed: [create-and-compile-release]
       trigger: true
     - get: cf-deployment
-      resource: cf-deployment-develop
+      resource: cf-deployment-release-candidate
     - get: cf-deployment-concourse-tasks
     - get: cf-acceptance-tests
     - get: cf-mysql-deployment
@@ -1040,7 +1040,7 @@ jobs:
       passed: [create-and-compile-release]
       trigger: true
     - get: cf-deployment
-      resource: cf-deployment-develop
+      resource: cf-deployment-release-candidate
     - get: cf-deployment-concourse-tasks
     - get: cf-acceptance-tests
     - get: cf-mysql-deployment
@@ -1108,7 +1108,7 @@ jobs:
       passed: [create-and-compile-release]
       trigger: true
     - get: cf-deployment
-      resource: cf-deployment-develop
+      resource: cf-deployment-release-candidate
     - get: cf-deployment-concourse-tasks
     - get: cf-acceptance-tests
     - get: cf-mysql-deployment
@@ -1159,7 +1159,7 @@ jobs:
     - get: gcp-bosh-stemcell
       resource: xenial-gcp-bosh-stemcell
     - get: cf-deployment
-      resource: cf-deployment-develop
+      resource: cf-deployment-release-candidate
     - get: version
       passed: [create-and-compile-release]
       trigger: true
