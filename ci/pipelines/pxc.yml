@@ -291,6 +291,7 @@ jobs:
       outputs:
       - name: xenial-compiled-release-tarball
       params:
+        OUTPUT_DIR: xenial-compiled-release-tarball
         BOSH_CLIENT: ((concourse-compilation-director/Notes/BOSH_CLIENT))
         BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
         BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
