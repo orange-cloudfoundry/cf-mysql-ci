@@ -121,7 +121,7 @@ resources:
   type: git
   source:
     uri: https://github.com/cloudfoundry/cf-deployment.git
-    branch: develop
+    branch: release-candidate
     private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
 
 - name: cf-mysql-deployment
