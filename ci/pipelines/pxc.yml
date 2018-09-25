@@ -682,7 +682,6 @@ jobs:
           BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
           BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
           BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
-          STEMCELL_LINE: ubuntu-xenial
       ensure:
         put: compiled-packages-lock
         params:
