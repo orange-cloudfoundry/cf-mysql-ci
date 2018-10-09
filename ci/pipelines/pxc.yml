@@ -82,6 +82,11 @@ resources:
     branch: release-candidate
     private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
 
+- name: bpm-release
+  type: bosh-io-release
+  source:
+    repository: cloudfoundry-incubator/bpm-release
+
 - name: cf-deployment-release-candidate
   type: git
   source:
@@ -658,6 +663,7 @@ jobs:
       trigger: true
     - get: pxc-compiled-release
       passed: [create-and-compile-release]
+    - get: bpm-release
   - task: check-last-pxc-release-version
     config:
       platform: linux
@@ -696,6 +702,7 @@ jobs:
       - cf-mysql-ci/operations/pxc/add-proxy-load-balancer.yml
       - cf-mysql-ci/operations/pxc/enable-remote-admin-access.yml
       releases:
+      - bpm-release/*.tgz
       - compiled-last-pxc-release/*.tgz
       stemcells:
       - stemcell/*.tgz
@@ -719,6 +726,7 @@ jobs:
       - cf-mysql-ci/operations/pxc/enable-remote-admin-access.yml
       releases:
       - pxc-compiled-release/*.tgz
+      - bpm-release/*.tgz
       stemcells:
       - stemcell/*.tgz
       source_file: bosh-lite-info/bosh-deployment-resource-source-file
@@ -775,12 +783,14 @@ jobs:
     - get: compiled-release-tarball
       resource: pxc-compiled-release
       passed: [create-and-compile-release]
+    - get: bpm-release
   - do: *create-bosh-lite
   - put: pxc-bosh-deployment
     params:
       manifest: pxc-release/pxc-deployment.yml
       releases:
       - compiled-release-tarball/*.tgz
+      - bpm-release/*.tgz
       stemcells:
       - stemcell/*.tgz
       source_file: bosh-lite-info/bosh-deployment-resource-source-file
@@ -845,12 +855,14 @@ jobs:
     - get: compiled-release-tarball
       resource: pxc-compiled-release
       passed: [create-and-compile-release]
+    - get: bpm-release
   - do: *create-bosh-lite
   - put: pxc-bosh-deployment
     params:
       manifest: pxc-release/pxc-deployment.yml
       releases:
       - compiled-release-tarball/*.tgz
+      - bpm-release/*.tgz
       stemcells:
       - stemcell/*.tgz
       source_file: bosh-lite-info/bosh-deployment-resource-source-file
@@ -914,12 +926,14 @@ jobs:
     - get: compiled-release-tarball
       resource: pxc-compiled-release
       passed: [create-and-compile-release]
+    - get: bpm-release
   - do: *create-bosh-lite
   - put: pxc-bosh-deployment
     params:
       manifest: pxc-release/pxc-deployment.yml
       releases:
       - compiled-release-tarball/*.tgz
+      - bpm-release/*.tgz
       stemcells:
       - stemcell/*.tgz
       source_file: bosh-lite-info/bosh-deployment-resource-source-file
@@ -983,12 +997,14 @@ jobs:
     - get: compiled-release-tarball
       resource: pxc-compiled-release
       passed: [create-and-compile-release]
+    - get: bpm-release
   - do: *create-bosh-lite
   - put: pxc-bosh-deployment
     params:
       manifest: pxc-release/pxc-deployment.yml
       releases:
       - compiled-release-tarball/*.tgz
+      - bpm-release/*.tgz
       stemcells:
       - stemcell/*.tgz
       source_file: bosh-lite-info/bosh-deployment-resource-source-file
@@ -1046,12 +1062,14 @@ jobs:
     - get: compiled-release-tarball
       resource: pxc-compiled-release
       passed: [create-and-compile-release]
+    - get: bpm-release
   - do: *create-bosh-lite
   - put: pxc-bosh-deployment
     params:
       manifest: pxc-release/pxc-deployment.yml
       releases:
       - compiled-release-tarball/*.tgz
+      - bpm-release/*.tgz
       stemcells:
       - stemcell/*.tgz
       source_file: bosh-lite-info/bosh-deployment-resource-source-file
@@ -1114,11 +1132,13 @@ jobs:
     - get: compiled-release-tarball
       resource: pxc-compiled-release
       passed: [create-and-compile-release]
+    - get: bpm-release
   - do: *create-bosh-lite
   - put: pxc-bosh-deployment
     params:
       manifest: pxc-release/pxc-deployment.yml
       releases:
+      - bpm-release/*.tgz
       - compiled-release-tarball/*.tgz
       stemcells:
       - stemcell/*.tgz
@@ -1162,6 +1182,7 @@ jobs:
     - get: version
       passed: [create-and-compile-release]
       trigger: true
+    - get: bpm-release
   - task: gate-on-stemcells
     input_mapping: {bosh-lite-stemcell: stemcell}
     file: cf-mysql-ci/ci/tasks/create-and-compile-release/gate-on-stemcells.yml
@@ -1194,6 +1215,7 @@ jobs:
     params:
       manifest: pxc-release/pxc-deployment.yml
       releases:
+      - bpm-release/*.tgz
       - compiled-release-tarball/*.tgz
       stemcells:
       - stemcell/*.tgz
