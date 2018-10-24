@@ -117,6 +117,11 @@ resources:
   source:
     repository: cloudfoundry-incubator/cf-routing-release
 
+- name: bpm-release
+  type: bosh-io-release
+  source:
+    repository: cloudfoundry-incubator/bpm-release
+
 - name: cf-deployment
   type: git
   source:
