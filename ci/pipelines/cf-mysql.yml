@@ -600,6 +600,7 @@ jobs:
   - &ondemand-setup
     do:
     - aggregate:
+      - get: bpm-release
       - get: cf-mysql-release
         passed: [create-and-compile-release]
       - get: cf-mysql-deployment
@@ -642,6 +643,7 @@ jobs:
       params:
         manifest: deployment-manifest/deployment.yml
         releases:
+        - bpm-release/*.tgz
         - compiled-release-tarball/*.tgz
         stemcells:
         - stemcell/*.tgz
@@ -1160,6 +1162,7 @@ jobs:
 - name: test-upgrade-from-previous
   plan:
   - aggregate:
+    - get: bpm-release
     - get: cf-mysql-release-develop
       resource: cf-mysql-release
       passed: [create-and-compile-release]
@@ -1242,6 +1245,7 @@ jobs:
     params:
       manifest: deployment-manifest/deployment.yml
       releases:
+      - bpm-release/*.tgz
       - cf-mysql-compiled-release/*.tgz
       stemcells:
       - stemcell/*.tgz
@@ -1457,46 +1461,7 @@ jobs:
 ### VERIFY NO REMOTE ACCESS
 - name: test-verify-no-remote-access
   plan:
-  - do:
-    - aggregate:
-      - get: cf-mysql-release
-        passed: [create-and-compile-release]
-      - get: cf-mysql-deployment
-        passed: [create-and-compile-release]
-        trigger: true
-      - get: cf-mysql-ci
-      - get: compiled-release-tarball
-        resource: cf-mysql-compiled-release
-        passed: [create-and-compile-release]
-      - get: bosh-deployment
-        resource: bosh-deployment-repo
-      - get: deployments
-        resource: deployments-configuration
-      - get: stemcell
-        resource: bosh-lite-stemcell
-        passed: [create-and-compile-release]
-      - get: version
-        passed: [create-and-compile-release]
-        trigger: true
-    - aggregate:
-      - task: make-manifest
-        file: cf-mysql-ci/ci/tasks/make-manifest.yml
-        params:
-          ENABLE_REMOTE_ADMIN_ACCESS: false
-          MINIMAL_MODE: true
-      - task: apply-terraform
-        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
-    - task: create-bosh-lite
-      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
-      input_mapping: {deployments: deployments-terraformed}
-      params:
-        PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
-        ZONE: ((core-services-ci-credentials/Notes/gcp-bosh-lite-zone))
-        NETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-network))
-        SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-    - task: delete-stemcell
-      file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
+  - *ondemand-setup
   - *ondemand-deploy-manifest
   - task: run-verify-no-remote-access
     config:
@@ -1519,47 +1484,7 @@ jobs:
 ### VERIFY TUNING WORKS
 - name: test-verify-tuning
   plan:
-  - do:
-    - aggregate:
-      - get: cf-mysql-release
-        passed: [create-and-compile-release]
-      - get: cf-mysql-deployment
-        passed: [create-and-compile-release]
-        trigger: true
-      - get: cf-mysql-ci
-      - get: compiled-release-tarball
-        resource: cf-mysql-compiled-release
-        passed: [create-and-compile-release]
-      - get: bosh-deployment
-        resource: bosh-deployment-repo
-      - get: deployments
-        resource: deployments-configuration
-      - get: stemcell
-        resource: bosh-lite-stemcell
-        passed: [create-and-compile-release]
-      - get: version
-        passed: [create-and-compile-release]
-        trigger: true
-    - aggregate:
-      - task: make-manifest
-        file: cf-mysql-ci/ci/tasks/make-manifest.yml
-        params:
-          ENABLE_REMOTE_ADMIN_ACCESS: true
-          MINIMAL_MODE: true
-      - task: apply-terraform
-        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
-    - task: create-bosh-lite
-      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
-      input_mapping: {deployments: deployments-terraformed}
-      params:
-        PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
-        ZONE: ((core-services-ci-credentials/Notes/gcp-bosh-lite-zone))
-        NETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-network))
-        SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-    - task: delete-stemcell
-      file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
-  - *ondemand-deploy-manifest
+  - *ondemand-setup
   - task: run-verify-tuning
     config:
       platform: linux
@@ -1586,6 +1511,7 @@ jobs:
 - name: test-xenial
   plan:
   - aggregate:
+    - get: bpm-release
     - get: cf-mysql-release
       passed: [create-and-compile-release]
     - get: cf-mysql-deployment
@@ -1656,6 +1582,7 @@ jobs:
       - cf-mysql-ci/operations/minimal-mode.yml
       - cf-mysql-deployment/operations/xenial-stemcell.yml
       releases:
+      - bpm-release/*.tgz
       - compiled-release-tarball/*.tgz
       stemcells:
       - stemcell/*.tgz
