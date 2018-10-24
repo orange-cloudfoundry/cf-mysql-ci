@@ -702,7 +702,6 @@ jobs:
       - cf-mysql-ci/operations/pxc/add-proxy-load-balancer.yml
       - cf-mysql-ci/operations/pxc/enable-remote-admin-access.yml
       releases:
-      - bpm-release/*.tgz
       - compiled-last-pxc-release/*.tgz
       stemcells:
       - stemcell/*.tgz
