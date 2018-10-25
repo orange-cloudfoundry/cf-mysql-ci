@@ -6,6 +6,8 @@ CI_DIR="$( cd ${MY_DIR}/../../ && pwd )"
 WORKSPACE_DIR="$( cd ${MY_DIR}/../../.. && pwd )"
 MYSQL_CONFIG=${MY_DIR}/mysql.config
 
+source "${WORKSPACE_DIR}/bosh-lite-info/source_me"
+
 source ${CI_DIR}/scripts/utils.sh
 
 : "${ENV_TARGET_FILE:?}"

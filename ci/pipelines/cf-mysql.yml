@@ -1523,10 +1523,7 @@ jobs:
       params:
         MYSQL_TUNNEL_USERNAME: jumpbox
         ENV_TARGET_FILE: bosh-lite-info/external-ip
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
         SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
-        BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/remote-access/verify-no-remote-access
   - *ondemand-teardown
