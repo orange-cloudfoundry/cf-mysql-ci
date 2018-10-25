@@ -39,7 +39,9 @@ function deploy_with_exact_size() {
   OUTPUT_FILE="${MANIFEST_FILE}" \
   ${CI_DIR}/scripts/bosh-lite/make-manifest
 
+  bosh vms
   bosh -n deploy $MANIFEST_FILE
+  bosh vms
 }
 
 function deploy_with_percentage() {
@@ -99,6 +101,7 @@ function deploy_with_everything_disabled() {
 }
 
 function connect_to_mysql() {
+  bosh vms
   write_mysql_config
   trap close-ssh-tunnels EXIT
   open_ssh_tunnel_to_mysql
