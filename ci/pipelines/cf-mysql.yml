@@ -1218,9 +1218,14 @@ jobs:
       - *compile-release
   - task: delete-stemcell
     file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
-
-  - *ondemand-deploy-manifest
-
+  - put: cf-mysql-bosh-deployment
+    params:
+      manifest: deployment-manifest/deployment.yml
+      releases:
+      - compiled-release-tarball/*.tgz
+      stemcells:
+      - stemcell/*.tgz
+      source_file: bosh-lite-info/bosh-deployment-resource-source-file
   - task: persistence-test-data-write
     config:
       platform: linux
