@@ -1589,6 +1589,7 @@ jobs:
         BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
         SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
         BOSH_DEPLOYMENT: cf-mysql
+        MINIMAL_MODE: true
         ENABLE_REMOTE_ADMIN_ACCESS: true
       run:
         path: cf-mysql-ci/scripts/tuning/verify-tuning
