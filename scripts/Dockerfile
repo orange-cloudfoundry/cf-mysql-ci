@@ -30,6 +30,7 @@ RUN \
             python-dev \
             apt-transport-https \
             software-properties-common \
+            aria2 \
       && \
       apt-get clean
 
