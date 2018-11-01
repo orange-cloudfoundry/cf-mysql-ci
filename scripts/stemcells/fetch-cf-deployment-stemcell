@@ -3,5 +3,6 @@
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 WORKSPACE_DIR="$( cd "${MY_DIR}/../../.." && pwd )"
 
-stemcell_version="$(bosh int "${WORKSPACE_DIR}/cf-deployment/cf-deployment.yml" --path=/stemcells/os=ubuntu-xenial/version)"
-aria2c -x 4 -d ${WORKSPACE_DIR}/cf-deployment-rc-stemcell https://s3.amazonaws.com/bosh-core-stemcells/google/bosh-stemcell-${stemcell_version}-google-kvm-ubuntu-xenial-go_agent.tgz
+stemcell_version="$(bosh int "${WORKSPACE_DIR}/cf-deployment-rc/cf-deployment.yml" --path=/stemcells/os=ubuntu-xenial/version)"
+aria2c -x 4 -d ${WORKSPACE_DIR}/cf-deployment-rc-stemcell \
+  https://s3.amazonaws.com/bosh-core-stemcells/google/bosh-stemcell-${stemcell_version}-google-kvm-ubuntu-xenial-go_agent.tgz
