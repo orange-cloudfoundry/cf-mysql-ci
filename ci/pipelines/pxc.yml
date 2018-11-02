@@ -444,7 +444,7 @@ jobs:
       - cf-deployment/operations/use-compiled-releases.yml
       - cf-deployment/operations/bosh-lite.yml
       - cf-deployment/operations/scale-database-cluster.yml
-      - cf-deployment/operations/experimental/use-pxc.yml
+      - cf-deployment/operations/use-pxc.yml
       - cf-mysql-ci/operations/cf-deployment/pending-merge.yml
       - cf-mysql-ci/operations/cf-deployment/enable-remote-admin-access.yml
       - cf-mysql-ci/operations/cf-deployment/increase-pxc-proxy-healthcheck-timeout.yml
@@ -607,7 +607,7 @@ jobs:
       ops_files:
       - cf-deployment/operations/use-compiled-releases.yml
       - cf-deployment/operations/bosh-lite.yml
-      - cf-deployment/operations/experimental/migrate-cf-mysql-to-pxc.yml
+      - cf-deployment/operations/migrate-cf-mysql-to-pxc.yml
       - cf-mysql-ci/operations/cf-deployment/pending-merge.yml
       - cf-mysql-ci/operations/cf-deployment/pending-merge-migration.yml
       - cf-mysql-ci/operations/cf-deployment/increase-pxc-proxy-healthcheck-timeout.yml
@@ -652,7 +652,7 @@ jobs:
       ops_files:
       - cf-deployment/operations/use-compiled-releases.yml
       - cf-deployment/operations/bosh-lite.yml
-      - cf-deployment/operations/experimental/migrate-cf-mysql-to-pxc.yml
+      - cf-deployment/operations/migrate-cf-mysql-to-pxc.yml
       - cf-mysql-ci/operations/cf-deployment/pending-merge.yml
       - cf-mysql-ci/operations/cf-deployment/pending-merge-migration.yml
       - cf-mysql-ci/operations/cf-deployment/increase-pxc-proxy-healthcheck-timeout.yml
