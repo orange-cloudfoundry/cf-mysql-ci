@@ -147,6 +147,14 @@ resources:
     - Monday
     interval: 24h
 
+- name: pxc-compiled-release-for-cf-deployment-rc
+  type: s3
+  source:
+    bucket: pxc-releases
+    access_key_id: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-access-key-id))
+    secret_access_key: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-secret-access-key))
+    versioned_file: compiled-releases/pxc-for-cf-deployment-rc.tgz
+
 - name: pxc-compiled-release
   type: s3
   source:
@@ -246,6 +254,8 @@ jobs:
   - aggregate:
     - get: pxc-release
       passed: [bump-version, test-unit-and-integration]
+    - get: cf-deployment-rc
+      resource: cf-deployment-release-candidate
     - get: gcp-bosh-stemcell
       passed: [bump-version]
     - get: bosh-lite-stemcell
@@ -304,6 +314,36 @@ jobs:
         STEMCELL_LINE: ubuntu-xenial
       run:
         path: cf-mysql-ci/scripts/compile_release
+  - task: fetch-cf-deployment-rc-stemcell
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
+      - name: cf-deployment-rc
+      - name: cf-mysql-ci
+      outputs:
+      - name: cf-deployment-rc-stemcell
+      run:
+        path: cf-mysql-ci/scripts/stemcells/fetch-cf-deployment-stemcell
+  - task: cf-deployment-pxc-compile-release #compile pxc release on cf-d's stemcell
+    config:
+      platform: linux
+      image_resource: *image_resource
+      inputs:
+      - name: cf-mysql-ci
+      - name: release-tarball
+      - name: cf-deployment-rc-stemcell
+      outputs:
+      - name: cf-deployment-pxc-compiled-release-tarball
+      params:
+        OUTPUT_DIR: cf-deployment-pxc-compiled-release-tarball
+        BOSH_CLIENT: ((concourse-compilation-director/Notes/BOSH_CLIENT))
+        BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
+        BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
+        BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
+        STEMCELL_LINE: ubuntu-xenial
+      run:
+        path: cf-mysql-ci/scripts/compile_release
     ensure:
       put: compiled-packages-lock
       params:
@@ -314,6 +354,9 @@ jobs:
   - put: pxc-xenial-compiled-release
     params:
       file: xenial-compiled-release-tarball/*.tgz
+  - put: pxc-compiled-release-for-cf-deployment-rc
+    params:
+      file: cf-deployment-pxc-compiled-release-tarball/*.tgz
 
 - name: test-clean-install-pxc
   plan:
@@ -336,8 +379,7 @@ jobs:
     - get: cf-deployment-concourse-tasks
     - get: cf-acceptance-tests
     - get: cf-mysql-deployment
-    - get: compiled-release-tarball
-      resource: pxc-xenial-compiled-release
+    - get: pxc-compiled-release-for-cf-deployment-rc
       passed: [create-and-compile-release]
   - do: &create-bosh-lite
     - task: apply-terraform
@@ -396,9 +438,7 @@ jobs:
     params:
       manifest: cf-deployment/cf-deployment.yml
       releases:
-      - compiled-release-tarball/*.tgz
-      stemcells:
-      - stemcell/*.tgz
+      - pxc-compiled-release-for-cf-deployment-rc/*.tgz
       ops_files:
       - cf-mysql-ci/operations/cf-deployment/add-database-vm-extension.yml
       - cf-deployment/operations/use-compiled-releases.yml
@@ -480,6 +520,8 @@ jobs:
       passed: [create-and-compile-release]
     - get: pxc-xenial-compiled-release
       passed: [create-and-compile-release]
+    - get: pxc-compiled-release-for-cf-deployment-rc
+      passed: [create-and-compile-release]
     - get: cf-mysql-ci
     - get: bosh-deployment
       resource: bosh-deployment-repo
@@ -523,6 +565,11 @@ jobs:
         put: compiled-packages-lock
         params:
           release: compiled-packages-lock
+  - task: bosh-upload-stemcell-from-cf-deployment
+    file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
+    input_mapping: {bbl-state: bosh-lite-info}
+    params:
+      INFRASTRUCTURE: bosh-lite
   # deploy cf with cf-mysql
   - put: deploy-cf-with-cf-mysql
     resource: cf-bosh-deployment
@@ -530,8 +577,6 @@ jobs:
       manifest: cf-deployment/cf-deployment.yml
       releases:
       - compiled-release-tarball/*.tgz
-      stemcells:
-      - stemcell/*.tgz
       ops_files:
       - cf-deployment/operations/use-compiled-releases.yml
       - cf-deployment/operations/bosh-lite.yml
@@ -558,9 +603,7 @@ jobs:
     params:
       manifest: cf-deployment/cf-deployment.yml
       releases:
-      - pxc-xenial-compiled-release/*.tgz
-      stemcells:
-      - stemcell/*.tgz
+      - pxc-compiled-release-for-cf-deployment-rc/*.tgz
       ops_files:
       - cf-deployment/operations/use-compiled-releases.yml
       - cf-deployment/operations/bosh-lite.yml
@@ -605,9 +648,7 @@ jobs:
       manifest: cf-deployment/cf-deployment.yml
       recreate: true
       releases:
-      - pxc-xenial-compiled-release/*.tgz
-      stemcells:
-      - stemcell/*.tgz
+      - pxc-compiled-release-for-cf-deployment-rc/*.tgz
       ops_files:
       - cf-deployment/operations/use-compiled-releases.yml
       - cf-deployment/operations/bosh-lite.yml
