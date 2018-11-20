@@ -7,6 +7,11 @@ WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-compiled-release-tarball}"
 DEPLOYMENT_NAME=d-$(cat /proc/sys/kernel/random/uuid)
 
+jb_tmp_file=$(mktemp)
+echo "$BOSH_JUMPBOX_PRIVATE_KEY" > jb_tmp_file
+
+BOSH_ALL_PROXY="$BOSH_ALL_PROXY=$jb_tmp_file"
+
 source "${MY_DIR}/utils.sh"
 
 RELEASE_TARBALL_DIR=${RELEASE_TARBALL_DIR:-release-tarball}
