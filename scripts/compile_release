@@ -8,7 +8,9 @@ OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-compiled-release-tarball}"
 DEPLOYMENT_NAME=d-$(cat /proc/sys/kernel/random/uuid)
 
 jb_tmp_file=$(mktemp)
-echo "$BOSH_JUMPBOX_PRIVATE_KEY" > jb_tmp_file
+set +x
+echo "$BOSH_JUMPBOX_PRIVATE_KEY" > $jb_tmp_file
+set -x
 
 BOSH_ALL_PROXY="$BOSH_ALL_PROXY=$jb_tmp_file"
 
