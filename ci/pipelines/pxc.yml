@@ -293,6 +293,8 @@ jobs:
         BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
         BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
         BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
+        BOSH_ALL_PROXY: ((concourse-compilation-director/Notes/BOSH_ALL_PROXY))
+        BOSH_JUMPBOX_PRIVATE_KEY: ((concourse-compilation-director/Notes/BOSH_JUMPBOX_PRIVATE_KEY))
       run:
         path: cf-mysql-ci/scripts/compile_release
   - task: xenial-compile-release #compile pxc release on xenial
@@ -311,6 +313,8 @@ jobs:
         BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
         BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
         BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
+        BOSH_ALL_PROXY: ((concourse-compilation-director/Notes/BOSH_ALL_PROXY))
+        BOSH_JUMPBOX_PRIVATE_KEY: ((concourse-compilation-director/Notes/BOSH_JUMPBOX_PRIVATE_KEY))
         STEMCELL_LINE: ubuntu-xenial
       run:
         path: cf-mysql-ci/scripts/compile_release
@@ -341,6 +345,8 @@ jobs:
         BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
         BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
         BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
+        BOSH_ALL_PROXY: ((concourse-compilation-director/Notes/BOSH_ALL_PROXY))
+        BOSH_JUMPBOX_PRIVATE_KEY: ((concourse-compilation-director/Notes/BOSH_JUMPBOX_PRIVATE_KEY))
         STEMCELL_LINE: ubuntu-xenial
       run:
         path: cf-mysql-ci/scripts/compile_release
@@ -560,6 +566,8 @@ jobs:
           BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
           BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
           BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
+          BOSH_ALL_PROXY: ((concourse-compilation-director/Notes/BOSH_ALL_PROXY))
+          BOSH_JUMPBOX_PRIVATE_KEY: ((concourse-compilation-director/Notes/BOSH_JUMPBOX_PRIVATE_KEY))
           STEMCELL_LINE: ubuntu-xenial
       ensure:
         put: compiled-packages-lock
@@ -729,6 +737,8 @@ jobs:
           BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
           BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
           BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
+          BOSH_ALL_PROXY: ((concourse-compilation-director/Notes/BOSH_ALL_PROXY))
+          BOSH_JUMPBOX_PRIVATE_KEY: ((concourse-compilation-director/Notes/BOSH_JUMPBOX_PRIVATE_KEY))
       ensure:
         put: compiled-packages-lock
         params:
@@ -1245,6 +1255,8 @@ jobs:
           BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
           BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
           BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
+          BOSH_ALL_PROXY: ((concourse-compilation-director/Notes/BOSH_ALL_PROXY))
+          BOSH_JUMPBOX_PRIVATE_KEY: ((concourse-compilation-director/Notes/BOSH_JUMPBOX_PRIVATE_KEY))
           STEMCELL_LINE: ubuntu-xenial
       ensure:
         put: compiled-packages-lock
