@@ -20,6 +20,8 @@ params:
   BOSH_ENVIRONMENT:
   RELEASE_NAME:
   STEMCELL_LINE:
+  BOSH_ALL_PROXY:
+  BOSH_JUMPBOX_PRIVATE_KEY:
 
 run:
   path: cf-mysql-ci/scripts/compile_release
