@@ -4,6 +4,7 @@ MAINTAINER https://github.com/cloudfoundry/cf-mysql-release
 ENV DEBIAN_FRONTEND=noninteractive
 
 ARG BBL_GIT_TAG
+ARG BBL6_GIT_TAG
 ARG BOSH_CLI_VERSION
 ARG CREDHUB_CLI_VERSION
 ARG TERRAFORM_VERSION
@@ -132,6 +133,12 @@ RUN wget "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terrafor
 RUN wget "https://github.com/cloudfoundry/bosh-bootloader/releases/download/${BBL_GIT_TAG}/bbl-${BBL_GIT_TAG}_linux_x86-64" \
       -O /usr/local/bin/bbl && \
       chmod +x /usr/local/bin/bbl
+
+# Temporarily install bbl 6 and bbl 4 as separate binaries
+# until we can get all envs moved to bbl 6.
+RUN wget "https://github.com/cloudfoundry/bosh-bootloader/releases/download/${BBL6_GIT_TAG}/bbl-${BBL6_GIT_TAG}_linux_x86-64" \
+      -O /usr/local/bin/bbl6 && \
+      chmod +x /usr/local/bin/bbl6
 
 # Install credhub cli
 RUN wget -O - "https://github.com/cloudfoundry-incubator/credhub-cli/releases/download/${CREDHUB_CLI_VERSION}/credhub-linux-${CREDHUB_CLI_VERSION}.tgz" \
