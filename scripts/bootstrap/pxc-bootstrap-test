@@ -23,5 +23,5 @@ source ${RELEASE_DIR}/.envrc # To set GOPATH to release dir
 go install -v github.com/onsi/ginkgo/ginkgo
 pushd ${RELEASE_DIR}/src/specs/integration
   echo "Running tests ..."
-  ginkgo bootstrap
+  ginkgo ./bootstrap
 popd
