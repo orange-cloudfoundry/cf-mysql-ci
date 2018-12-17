@@ -849,6 +849,7 @@ jobs:
       - cf-mysql-ci/operations/pxc/add-proxy-load-balancer.yml
       - cf-mysql-ci/operations/pxc/allow-http-proxy-access.yml
       - cf-mysql-ci/operations/pxc/enable-remote-admin-access.yml
+      - cf-mysql-ci/operations/pxc/test-audit-logging.yml
   - *smoke-tests
   - task: test-audit-logging
     config:
@@ -859,6 +860,7 @@ jobs:
         - name: bosh-lite-info
         - name: pxc-release
       params:
+        AUDIT_LOG_PATH: /var/vcap/store/mysql_audit_logs/mysql_server_audit.log
         BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
         BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
         BOSH_DEPLOYMENT: pxc
