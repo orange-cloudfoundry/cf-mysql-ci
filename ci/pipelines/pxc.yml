@@ -201,6 +201,8 @@ jobs:
       trigger: true
     - get: pxc-release
       trigger: true
+    - get: cf-deployment-release-candidate
+      trigger: true
     - get: weekly-trigger
       trigger: true
     - get: version
