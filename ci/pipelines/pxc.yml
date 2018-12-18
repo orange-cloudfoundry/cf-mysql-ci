@@ -391,7 +391,7 @@ jobs:
       passed: [create-and-compile-release]
   - do: &create-bosh-lite
     - task: apply-terraform
-      file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+      file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
     - task: create-bosh-lite
       file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
       input_mapping: {deployments: deployments-terraformed}
