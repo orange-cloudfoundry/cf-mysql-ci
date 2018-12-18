@@ -14,7 +14,7 @@ outputs:
 - name: deployments-terraformed
 
 run:
-  path: cf-mysql-ci/scripts/bosh-lite-gcp/apply-terraform
+  path: cf-mysql-ci/ci/tasks/bosh-lite-gcp/apply-terraform.sh
 
 params:
   OUTPUT_DIR: deployments-terraformed
