@@ -15,5 +15,5 @@ outputs:
 - name: bosh-lite-info-stemcell-deleted
 
 run:
-  path: cf-mysql-ci/scripts/bosh-lite-gcp/delete-stemcell
+  path: cf-mysql-ci/ci/tasks/delete-stemcell/task.sh
 
