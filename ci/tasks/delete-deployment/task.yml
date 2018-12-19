@@ -1,18 +1,13 @@
----
-platform: linux
-
 image_resource:
-  type: docker-image
   source:
     repository: cloudfoundry/cf-mysql-ci
-
+  type: docker-image
 inputs:
 - name: cf-mysql-ci
 - name: environment
-
-run:
-  path: cf-mysql-ci/scripts/bosh/delete_deployment_gcp
-
 params:
+  BOSH_DEPLOYMENT:
   ENV_METADATA: environment/metadata
-  BOSH_DEPLOYMENT: ~
+platform: linux
+run:
+  path: cf-mysql-ci/ci/tasks/delete-deployment/task.sh

@@ -1,17 +1,12 @@
----
-platform: linux
-
 image_resource:
-  type: docker-image
   source:
     repository: cloudfoundry/cf-mysql-ci
-
+  type: docker-image
 inputs:
 - name: cf-mysql-ci
 - name: deployments
-
-run:
-  path: cf-mysql-ci/scripts/bosh-lite-gcp/destroy-terraform
-
 params:
   DEPLOYMENTS_DIR: deployments
+platform: linux
+run:
+  path: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform/task.sh

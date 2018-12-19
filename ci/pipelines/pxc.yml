@@ -272,7 +272,7 @@ jobs:
     - get: cf-mysql-ci
   - task: create-release
     attempts: 3
-    file: cf-mysql-ci/ci/tasks/create-release.yml
+    file: cf-mysql-ci/ci/tasks/create-release/task.yml
     input_mapping: {release-repo: pxc-release}
     params:
       RELEASE_NAME: pxc
@@ -393,7 +393,7 @@ jobs:
     - task: apply-terraform
       file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
     - task: create-bosh-lite
-      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+      file: cf-mysql-ci/ci/tasks/create-bosh-lite/task.yml
       input_mapping: {deployments: deployments-terraformed}
       params:
         PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
@@ -420,7 +420,7 @@ jobs:
         file: cf-mysql-ci/ci/tasks/delete-stemcell/task.yml
       - do:
         - task: generate-cloud-config
-          file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
+          file: cf-mysql-ci/ci/tasks/generate-cloud-config/task.yml
         - task: update-cloud-config
           file: cf-mysql-ci/ci/tasks/update-cloud-config/task.yml
           params:
@@ -494,10 +494,10 @@ jobs:
         path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
   - do: &teardown-bosh-lite
     - task: destroy-bosh-lite
-      file: cf-mysql-ci/ci/tasks/destroy-bosh-lite.yml
+      file: cf-mysql-ci/ci/tasks/destroy-bosh-lite/task.yml
       input_mapping: {bosh-lite-info: bosh-lite-info-stemcell-deleted}
     - task: destroy-terraform
-      file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
+      file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform/task.yml
       input_mapping: {deployments: deployments-terraformed}
     - task: delete-dns
       attempts: 5
@@ -554,7 +554,7 @@ jobs:
           acquire: true
       - task: compile-cf-mysql-release
         input_mapping: {release-tarball: cf-mysql-release-candidate}
-        file: cf-mysql-ci/ci/tasks/compile-release.yml
+        file: cf-mysql-ci/ci/tasks/compile-release/task.yml
         params:
           BOSH_CLIENT: ((concourse-compilation-director/Notes/BOSH_CLIENT))
           BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
@@ -725,7 +725,7 @@ jobs:
       - task: compile-last-pxc-release
         input_mapping: {release-tarball: last-pxc-release-bosh-release}
         output_mapping: {compiled-release-tarball: compiled-last-pxc-release}
-        file: cf-mysql-ci/ci/tasks/compile-release.yml
+        file: cf-mysql-ci/ci/tasks/compile-release/task.yml
         params:
           BOSH_CLIENT: ((concourse-compilation-director/Notes/BOSH_CLIENT))
           BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
@@ -1390,7 +1390,7 @@ jobs:
     - do:
       - task: create-release
         attempts: 3
-        file: cf-mysql-ci/ci/tasks/create-release.yml
+        file: cf-mysql-ci/ci/tasks/create-release/task.yml
         input_mapping: {release-repo: pxc-release}
         params:
           RELEASE_NAME: pxc
@@ -1399,7 +1399,7 @@ jobs:
         params:
           acquire: true
       - task: compile-pxc-release
-        file: cf-mysql-ci/ci/tasks/compile-release.yml
+        file: cf-mysql-ci/ci/tasks/compile-release/task.yml
         params:
           BOSH_CLIENT: ((concourse-compilation-director/Notes/BOSH_CLIENT))
           BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
@@ -1473,7 +1473,7 @@ jobs:
         params:
           bump: final
     - task: create-release
-      file: cf-mysql-ci/ci/tasks/create-release.yml
+      file: cf-mysql-ci/ci/tasks/create-release/task.yml
       input_mapping: {release-repo: pxc-release}
       output_mapping: {release-repo-modified: pxc-release-final}
       params:

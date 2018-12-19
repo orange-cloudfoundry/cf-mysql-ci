@@ -1,0 +1,23 @@
+image_resource:
+  source:
+    repository: cloudfoundry/cf-mysql-ci
+  type: docker-image
+inputs:
+- name: cf-mysql-ci
+- name: release-repo
+- name: version
+outputs:
+- name: commit-message
+- name: release-tarball
+- name: release-repo-modified
+params:
+  AWS_ACCESS_KEY_ID:
+  AWS_SECRET_ACCESS_KEY:
+  BLOBS_BUCKET_NAME:
+  BOSH_SHA2: false
+  FINAL:
+  RELEASE_NAME:
+  SHA2:
+platform: linux
+run:
+  path: cf-mysql-ci/ci/tasks/create-release/task.sh

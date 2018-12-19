@@ -297,7 +297,7 @@ jobs:
       trigger: true
     - get: cf-mysql-ci
   - task: generate-docker-build-args-file
-    file: cf-mysql-ci/ci/tasks/generate-docker-build-args-file.yml
+    file: cf-mysql-ci/ci/tasks/generate-docker-build-args-file/task.yml
   - put: cf-mysql-ci-image
     params:
       build: cf-mysql-dockerfile/scripts/
@@ -335,12 +335,12 @@ jobs:
     - get: version
   - aggregate:
     - task: test-unit
-      file: cf-mysql-ci/ci/tasks/test-unit.yml
+      file: cf-mysql-ci/ci/tasks/test-unit/task.yml
       attempts: 5
     - task: test-integration
-      file: cf-mysql-ci/ci/tasks/test-integration.yml
+      file: cf-mysql-ci/ci/tasks/test-integration/task.yml
     - task: test-broker
-      file: cf-mysql-ci/ci/tasks/test-broker.yml
+      file: cf-mysql-ci/ci/tasks/test-broker/task.yml
     - task: test-broker-dependencies
       config:
         platform: &platform linux
@@ -388,7 +388,7 @@ jobs:
     file: cf-mysql-ci/ci/tasks/create-and-compile-release/gate-on-stemcells.yml
   - &create-release
     task: create-release
-    file: cf-mysql-ci/ci/tasks/create-release.yml
+    file: cf-mysql-ci/ci/tasks/create-release/task.yml
     input_mapping: {release-repo: cf-mysql-release}
     params:
       RELEASE_NAME: cf-mysql
@@ -629,13 +629,13 @@ jobs:
         trigger: true
     - aggregate:
       - task: make-manifest
-        file: cf-mysql-ci/ci/tasks/make-manifest.yml
+        file: cf-mysql-ci/ci/tasks/make-manifest/task.yml
         params:
           ENABLE_REMOTE_ADMIN_ACCESS: true
       - task: apply-terraform
         file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
     - task: create-bosh-lite
-      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+      file: cf-mysql-ci/ci/tasks/create-bosh-lite/task.yml
       input_mapping: {deployments: deployments-terraformed}
       params:
         PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
@@ -707,10 +707,10 @@ jobs:
           run:
             path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
       - task: destroy-bosh-lite
-        file: cf-mysql-ci/ci/tasks/destroy-bosh-lite.yml
+        file: cf-mysql-ci/ci/tasks/destroy-bosh-lite/task.yml
         input_mapping: {bosh-lite-info: bosh-lite-info-stemcell-deleted}
       - task: destroy-terraform
-        file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
+        file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform/task.yml
         input_mapping: {deployments: deployments-terraformed}
 
 ### ARB-TO-FULL-SCALING
@@ -769,7 +769,7 @@ jobs:
     - task: apply-terraform
       file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
     - task: create-bosh-lite
-      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+      file: cf-mysql-ci/ci/tasks/create-bosh-lite/task.yml
       input_mapping: {deployments: deployments-terraformed}
       params:
         PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
@@ -801,12 +801,12 @@ jobs:
         params:
           INFRASTRUCTURE: bosh-lite
       - task: make-cf-manifest
-        file: cf-mysql-ci/ci/tasks/make-cf-manifest.yml
+        file: cf-mysql-ci/ci/tasks/make-cf-manifest/task.yml
         params:
           DEPLOY_WITH_DIEGO_CA_CERT: true
       - do:
         - task: generate-cloud-config
-          file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
+          file: cf-mysql-ci/ci/tasks/generate-cloud-config/task.yml
         - task: update-cloud-config
           file: cf-mysql-ci/ci/tasks/update-cloud-config/task.yml
           params:
@@ -923,10 +923,10 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
   - task: destroy-bosh-lite
-    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite.yml
+    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite/task.yml
     input_mapping: {bosh-lite-info: bosh-lite-info-stemcell-deleted}
   - task: destroy-terraform
-    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
+    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform/task.yml
     input_mapping: {deployments: deployments-terraformed}
   - task: delete-dns
     config:
@@ -972,7 +972,7 @@ jobs:
     - task: apply-terraform
       file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
     - task: create-bosh-lite
-      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+      file: cf-mysql-ci/ci/tasks/create-bosh-lite/task.yml
       input_mapping: {deployments: deployments-terraformed}
       params:
         PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
@@ -1004,10 +1004,10 @@ jobs:
         params:
           INFRASTRUCTURE: bosh-lite
       - task: make-cf-manifest
-        file: cf-mysql-ci/ci/tasks/make-cf-manifest.yml
+        file: cf-mysql-ci/ci/tasks/make-cf-manifest/task.yml
       - do:
         - task: generate-cloud-config
-          file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
+          file: cf-mysql-ci/ci/tasks/generate-cloud-config/task.yml
         - task: update-cloud-config
           file: cf-mysql-ci/ci/tasks/update-cloud-config/task.yml
           params:
@@ -1131,10 +1131,10 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
   - task: destroy-bosh-lite
-    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite.yml
+    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite/task.yml
     input_mapping: {bosh-lite-info: bosh-lite-info-stemcell-deleted}
   - task: destroy-terraform
-    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
+    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform/task.yml
     input_mapping: {deployments: deployments-terraformed}
   - task: delete-dns
     config:
@@ -1182,14 +1182,14 @@ jobs:
       passed: [create-and-compile-release]
   - aggregate:
     - task: make-manifest
-      file: cf-mysql-ci/ci/tasks/make-manifest.yml
+      file: cf-mysql-ci/ci/tasks/make-manifest/task.yml
       params:
         ENABLE_REMOTE_ADMIN_ACCESS: true
     - do:
       - task: apply-terraform
         file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
       - task: create-bosh-lite
-        file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+        file: cf-mysql-ci/ci/tasks/create-bosh-lite/task.yml
         input_mapping: {deployments: deployments-terraformed}
         params:
           PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
@@ -1231,7 +1231,7 @@ jobs:
         path: cf-mysql-ci/scripts/persistence/load-test-data
 
   - task: make-manifest
-    file: cf-mysql-ci/ci/tasks/make-manifest.yml
+    file: cf-mysql-ci/ci/tasks/make-manifest/task.yml
     input_mapping:
       cf-mysql-deployment: cf-mysql-deployment-develop
     params:
@@ -1338,7 +1338,7 @@ jobs:
   plan:
   - *ondemand-setup
   - task: make-manifest-with-interruptor-enabled
-    file: cf-mysql-ci/ci/tasks/make-manifest.yml
+    file: cf-mysql-ci/ci/tasks/make-manifest/task.yml
     params:
       ENABLE_INTERRUPTOR: true
       ENABLE_REMOTE_ADMIN_ACCESS: true
@@ -1381,7 +1381,7 @@ jobs:
   plan:
   - *ondemand-setup
   - task: make-manifest-with-interruptor-enabled
-    file: cf-mysql-ci/ci/tasks/make-manifest.yml
+    file: cf-mysql-ci/ci/tasks/make-manifest/task.yml
     params:
       ENABLE_INTERRUPTOR: true
       ENABLE_REMOTE_ADMIN_ACCESS: true
@@ -1402,7 +1402,7 @@ jobs:
       run:
         path: cf-mysql-ci/scripts/data-loss/force-sst-test
   - task: make-manifest-with-interruptor-disabled
-    file: cf-mysql-ci/ci/tasks/make-manifest.yml
+    file: cf-mysql-ci/ci/tasks/make-manifest/task.yml
     params:
       ENABLE_REMOTE_ADMIN_ACCESS: true
   - *ondemand-deploy-manifest
@@ -1428,7 +1428,7 @@ jobs:
   plan:
   - *ondemand-setup
   - task: make-manifest
-    file: cf-mysql-ci/ci/tasks/make-manifest.yml
+    file: cf-mysql-ci/ci/tasks/make-manifest/task.yml
     params:
       TINY_GCACHE: true #TODO: do we need this?
       ENABLE_REMOTE_ADMIN_ACCESS: true
@@ -1481,14 +1481,14 @@ jobs:
         trigger: true
     - aggregate:
       - task: make-manifest
-        file: cf-mysql-ci/ci/tasks/make-manifest.yml
+        file: cf-mysql-ci/ci/tasks/make-manifest/task.yml
         params:
           ENABLE_REMOTE_ADMIN_ACCESS: false
           MINIMAL_MODE: true
       - task: apply-terraform
         file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
     - task: create-bosh-lite
-      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+      file: cf-mysql-ci/ci/tasks/create-bosh-lite/task.yml
       input_mapping: {deployments: deployments-terraformed}
       params:
         PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
@@ -1541,14 +1541,14 @@ jobs:
         trigger: true
     - aggregate:
       - task: make-manifest
-        file: cf-mysql-ci/ci/tasks/make-manifest.yml
+        file: cf-mysql-ci/ci/tasks/make-manifest/task.yml
         params:
           ENABLE_REMOTE_ADMIN_ACCESS: true
           MINIMAL_MODE: true
       - task: apply-terraform
         file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
     - task: create-bosh-lite
-      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+      file: cf-mysql-ci/ci/tasks/create-bosh-lite/task.yml
       input_mapping: {deployments: deployments-terraformed}
       params:
         PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
@@ -1611,7 +1611,7 @@ jobs:
       - task: apply-terraform
         file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
       - task: create-bosh-lite
-        file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
+        file: cf-mysql-ci/ci/tasks/create-bosh-lite/task.yml
         input_mapping: {deployments: deployments-terraformed}
         params:
           PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
@@ -1785,7 +1785,7 @@ jobs:
       - get: gcp-bosh-stemcell
         passed: [promote-to-rc]
     - task: create-mysql-release
-      file: cf-mysql-ci/ci/tasks/create-release.yml
+      file: cf-mysql-ci/ci/tasks/create-release/task.yml
       input_mapping: {release-repo: cf-mysql-release}
       output_mapping: {release-repo-modified: cf-mysql-release-final}
       params:
