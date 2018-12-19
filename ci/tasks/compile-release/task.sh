@@ -3,8 +3,11 @@
 set -eux
 
 WORKSPACE_DIR="$(pwd)"
+CI_DIR="${WORKSPACE_DIR}/cf-mysql-ci/"
 OUTPUT_DIR="${WORKSPACE_DIR}/${OUTPUT_DIR:-compiled-release-tarball}"
 DEPLOYMENT_NAME=d-$(cat /proc/sys/kernel/random/uuid)
+
+source "${CI_DIR}/scripts/utils.sh"
 
 jb_tmp_file=$(mktemp)
 set +x
