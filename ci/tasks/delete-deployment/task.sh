@@ -3,7 +3,7 @@
 set -eux -o pipefail
 
 WORKSPACE_DIR="$(pwd)"
-CI_DIR="${WORKSPACE_DIR}/cf-mysql-ci/"
+CI_DIR="${WORKSPACE_DIR/cf-mysql-ci/}"
 
 source ${CI_DIR}/scripts/utils.sh
 
