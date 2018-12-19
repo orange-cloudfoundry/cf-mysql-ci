@@ -18,4 +18,4 @@ params:
   BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
 
 run:
-  path: cf-mysql-ci/scripts/bosh-lite-gcp/update-cloud-config
+  path: cf-mysql-ci/ci/tasks/update-cloud-config/task.sh
