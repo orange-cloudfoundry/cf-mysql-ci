@@ -2,7 +2,8 @@
 
 set -eux
 
-WORKSPACE_DIR="$(pwd)"
+MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+WORKSPACE_DIR="$( cd "${MY_DIR}/../.." && pwd )"
 
 # Params
 : "${RELEASE_NAME:?}"
