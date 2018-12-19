@@ -633,7 +633,7 @@ jobs:
         params:
           ENABLE_REMOTE_ADMIN_ACCESS: true
       - task: apply-terraform
-        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
     - task: create-bosh-lite
       file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
       input_mapping: {deployments: deployments-terraformed}
@@ -767,7 +767,7 @@ jobs:
       - get: cf-deployment
       - get: cf-deployment-concourse-tasks
     - task: apply-terraform
-      file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+      file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
     - task: create-bosh-lite
       file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
       input_mapping: {deployments: deployments-terraformed}
@@ -978,7 +978,7 @@ jobs:
       - get: cf-deployment
       - get: cf-deployment-concourse-tasks
     - task: apply-terraform
-      file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+      file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
     - task: create-bosh-lite
       file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
       input_mapping: {deployments: deployments-terraformed}
@@ -1203,7 +1203,7 @@ jobs:
         ENABLE_REMOTE_ADMIN_ACCESS: true
     - do:
       - task: apply-terraform
-        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
       - task: create-bosh-lite
         file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
         input_mapping: {deployments: deployments-terraformed}
@@ -1502,7 +1502,7 @@ jobs:
           ENABLE_REMOTE_ADMIN_ACCESS: false
           MINIMAL_MODE: true
       - task: apply-terraform
-        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
     - task: create-bosh-lite
       file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
       input_mapping: {deployments: deployments-terraformed}
@@ -1562,7 +1562,7 @@ jobs:
           ENABLE_REMOTE_ADMIN_ACCESS: true
           MINIMAL_MODE: true
       - task: apply-terraform
-        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
     - task: create-bosh-lite
       file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
       input_mapping: {deployments: deployments-terraformed}
@@ -1625,7 +1625,7 @@ jobs:
   - aggregate:
     - do:
       - task: apply-terraform
-        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform.yml
+        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
       - task: create-bosh-lite
         file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
         input_mapping: {deployments: deployments-terraformed}
