@@ -1,20 +1,26 @@
+---
+platform: linux
+
 image_resource:
+  type: docker-image
   source:
     repository: cloudfoundry/cf-mysql-ci
-  type: docker-image
+
 inputs:
 - name: cf-mysql-ci
 - name: cf-deployment
 - name: url
+
 outputs:
 - name: cf-deployment-manifest
 - name: varstore
-params:
-  DEPLOY_WITH_DIEGO_CA_CERT: false
-  DNS_NAME: url/url
-  OUTPUT_FILE: cf-deployment-manifest/cf.yml
-  PROXY_LB:
-  REMOTE_ADMIN_ACCESS:
-platform: linux
+
 run:
-  path: cf-mysql-ci/ci/tasks/make-cf-manifest/task.sh
+  path: cf-mysql-ci/scripts/bosh-lite/make-cf-manifest
+
+params:
+  OUTPUT_FILE: cf-deployment-manifest/cf.yml
+  DNS_NAME: url/url
+  DEPLOY_WITH_DIEGO_CA_CERT: false
+  REMOTE_ADMIN_ACCESS:
+  PROXY_LB:
