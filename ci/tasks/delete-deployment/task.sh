@@ -2,9 +2,8 @@
 
 set -eux -o pipefail
 
-MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-CI_DIR="$( cd ${MY_DIR}/../../ && pwd )"
-WORKSPACE_DIR="$( cd ${CI_DIR}/../ && pwd )"
+WORKSPACE_DIR="$(pwd)"
+CI_DIR="${WORKSPACE_DIR/cf-mysql-ci/}"
 
 source ${CI_DIR}/scripts/utils.sh
 
