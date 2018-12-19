@@ -644,7 +644,7 @@ jobs:
         SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
         BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
     - task: delete-stemcell
-      file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
+      file: cf-mysql-ci/ci/tasks/delete-stemcell/task.yml
     - &ondemand-deploy-manifest
       put: cf-mysql-bosh-deployment
       params:
@@ -793,7 +793,7 @@ jobs:
           run:
             path: cf-mysql-ci/scripts/bosh-lite-gcp/create-dns
       - task: delete-stemcell
-        file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
+        file: cf-mysql-ci/ci/tasks/delete-stemcell/task.yml
     - aggregate:
       - task: bosh-upload-stemcell-from-cf-deployment
         file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
@@ -1004,7 +1004,7 @@ jobs:
           run:
             path: cf-mysql-ci/scripts/bosh-lite-gcp/create-dns
       - task: delete-stemcell
-        file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
+        file: cf-mysql-ci/ci/tasks/delete-stemcell/task.yml
     - aggregate:
       - task: bosh-upload-stemcell-from-cf-deployment
         file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
@@ -1219,7 +1219,7 @@ jobs:
           acquire: true
       - *compile-release
   - task: delete-stemcell
-    file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
+    file: cf-mysql-ci/ci/tasks/delete-stemcell/task.yml
   - put: cf-mysql-bosh-deployment
     params:
       manifest: deployment-manifest/deployment.yml
@@ -1513,7 +1513,7 @@ jobs:
         SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
         BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
     - task: delete-stemcell
-      file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
+      file: cf-mysql-ci/ci/tasks/delete-stemcell/task.yml
   - *ondemand-deploy-manifest
   - task: run-verify-no-remote-access
     config:
@@ -1573,7 +1573,7 @@ jobs:
         SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
         BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
     - task: delete-stemcell
-      file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
+      file: cf-mysql-ci/ci/tasks/delete-stemcell/task.yml
   - *ondemand-deploy-manifest
   - task: run-verify-tuning
     config:
@@ -1636,7 +1636,7 @@ jobs:
           SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
           BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
       - task: delete-stemcell
-        file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
+        file: cf-mysql-ci/ci/tasks/delete-stemcell/task.yml
     - do:
       - *create-release
       - put: compiled-packages-lock

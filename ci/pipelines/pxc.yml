@@ -417,7 +417,7 @@ jobs:
           run:
             path: cf-mysql-ci/scripts/bosh-lite-gcp/create-dns
       - task: delete-stemcell
-        file: cf-mysql-ci/ci/tasks/bosh-lite-gcp/delete-stemcell.yml
+        file: cf-mysql-ci/ci/tasks/delete-stemcell/task.yml
       - do:
         - task: generate-cloud-config
           file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
