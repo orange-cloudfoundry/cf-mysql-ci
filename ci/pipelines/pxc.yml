@@ -422,21 +422,13 @@ jobs:
         - task: generate-cloud-config
           file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
         - task: update-cloud-config
-          config:
-            platform: linux
-            image_resource: *image_resource
-            inputs:
-            - name: cf-mysql-ci
-            - name: cloud-config
-            - name: bosh-lite-info
-            params:
-              BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-              BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-              ENV_TARGET_FILE: bosh-lite-info/director-url
-              BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-              CLOUD_CONFIG: cloud-config/cloud-config.yml
-            run:
-              path: cf-mysql-ci/scripts/bosh-lite-gcp/update-cloud-config
+          file: cf-mysql-ci/ci/tasks/update-cloud-config/task.yml
+          params:
+            BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
+            BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+            ENV_TARGET_FILE: bosh-lite-info/director-url
+            BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
+            CLOUD_CONFIG: cloud-config/cloud-config.yml
   - task: bosh-upload-stemcell-from-cf-deployment
     file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
     input_mapping: {bbl-state: bosh-lite-info}
