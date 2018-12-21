@@ -32,5 +32,9 @@ fi
 
 pushd pxc-release
     source .envrc
-    ginkgo -slowSpecThreshold=180 src/github.com/cloudfoundry/galera-init/integration_test/
+    ginkgo -r -slowSpecThreshold=180 \
+           -race \
+           -failOnPending \
+           -randomizeAllSpecs \
+           src/github.com/cloudfoundry/galera-init/integration_test/
 popd
