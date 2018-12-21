@@ -7,4 +7,4 @@ image_resource:
 inputs:
   - name: pxc-release
 run:
-  path: cf-mysql-release/scripts/integration/run-galera-init-integration
+  path: cf-mysql-ci/scripts/integration/run-galera-init-integration
