@@ -6,5 +6,6 @@ image_resource:
     repository: dedicatedmysql/dedicated-mysql-docker-ci
 inputs:
   - name: pxc-release
+  - name: cf-mysql-ci
 run:
   path: cf-mysql-ci/scripts/integration/run-galera-init-integration
