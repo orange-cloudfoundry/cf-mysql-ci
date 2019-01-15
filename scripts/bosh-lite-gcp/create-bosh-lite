@@ -129,19 +129,4 @@ export BOSH_CA_CERT=\${bosh_lite_info_dir}/ca-cert
 export BOSH_CLIENT=admin
 export BOSH_CLIENT_SECRET=${BOSH_CLIENT_SECRET}
 export BOSH_GW_PRIVATE_KEY=\${bosh_lite_info_dir}/jumpbox-private-key
-
-echo "Logging into credhub"
-echo
-credhub_api_url="https://$(cat ${bosh_lite_info_dir}/external-ip | tr '\n' '\0'):8844/api/"
-credhub api $credhub_api_url --ca-cert=${bosh_lite_info_dir}/credhub.ca --ca-cert ${bosh_lite_info_dir}/uaa.ca
-credhub login --client-name=credhub-admin --client-secret=$(bosh int ${bosh_lite_info_dir}/bosh-creds.yml --path /credhub_admin_client_secret)
-echo
-echo "Logging into cf"
-
-cf_api_url=$(bosh -d cf manifest | grep -o 'https://api.*.bosh-lite.gcp.core-services.cf-app.com')
-
-cf api $cf_api_url --skip-ssl-validation
-cf_admin_password="$(credhub get -n /lite/cf/cf_admin_password -j | jq .value -r)"
-
-cf login -u admin -p "${cf_admin_password}"
 HEREDOC
