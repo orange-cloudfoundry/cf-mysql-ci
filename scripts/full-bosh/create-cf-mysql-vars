@@ -21,5 +21,4 @@ cf_skip_ssl_validation: true
 cf_api_url: "https://api.${env_domain}"
 app_domains: "[${env_domain}]"
 cf_mysql_external_host: "p-mysql.${env_domain}"
-cf_mysql_host: "proxy-p-mysql.${env_domain}"
 EOF
