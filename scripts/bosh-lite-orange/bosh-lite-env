@@ -1,0 +1,107 @@
+#!/bin/bash
+set -eux
+
+my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+scripts_dir="$( cd "${my_dir}/../" && pwd )"
+workspace_dir="$( cd "${my_dir}/../../../" && pwd )"
+
+OUTPUT_DIR="${workspace_dir}/${OUTPUT_DIR}"
+OUTPUT_VAR_DIR="${workspace_dir}/${OUTPUT_VAR_DIR}"
+OUTPUT_URL_DIR="${workspace_dir}/${OUTPUT_URL_DIR}"
+
+DEPLOYMENTS_DIR="${workspace_dir}/${BOSH_LITE_REPO}"
+
+pushd "${DEPLOYMENTS_DIR}" > /dev/null
+cp bosh-creds.yml ${OUTPUT_DIR}
+cp external-ip ${OUTPUT_DIR}
+cp domain ${OUTPUT_DIR}
+bosh -n interpolate "${OUTPUT_DIR}/bosh-creds.yml" \
+  --path /director_ssl/ca > "${OUTPUT_DIR}/ca-cert"
+
+bosh -n interpolate "${OUTPUT_DIR}/bosh-creds.yml" \
+  --path /jumpbox_ssh/private_key > "${OUTPUT_DIR}/jumpbox-private-key"
+chmod 600 "${OUTPUT_DIR}/jumpbox-private-key"
+
+bosh -n interpolate "${OUTPUT_DIR}/bosh-creds.yml" \
+  --path /credhub_ca/ca > "${OUTPUT_DIR}/credhub.ca"
+
+bosh -n interpolate "${OUTPUT_DIR}/bosh-creds.yml" \
+  --path /uaa_ssl/ca > "${OUTPUT_DIR}/uaa.ca"
+
+
+director_url="https://$(cat "${OUTPUT_DIR}/domain")"
+escaped_ca_cert="$(cat ${OUTPUT_DIR}/ca-cert | sed ':a;N;$!ba;s/\n/\\n/g')"
+
+# Adding https: escapes the regex that would otherwise convert to sslip
+echo ${director_url} > "${OUTPUT_DIR}/director-url"
+
+# Replacing newlines with \n is hard apparently
+# https://stackoverflow.com/questions/1251999/how-can-i-replace-a-newline-n-using-sed
+cat <<HEREDOC > "${OUTPUT_DIR}/bosh-deployment-resource-source-file"
+{
+  client: "${BOSH_CLIENT}",
+  client_secret: "${BOSH_CLIENT_SECRET}",
+  target: "${director_url}",
+  ca_cert: "${escaped_ca_cert}"
+}
+HEREDOC
+
+# Create a bbl state file with credentials so that scripts can target the director with `bbl print-env`
+cat <<HEREDOC > "${OUTPUT_DIR}/bbl-state.json"
+{
+  "version": 3,
+  "bosh": {
+    "directorUsername": "${BOSH_CLIENT}",
+    "directorPassword": "${BOSH_CLIENT_SECRET}",
+    "directorAddress": "${director_url}",
+    "directorSSLCA": "${escaped_ca_cert}"
+  }
+}
+HEREDOC
+
+# create a deployment-vars.yml
+cat <<HEREDOC > "${OUTPUT_VAR_DIR}/deployment-vars.yml"
+cf_admin_password: $(cat "${DEPLOYMENTS_DIR}/cf-admin-password")
+HEREDOC
+
+# create url
+url=$(cat "${OUTPUT_DIR}/domain")
+wildcard_url="*.${url}"
+echo "${url}"  > "${OUTPUT_URL_DIR}/url"
+echo "system_domain: ${url}" > "${OUTPUT_URL_DIR}/url-vars.yml"
+echo "${wildcard_url}" > "${OUTPUT_URL_DIR}/wildcard_url"
+
+
+
+# Create a file which can be sourced in order to get all the env vars to talk to the bosh director
+cat <<HEREDOC > "${OUTPUT_DIR}/source_me"
+#!/usr/bin/env bash
+
+bosh_lite_info_dir="\$( cd "\$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
+
+export BOSH_ENVIRONMENT=\$(cat "\${bosh_lite_info_dir}/external-ip")
+export BOSH_CA_CERT=\${bosh_lite_info_dir}/ca-cert
+export BOSH_CLIENT=${BOSH_CLIENT}
+export BOSH_CLIENT_SECRET=${BOSH_CLIENT_SECRET}
+export BOSH_GW_PRIVATE_KEY=\${bosh_lite_info_dir}/jumpbox-private-key
+
+credhub_api_url="https://\$(cat \${bosh_lite_info_dir}/domain | tr '\\n' '\\0'):8844/api/"
+echo "Logging into credhub"
+echo
+credhub api \$credhub_api_url --ca-cert=\${bosh_lite_info_dir}/credhub.ca --ca-cert \${bosh_lite_info_dir}/uaa.ca
+credhub login --client-name=credhub-admin --client-secret=\$(bosh int \${bosh_lite_info_dir}/bosh-creds.yml --path /credhub_admin_client_secret)
+echo
+
+# Do not target cf api if cf is not deployed
+if \$(bosh -d cf deployment > /dev/null 2>&1); then
+  echo "Logging into cf"
+
+ # cf_api_url=\$(bosh -d cf manifest | grep -o 'https://api.*.bosh-lite.gcp.core-services.cf-app.com')
+  cf_api_url="https://api.\$(cat \${bosh_lite_info_dir}/domain  | tr '\\n' '\\0')" 
+
+  cf api \$cf_api_url --skip-ssl-validation
+  cf_admin_password="\$(credhub get -n /bosh-warden-cf/cf/cf_admin_password -j | jq .value -r)"
+
+  cf login -u admin -p "\${cf_admin_password}"
+fi
+HEREDOC

@@ -42,4 +42,5 @@ else
   echo "deployment ${DEPLOYMENT_NAME} not found - nothing to delete"
 fi
 
-bosh -n clean-up --all
+#bosh -n clean-up --all
+bosh disks --orphaned --json|jq -r '.Tables[].Rows[].disk_cid'|xargs -i bosh delete-disk -n {}

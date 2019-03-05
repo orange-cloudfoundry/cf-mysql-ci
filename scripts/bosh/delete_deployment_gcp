@@ -22,4 +22,4 @@ export BOSH_CA_CERT
 
 bosh -n delete-deployment
 
-bosh -n clean-up --all
+#bosh -n clean-up --all

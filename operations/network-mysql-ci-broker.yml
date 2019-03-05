@@ -1,0 +1,13 @@
+---
+- type: replace
+  path: /instance_groups/name=broker/networks
+  value: [{name: mysql-ci}]
+
+- type: replace
+  path: /instance_groups/name=broker-registrar/networks
+  value: [{name: mysql-ci}]
+
+- type: replace
+  path: /instance_groups/name=deregister-and-purge-instances-vm/networks
+  value: [{name: mysql-ci}]
+

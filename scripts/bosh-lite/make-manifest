@@ -16,6 +16,7 @@ set -eux
 : "${STATIC_PROXY_IPS:=false}"
 : "${ADD_TLS:=false}"
 : "${FAKE_CA:=false}"
+: "${NETWORK_DEF:=false}"
 : "${VARS_FILE:=}"
 
 VARS_FILE_OPTION=''
@@ -23,7 +24,11 @@ if [[ ! -z "${VARS_FILE}" ]]; then
   VARS_FILE_OPTION="-l ${VARS_FILE}"
 fi
 
-operations=""
+if ${NETWORK_DEF}; then
+    operations="-o ./cf-mysql-ci/operations/network-mysql-ci.yml"
+else
+    operations=""
+fi
 variables=""
 
 if ${MINIMAL_MODE}; then
@@ -64,6 +69,9 @@ fi
 
 if ${ADD_BROKERS}; then
     operations="$operations -o ./cf-mysql-deployment/operations/add-broker.yml"
+    if ${NETWORK_DEF}; then
+        operations="$operations -o ./cf-mysql-ci/operations/network-mysql-ci-broker.yml"
+    fi
     operations="$operations -o ./cf-mysql-deployment/operations/register-proxy-route.yml"
     operations="$operations -o ./cf-mysql-ci/operations/add-proxy-and-broker-load-balancers.yml"
     operations="$operations -o ./cf-mysql-ci/operations/default-vcap-password-broker.yml"
@@ -92,10 +100,10 @@ if ${ADD_TLS}; then
     -o ./cf-mysql-deployment/operations/add-tls.yml \
     -o ./cf-mysql-deployment/operations/proxy-elb.yml"
 
-    if ${ADD_BROKERS}; then
-      operations="$operations \
-      -o ./cf-mysql-deployment/operations/configure-broker-load-balancer.yml"
-    fi
+#    if ${ADD_BROKERS}; then
+#      operations="$operations \
+#      -o ./cf-mysql-deployment/operations/configure-broker-load-balancer.yml"
+#    fi
 
     variables="$variables \
     -v proxy_vm_extension=mysql-proxy-lb \

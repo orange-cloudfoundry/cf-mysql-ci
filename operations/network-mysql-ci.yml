@@ -1,0 +1,29 @@
+---
+- type: replace
+  path: /instance_groups/name=mysql/networks
+  value: [{name: mysql-ci}]
+
+- type: replace
+  path: /instance_groups/name=proxy/networks
+  value: [{name: mysql-ci}]
+
+- type: replace
+  path: /instance_groups/name=arbitrator/networks
+  value: [{name: mysql-ci}]
+
+- type: replace
+  path: /instance_groups/name=bootstrap-vm/networks
+  value: [{name: mysql-ci}]
+
+- type: replace
+  path: /instance_groups/name=rejoin-unsafe-vm/networks
+  value: [{name: mysql-ci}]
+
+- type: replace 
+  path: /instance_groups/name=verify-cluster-schemas-vm/networks
+  value: [{name: mysql-ci}]
+
+- type: replace
+  path: /instance_groups/name=smoke-tests-vm/networks
+  value: [{name: mysql-ci}]
+

@@ -1,0 +1,27 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: cloudfoundry/cf-mysql-ci
+
+inputs:
+- name: cf-mysql-ci
+- name: deployments
+
+outputs:
+- name: bosh-lite-info
+- name: varstore
+- name: url
+
+run:
+  path: cf-mysql-ci/scripts/bosh-lite-orange/bosh-lite-env
+
+params:
+  OUTPUT_DIR: bosh-lite-info
+  OUTPUT_VAR_DIR: varstore
+  OUTPUT_URL_DIR: url
+  BOSH_LITE_REPO:
+  BOSH_CLIENT:
+  BOSH_CLIENT_SECRET: 

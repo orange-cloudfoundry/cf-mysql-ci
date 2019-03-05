@@ -24,3 +24,4 @@ params:
   ENABLE_REMOTE_ADMIN_ACCESS: false
   ADD_BROKER: false
   SET_CF_MYSQL_HOST: false
+  NETWORK_DEF: false
