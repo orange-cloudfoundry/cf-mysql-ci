@@ -96,7 +96,6 @@ echo
 if \$(bosh -d cf deployment > /dev/null 2>&1); then
   echo "Logging into cf"
 
- # cf_api_url=\$(bosh -d cf manifest | grep -o 'https://api.*.bosh-lite.gcp.core-services.cf-app.com')
   cf_api_url="https://api.\$(cat \${bosh_lite_info_dir}/domain  | tr '\\n' '\\0')" 
 
   cf api \$cf_api_url --skip-ssl-validation
