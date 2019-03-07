@@ -97,7 +97,8 @@ if ${ADD_TLS}; then
     fi
 
     operations="$operations \
-    -o ./cf-mysql-deployment/operations/add-tls.yml \
+#    -o ./cf-mysql-deployment/operations/add-tls.yml \
+    -o ./cf-mysql-ci/operations/add-tls.yml \
     -o ./cf-mysql-deployment/operations/proxy-elb.yml"
 
 #    if ${ADD_BROKERS}; then
@@ -106,8 +107,8 @@ if ${ADD_TLS}; then
 #    fi
 
     variables="$variables \
-    -v proxy_vm_extension=mysql-proxy-lb \
-    -v cf_mysql_host=$(cat bosh-lite-info/external-ip)"
+     -v proxy_vm_extension=mysql-proxy-lb"
+#    -v cf_mysql_host=$(cat bosh-lite-info/external-ip)"
 fi
 
 if ${STATIC_PROXY_IPS}; then
