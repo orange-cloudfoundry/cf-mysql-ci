@@ -97,7 +97,6 @@ if ${ADD_TLS}; then
     fi
 
     operations="$operations \
-#    -o ./cf-mysql-deployment/operations/add-tls.yml \
     -o ./cf-mysql-ci/operations/add-tls.yml \
     -o ./cf-mysql-deployment/operations/proxy-elb.yml"
 
