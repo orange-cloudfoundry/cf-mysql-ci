@@ -125,7 +125,7 @@ resources:
   type: git
   source:
     uri: https://github.com/cloudfoundry/cf-mysql-deployment.git
-    branch: master
+    branch: develop
     username: ((git-username))
     password: ((git-password))
 
@@ -133,7 +133,7 @@ resources:
   type: git
   source:
     uri: https://github.com/cloudfoundry/cf-mysql-deployment.git
-    branch: master
+    branch: develop
     username: ((git-username))
     password: ((git-password))
 
@@ -160,7 +160,7 @@ resources:
   type: git
   source:
     uri: https://github.com/cloudfoundry/cf-mysql-release.git
-    branch: master
+    branch: develop
     username: ((git-username))
     password: ((git-password))
 
