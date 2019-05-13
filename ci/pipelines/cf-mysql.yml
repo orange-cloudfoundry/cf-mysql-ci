@@ -78,11 +78,12 @@ resources:
   type: bosh-io-stemcell
   source:
     name: bosh-warden-boshlite-ubuntu-trusty-go_agent
+    
 
 - name: gcp-bosh-stemcell
   type: bosh-io-stemcell
   source:
-    name: bosh-google-kvm-ubuntu-trusty-go_agent
+    name: bosh-warden-boshlite-ubuntu-trusty-go_agent
 
 - name: xenial-bosh-lite-stemcell
   type: bosh-io-stemcell
@@ -92,25 +93,22 @@ resources:
 - name: xenial-gcp-bosh-stemcell
   type: bosh-io-stemcell
   source:
-    name: bosh-google-kvm-ubuntu-xenial-go_agent
+    name: bosh-warden-boshlite-ubuntu-xenial-go_agent
 
 - name: deployments-configuration
   type: git
   source:
-    uri: git@github.com:pivotal-cf/deployments-core-services
-    private_key: ((core-services-ci-credentials/Notes/pcf-mysql-engine-reader-private-key))
+    uri: https://gitlab.forge.orange-labs.fr/gcl-dba-isad/cf-mysql-ci-envs.git
+    branch: master
+    skip_ssl_verification: true
+    username: ((gitlab-username))
+    password: ((gitlab-password))
 
 - name: cf-mysql-ci
   type: git
   source:
-    uri: https://github.com/cloudfoundry-incubator/cf-mysql-ci.git
-    branch: master
-
-- name: cf-deployment-concourse-tasks
-  type: git
-  source:
-    uri: https://github.com/cloudfoundry/cf-deployment-concourse-tasks.git
-    tag_filter: v3.*
+    uri: https://github.com/orange-cloudfoundry/cf-mysql-ci.git
+    branch: orange-acceptance-test
 
 - name: routing-release
   type: bosh-io-release
@@ -122,33 +120,30 @@ resources:
   source:
     repository: cloudfoundry-incubator/bpm-release
 
-- name: cf-deployment
-  type: git
-  source:
-    uri: https://github.com/cloudfoundry/cf-deployment.git
-    branch: release-candidate
-    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
 
 - name: cf-mysql-deployment
   type: git
   source:
-    uri: git@github.com:cloudfoundry/cf-mysql-deployment.git
-    branch: develop
-    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
+    uri: https://github.com/cloudfoundry/cf-mysql-deployment.git
+    branch: master
+    username: ((git-username))
+    password: ((git-password))
 
 - name: cf-mysql-deployment-master
   type: git
   source:
-    uri: git@github.com:cloudfoundry/cf-mysql-deployment.git
+    uri: https://github.com/cloudfoundry/cf-mysql-deployment.git
     branch: master
-    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
+    username: ((git-username))
+    password: ((git-password))
 
 - name: cf-mysql-deployment-release-candidate
   type: git
   source:
-    uri: git@github.com:cloudfoundry/cf-mysql-deployment.git
+    uri: https://github.com/cloudfoundry/cf-mysql-deployment.git
     branch: release-candidate
-    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
+    username: ((git-username))
+    password: ((git-password))
 
 - name: runtime-ci
   type: git
@@ -164,40 +159,46 @@ resources:
 - name: cf-mysql-release
   type: git
   source:
-    uri: git@github.com:cloudfoundry/cf-mysql-release.git
-    branch: develop
-    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
+    uri: https://github.com/cloudfoundry/cf-mysql-release.git
+    branch: master
+    username: ((git-username))
+    password: ((git-password))
 
 - name: cf-mysql-release-cipher-finder
   type: git
   source:
-    uri: git@github.com:cloudfoundry/cf-mysql-release.git
+    uri: https://github.com/cloudfoundry/cf-mysql-release.git
     branch: develop
-    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
+    username: ((git-username))
+    password: ((git-password))
     paths:
     - src/github.com/cloudfoundry-incubator/cf-mysql-acceptance-tests/assets/cipher_finder/**/*
 
 - name: cf-mysql-master
   type: git
   source:
-    uri: git@github.com:cloudfoundry/cf-mysql-release.git
+    uri: https://github.com/cloudfoundry/cf-mysql-release.git
     branch: master
-    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
+    username: ((git-username))
+    password: ((git-password))
 
 - name: cf-mysql-release-candidate
   type: git
   source:
-    uri: git@github.com:cloudfoundry/cf-mysql-release.git
+    uri: https://github.com/cloudfoundry/cf-mysql-release.git
     branch: release-candidate
-    private_key: ((core-services-ci-credentials/Notes/git-writer-private-key))
+    username: ((git-username))
+    password: ((git-password))
 
 - name: full-bosh-environment
   type: pool
   source:
-    uri: &pool-uri git@github.com:pivotal-cf-experimental/core-services-oss-env-resource-pool
+    uri: &pool-uri https://gitlab.forge.orange-labs.fr/gcl-dba-isad/cf-mysql-ci-envs.git
     branch: master
     pool: full-bosh
-    private_key: ((core-services-ci-credentials/Notes/pcf-mysql-engine-writer-private-key))
+    skip_ssl_verification: true
+    username: ((gitlab-username))
+    password: ((gitlab-password))
 
 - name: compiled-packages-lock
   type: pool
@@ -205,8 +206,9 @@ resources:
     uri: *pool-uri
     branch: master
     pool: compiled-packages
-    private_key: ((core-services-ci-credentials/Notes/pcf-mysql-engine-writer-private-key))
-
+    username: ((gitlab-username))
+    password: ((gitlab-password))
+    skip_ssl_verification: true
 
 - name: cf-mysql-rc-artifacts
   type: s3
@@ -219,49 +221,47 @@ resources:
 - name: cf-mysql-compiled-release
   type: s3
   source:
-    bucket: cf-mysql-releases
-    access_key_id: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-access-key-id))
-    secret_access_key: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-secret-access-key))
-    versioned_file: compiled-releases/cf-mysql-ubuntu-trusty-develop.tgz
+    bucket: ((cf-mysql-ci-s3-bucket))
+    access_key_id: ((cf-mysql-ci-s3-access-key-id))
+    secret_access_key: ((cf-mysql-ci-s3-secret-access-key))
+    endpoint: ((cf-mysql-ci-s3-endpoint))
+    skip_ssl_verification: true
+    regexp: compiled-releases/cf-mysql-(.*)-ubuntu-trusty-(.*).tgz
 
 - name: cf-mysql-bosh-deployment
   type: bosh-deployment
   source:
     deployment: cf-mysql
 
-- name: cf-bosh-deployment
-  type: bosh-deployment
-  source:
-    deployment: cf
-
-- name: bosh-deployment-repo
-  type: git
-  source:
-    uri: https://github.com/cloudfoundry/bosh-deployment
 
 - name: version
   type: semver
   source:
-    driver: s3
-    bucket: cf-mysql-releases
-    access_key_id: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-access-key-id))
-    secret_access_key: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-secret-access-key))
-    key: version
+    driver: git
+    uri: https://gitlab.forge.orange-labs.fr/gcl-dba-isad/cf-mysql-ci-envs.git
+    branch: master
+    file: version
+    skip_ssl_verification: true
+    username: ((gitlab-username))
+    password: ((gitlab-password))
+    git_user: ((ci-bot-git-user))
 
-- name: weekly-trigger
-  type: time
-  source:
-    days:
-    - Monday
-    interval: 24h
+# - name: weekly-trigger
+#   type: time
+#   source:
+#     days:
+#     - Monday
+#     interval: 24h
 
 - name: s3-resource-final-release
   type: s3
   source:
-    bucket: cf-mysql-releases
-    regexp: final/cf-mysql-(.*).tgz
-    access_key_id: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-access-key-id))
-    secret_access_key: ((core-services-ci-credentials/Notes/cf-mysql-ci-aws-secret-access-key))
+    bucket: ((cf-mysql-ci-s3-bucket))
+    regexp: final/cf-mysql-(.*)-ubuntu-trusty-(.*).tgz
+    access_key_id: ((cf-mysql-ci-s3-access-key-id))
+    secret_access_key: ((cf-mysql-ci-s3-secret-access-key))
+    endpoint: ((cf-mysql-ci-s3-endpoint))
+    skip_ssl_verification: true
 
 - name: publish-github-release
   type: github-release
@@ -326,8 +326,8 @@ jobs:
   plan:
   - aggregate:
     - get: cf-mysql-ci
-    - get: weekly-trigger
-      trigger: true
+    # - get: weekly-trigger
+    #   trigger: true
     - get: cf-mysql-release
       trigger: true
     - get: cf-mysql-deployment
@@ -410,12 +410,12 @@ jobs:
       outputs:
       - name: compiled-release-tarball
       params:
-        BOSH_CLIENT: ((concourse-compilation-director/Notes/BOSH_CLIENT))
-        BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
-        BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
-        BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
-        BOSH_ALL_PROXY: ((concourse-compilation-director/Notes/BOSH_ALL_PROXY))
-        BOSH_JUMPBOX_PRIVATE_KEY: ((concourse-compilation-director/Notes/BOSH_JUMPBOX_PRIVATE_KEY))
+        BOSH_CLIENT: ((bosh-server.user))
+        BOSH_CLIENT_SECRET: ((bosh-server.password))
+        BOSH_ENVIRONMENT: ((bosh-server.ip))
+        BOSH_CA_CERT: ((bosh-server.ca))
+        BOSH_ALL_PROXY: ((bosh-server.all_proxy))
+        BOSH_JUMPBOX_PRIVATE_KEY: ((bosh-server.jumpbox_private_key))
       run:
         path: cf-mysql-ci/scripts/compile_release
     ensure:
@@ -427,6 +427,7 @@ jobs:
       file: compiled-release-tarball/*.tgz
 
 - name: test-full-bosh
+  serial_groups: [boshlitecf]
   plan:
   - aggregate:
     - get: cf-mysql-release
@@ -495,7 +496,7 @@ jobs:
       outputs:
       - name: cf-mysql-vars
       run:
-        path: cf-mysql-ci/scripts/full-bosh/create-cf-mysql-vars
+        path: cf-mysql-ci/scripts/full-bosh-orange/create-cf-mysql-vars
   - put: cf-mysql-bosh-deployment
     params:
       source_file: full-bosh-environment/metadata
@@ -503,8 +504,6 @@ jobs:
       ops_files:
       - cf-mysql-deployment/operations/latest-versions.yml
       - cf-mysql-deployment/operations/add-broker.yml
-      - cf-mysql-deployment/operations/configure-broker-load-balancer.yml
-      - cf-mysql-deployment/operations/proxy-elb.yml
       - cf-mysql-deployment/operations/register-proxy-route.yml
       - cf-mysql-ci/operations/default-vcap-password.yml
       - cf-mysql-ci/operations/default-vcap-password-broker.yml
@@ -603,6 +602,7 @@ jobs:
 
 ### SCALING
 - name: test-scaling
+  serial_groups: [boshlite]
   plan:
   - &ondemand-setup
     do:
@@ -617,8 +617,6 @@ jobs:
       - get: compiled-release-tarball
         resource: cf-mysql-compiled-release
         passed: [create-and-compile-release]
-      - get: bosh-deployment
-        resource: bosh-deployment-repo
       - get: deployments
         resource: deployments-configuration
       - get: stemcell
@@ -627,24 +625,18 @@ jobs:
       - get: version
         passed: [create-and-compile-release]
         trigger: true
+    - task: bosh-lite-env
+      file: cf-mysql-ci/ci/tasks/orange/bosh-lite-env.yml
+      params:
+        BOSH_LITE_REPO: deployments/bosh-lite
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password))
     - aggregate:
       - task: make-manifest
         file: cf-mysql-ci/ci/tasks/make-manifest.yml
         params:
           ENABLE_REMOTE_ADMIN_ACCESS: true
-      - task: apply-terraform
-        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
-    - task: create-bosh-lite
-      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
-      input_mapping: {deployments: deployments-terraformed}
-      params:
-        PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
-        ZONE: ((core-services-ci-credentials/Notes/gcp-bosh-lite-zone))
-        NETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-network))
-        SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-    - task: delete-stemcell
-      file: cf-mysql-ci/ci/tasks/delete-stemcell/task.yml
+          NETWORK_DEF: true
     - &ondemand-deploy-manifest
       put: cf-mysql-bosh-deployment
       params:
@@ -665,8 +657,8 @@ jobs:
         - name: bosh-lite-info
       params:
         BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password))
         ENV_TARGET_FILE: bosh-lite-info/director-url
         BOSH_DEPLOYMENT: cf-mysql
         ERRAND: smoke-tests
@@ -682,11 +674,12 @@ jobs:
         - name: cf-mysql-deployment
       params:
         BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password))
         BOSH_DEPLOYMENT: cf-mysql
         ENV_TARGET_FILE: bosh-lite-info/director-url
         ENABLE_REMOTE_ADMIN_ACCESS: true
+        NETWORK_DEF: true
       run:
         path: cf-mysql-ci/scripts/scaling/scaling-test
   - &ondemand-teardown
@@ -699,23 +692,18 @@ jobs:
           - name: cf-mysql-ci
           - name: bosh-lite-info
           params:
-            BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-            BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-            BOSH_CA_CERT: bosh-lite-info/ca-cert
+            BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
+            BOSH_CLIENT: ((bosh-lite.user))
+            BOSH_CLIENT_SECRET: ((bosh-lite.password))
             BOSH_DEPLOYMENT: cf-mysql
-            ENV_TARGET_FILE: bosh-lite-info/external-ip
+            ENV_TARGET_FILE: bosh-lite-info/director-url
           run:
-            path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
-      - task: destroy-bosh-lite
-        file: cf-mysql-ci/ci/tasks/destroy-bosh-lite.yml
-        input_mapping: {bosh-lite-info: bosh-lite-info-stemcell-deleted}
-      - task: destroy-terraform
-        file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
-        input_mapping: {deployments: deployments-terraformed}
+            path: cf-mysql-ci/scripts/bosh/delete_deployment
 
 ### ARB-TO-FULL-SCALING
 # Verify that replication works in several different topologies
 - name: test-arb-to-full-scaling
+  serial_groups: [boshlite]
   plan:
   - *ondemand-setup
   - *run-smoke-tests-ondemand
@@ -729,17 +717,19 @@ jobs:
         - name: cf-mysql-deployment
       params:
         BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password))
         BOSH_DEPLOYMENT: cf-mysql
         ENV_TARGET_FILE: bosh-lite-info/director-url
         ENABLE_REMOTE_ADMIN_ACCESS: true
+        NETWORK_DEF: true
       run:
         path: cf-mysql-ci/scripts/scaling/scaling-arb-to-full-test
   - *ondemand-teardown
 
 ### TLS
 - name: test-tls
+  serial_groups: [boshlitecf]
   plan:
   - do:
     - aggregate:
@@ -752,69 +742,22 @@ jobs:
       - get: compiled-release-tarball
         resource: cf-mysql-compiled-release
         passed: [create-and-compile-release]
-      - get: bosh-deployment
-        resource: bosh-deployment-repo
       - get: deployments
         resource: deployments-configuration
       - get: routing-release
       - get: stemcell
         resource: bosh-lite-stemcell
         passed: [create-and-compile-release]
-      - get: xenial-bosh-lite-stemcell
+#      - get: xenial-bosh-lite-stemcell
       - get: version
         passed: [create-and-compile-release]
         trigger: true
-      - get: cf-deployment
-      - get: cf-deployment-concourse-tasks
-    - task: apply-terraform
-      file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
-    - task: create-bosh-lite
-      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
-      input_mapping: {deployments: deployments-terraformed}
+    - task: bosh-lite-env
+      file: cf-mysql-ci/ci/tasks/orange/bosh-lite-env.yml
       params:
-        PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
-        ZONE: ((core-services-ci-credentials/Notes/gcp-bosh-lite-zone))
-        NETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-network))
-        SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-    - aggregate:
-      - task: create-dns
-        attempts: 2
-        config:
-          platform: linux
-          image_resource: *image_resource
-          inputs:
-          - name: cf-mysql-ci
-          - name: bosh-lite-info
-          - name: deployments
-            path: deployments-core-services
-          outputs:
-          - name: url
-          run:
-            path: cf-mysql-ci/scripts/bosh-lite-gcp/create-dns
-      - task: delete-stemcell
-        file: cf-mysql-ci/ci/tasks/delete-stemcell/task.yml
-    - aggregate:
-      - task: bosh-upload-stemcell-from-cf-deployment
-        file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-        input_mapping: {bbl-state: bosh-lite-info}
-        params:
-          INFRASTRUCTURE: bosh-lite
-      - task: make-cf-manifest
-        file: cf-mysql-ci/ci/tasks/make-cf-manifest.yml
-        params:
-          DEPLOY_WITH_DIEGO_CA_CERT: true
-      - do:
-        - task: generate-cloud-config
-          file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
-        - task: update-cloud-config
-          file: cf-mysql-ci/ci/tasks/update-cloud-config/task.yml
-          params:
-            BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-            BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-            ENV_TARGET_FILE: bosh-lite-info/director-url
-            BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-            CLOUD_CONFIG: cloud-config/cloud-config.yml
+        BOSH_LITE_REPO: deployments/bosh-lite-cf
+        BOSH_CLIENT: ((bosh-server.user))
+        BOSH_CLIENT_SECRET: ((bosh-server.password))
     - task: make-manifest
       config:
         platform: linux
@@ -831,16 +774,10 @@ jobs:
           OUTPUT_FILE: deployment-manifest/deployment.yml
           ADD_BROKERS: true
           ADD_TLS: true
+          FAKE_CA: true
           DISABLE_CROSS_DEPLOYMENT_LINKS: false
         run:
           path: cf-mysql-ci/scripts/bosh-lite/make-manifest
-    - put: cf-bosh-deployment
-      params:
-        manifest: cf-deployment-manifest/cf.yml
-        releases: []
-        stemcells:
-        - xenial-bosh-lite-stemcell/*.tgz
-        source_file: bosh-lite-info/bosh-deployment-resource-source-file
     - put: cf-mysql-bosh-deployment
       params:
         manifest: deployment-manifest/deployment.yml
@@ -859,23 +796,23 @@ jobs:
         - name: bosh-lite-info
       params:
         BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-server.user))
+        BOSH_CLIENT_SECRET: ((bosh-server.password))
         ENV_TARGET_FILE: bosh-lite-info/director-url
         ERRAND: broker-registrar
         BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bosh/run_errand
-  - task: test-tls
-    config:
-      platform: linux
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-ci
-      - name: url
-      - name: varstore
-      run:
-        path: cf-mysql-ci/scripts/tls/verify-tls-enabled
+#  - task: test-tls
+#    config:
+#      platform: linux
+#      image_resource: *image_resource
+#      inputs:
+#      - name: cf-mysql-ci
+#      - name: url
+#      - name: varstore
+#      run:
+#        path: cf-mysql-ci/scripts/tls/verify-tls-enabled
   - task: run-smoke-tests
     config:
       platform: linux
@@ -885,8 +822,8 @@ jobs:
         - name: bosh-lite-info
       params:
         BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-server.user))
+        BOSH_CLIENT_SECRET: ((bosh-server.password))
         ENV_TARGET_FILE: bosh-lite-info/director-url
         ERRAND: smoke-tests
         BOSH_DEPLOYMENT: cf-mysql
@@ -900,49 +837,17 @@ jobs:
       - name: cf-mysql-ci
       - name: bosh-lite-info
       params:
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-        BOSH_CA_CERT: bosh-lite-info/ca-cert
+        BOSH_CLIENT: ((bosh-server.user))
+        BOSH_CLIENT_SECRET: ((bosh-server.password))
+        BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
         BOSH_DEPLOYMENT: cf-mysql
-        ENV_TARGET_FILE: bosh-lite-info/external-ip
+        ENV_TARGET_FILE: bosh-lite-info/director-url
       run:
-        path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
-  - task: delete-cf-deployment
-    config:
-      platform: linux
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-ci
-      - name: bosh-lite-info
-      params:
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-        BOSH_DEPLOYMENT: cf
-        BOSH_CA_CERT: bosh-lite-info/ca-cert
-        ENV_TARGET_FILE: bosh-lite-info/external-ip
-      run:
-        path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
-  - task: destroy-bosh-lite
-    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite.yml
-    input_mapping: {bosh-lite-info: bosh-lite-info-stemcell-deleted}
-  - task: destroy-terraform
-    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
-    input_mapping: {deployments: deployments-terraformed}
-  - task: delete-dns
-    config:
-      platform: linux
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-ci
-      - name: bosh-lite-info
-      - name: url
-      - name: deployments
-        path: deployments-core-services
-      run:
-        path: cf-mysql-ci/scripts/bosh-lite-gcp/delete-dns
+        path: cf-mysql-ci/scripts/bosh/delete_deployment
 
 ### FAILOVER
 - name: test-failover
+  serial_groups: [boshlitecf]
   plan:
   - do:
     - aggregate:
@@ -955,67 +860,21 @@ jobs:
       - get: compiled-release-tarball
         resource: cf-mysql-compiled-release
         passed: [create-and-compile-release]
-      - get: bosh-deployment
-        resource: bosh-deployment-repo
       - get: deployments
         resource: deployments-configuration
       - get: stemcell
         resource: bosh-lite-stemcell
         passed: [create-and-compile-release]
-      - get: xenial-bosh-lite-stemcell
       - get: version
         passed: [create-and-compile-release]
         trigger: true
       - get: routing-release
-      - get: cf-deployment
-      - get: cf-deployment-concourse-tasks
-    - task: apply-terraform
-      file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
-    - task: create-bosh-lite
-      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
-      input_mapping: {deployments: deployments-terraformed}
+    - task: bosh-lite-env
+      file: cf-mysql-ci/ci/tasks/orange/bosh-lite-env.yml
       params:
-        PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
-        ZONE: ((core-services-ci-credentials/Notes/gcp-bosh-lite-zone))
-        NETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-network))
-        SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-    - aggregate:
-      - task: create-dns
-        attempts: 2
-        config:
-          platform: linux
-          image_resource: *image_resource
-          inputs:
-          - name: cf-mysql-ci
-          - name: bosh-lite-info
-          - name: deployments
-            path: deployments-core-services
-          outputs:
-          - name: url
-          run:
-            path: cf-mysql-ci/scripts/bosh-lite-gcp/create-dns
-      - task: delete-stemcell
-        file: cf-mysql-ci/ci/tasks/delete-stemcell/task.yml
-    - aggregate:
-      - task: bosh-upload-stemcell-from-cf-deployment
-        file: cf-deployment-concourse-tasks/bosh-upload-stemcell-from-cf-deployment/task.yml
-        input_mapping: {bbl-state: bosh-lite-info}
-        params:
-          INFRASTRUCTURE: bosh-lite
-      - task: make-cf-manifest
-        file: cf-mysql-ci/ci/tasks/make-cf-manifest.yml
-      - do:
-        - task: generate-cloud-config
-          file: cf-mysql-ci/ci/tasks/generate-cloud-config.yml
-        - task: update-cloud-config
-          file: cf-mysql-ci/ci/tasks/update-cloud-config/task.yml
-          params:
-            BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-            BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-            ENV_TARGET_FILE: bosh-lite-info/director-url
-            BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-            CLOUD_CONFIG: cloud-config/cloud-config.yml
+        BOSH_LITE_REPO: deployments/bosh-lite-cf
+        BOSH_CLIENT: ((bosh-server.user))
+        BOSH_CLIENT_SECRET: ((bosh-server.password))      
     - task: make-manifest
       config:
         platform: linux
@@ -1034,13 +893,6 @@ jobs:
           DISABLE_CROSS_DEPLOYMENT_LINKS: false
         run:
           path: cf-mysql-ci/scripts/bosh-lite/make-manifest
-    - put: cf-bosh-deployment
-      params:
-        manifest: cf-deployment-manifest/cf.yml
-        releases: []
-        stemcells:
-        - xenial-bosh-lite-stemcell/*.tgz
-        source_file: bosh-lite-info/bosh-deployment-resource-source-file
     - put: cf-mysql-bosh-deployment
       params:
         manifest: deployment-manifest/deployment.yml
@@ -1059,8 +911,8 @@ jobs:
         - name: bosh-lite-info
       params:
         BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-server.user))
+        BOSH_CLIENT_SECRET: ((bosh-server.password))
         ENV_TARGET_FILE: bosh-lite-info/director-url
         ERRAND: broker-registrar
         BOSH_DEPLOYMENT: cf-mysql
@@ -1075,8 +927,8 @@ jobs:
         - name: bosh-lite-info
       params:
         BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-server.user))
+        BOSH_CLIENT_SECRET: ((bosh-server.password))
         ENV_TARGET_FILE: bosh-lite-info/director-url
         ERRAND: smoke-tests
         BOSH_DEPLOYMENT: cf-mysql
@@ -1092,10 +944,9 @@ jobs:
         - name: cf-mysql-release
       params:
         BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-server.user))
+        BOSH_CLIENT_SECRET: ((bosh-server.password))
         ENV_TARGET_FILE: bosh-lite-info/director-url
-        BOSH_LITE_SSH_KEY: ((core-services-ci-credentials/Notes/bosh-lite-private-key))
         BOSH_DEPLOYMENT: cf-mysql
         NEW_STYLE_PROXY_URL: true
       run:
@@ -1108,49 +959,17 @@ jobs:
       - name: cf-mysql-ci
       - name: bosh-lite-info
       params:
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-        BOSH_CA_CERT: bosh-lite-info/ca-cert
+        BOSH_CLIENT: ((bosh-server.user))
+        BOSH_CLIENT_SECRET: ((bosh-server.password))
+        BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
         BOSH_DEPLOYMENT: cf-mysql
-        ENV_TARGET_FILE: bosh-lite-info/external-ip
+        ENV_TARGET_FILE: bosh-lite-info/director-url
       run:
-        path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
-  - task: delete-cf-deployment
-    config:
-      platform: linux
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-ci
-      - name: bosh-lite-info
-      params:
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-        BOSH_DEPLOYMENT: cf
-        BOSH_CA_CERT: bosh-lite-info/ca-cert
-        ENV_TARGET_FILE: bosh-lite-info/external-ip
-      run:
-        path: cf-mysql-ci/scripts/bosh/delete_deployment_no_env_metadata
-  - task: destroy-bosh-lite
-    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite.yml
-    input_mapping: {bosh-lite-info: bosh-lite-info-stemcell-deleted}
-  - task: destroy-terraform
-    file: cf-mysql-ci/ci/tasks/destroy-bosh-lite-terraform.yml
-    input_mapping: {deployments: deployments-terraformed}
-  - task: delete-dns
-    config:
-      platform: linux
-      image_resource: *image_resource
-      inputs:
-      - name: cf-mysql-ci
-      - name: bosh-lite-info
-      - name: url
-      - name: deployments
-        path: deployments-core-services
-      run:
-        path: cf-mysql-ci/scripts/bosh-lite-gcp/delete-dns
+        path: cf-mysql-ci/scripts/bosh/delete_deployment
 
 ### UPGRADE
 - name: test-upgrade-from-previous
+  serial_groups: [boshlite]
   plan:
   - aggregate:
     - get: bpm-release
@@ -1165,9 +984,7 @@ jobs:
       resource: cf-mysql-deployment-master
     - get: cf-mysql-ci
     - get: release-tarball
-      resource: s3-resource-final-release
-    - get: bosh-deployment
-      resource: bosh-deployment-repo
+      resource: cf-mysql-compiled-release
     - get: deployments
       resource: deployments-configuration
     - get: stemcell
@@ -1185,25 +1002,18 @@ jobs:
       file: cf-mysql-ci/ci/tasks/make-manifest.yml
       params:
         ENABLE_REMOTE_ADMIN_ACCESS: true
-    - do:
-      - task: apply-terraform
-        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
-      - task: create-bosh-lite
-        file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
-        input_mapping: {deployments: deployments-terraformed}
-        params:
-          PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
-          ZONE: ((core-services-ci-credentials/Notes/gcp-bosh-lite-zone))
-          NETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-network))
-          SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
-          BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        NETWORK_DEF: true
+    - task: bosh-lite-env
+      file: cf-mysql-ci/ci/tasks/orange/bosh-lite-env.yml
+      params:
+        BOSH_LITE_REPO: deployments/bosh-lite
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password))
     - do:
       - put: compiled-packages-lock
         params:
           acquire: true
       - *compile-release
-  - task: delete-stemcell
-    file: cf-mysql-ci/ci/tasks/delete-stemcell/task.yml
   - *ondemand-deploy-manifest
   - task: persistence-test-data-write
     config:
@@ -1229,6 +1039,7 @@ jobs:
       cf-mysql-deployment: cf-mysql-deployment-develop
     params:
       ENABLE_REMOTE_ADMIN_ACCESS: true
+      NETWORK_DEF: true
 
   - put: cf-mysql-bosh-deployment
     params:
@@ -1261,6 +1072,7 @@ jobs:
 
 ### STANDALONE FOR BOOTSTRAP
 - name: test-bootstrap
+  serial_groups: [boshlite]
   plan:
   - *ondemand-setup
   - task: persistence-test-data-write
@@ -1275,8 +1087,8 @@ jobs:
       - name: cf-mysql-ci
       params:
         ENV_TARGET_FILE: bosh-lite-info/director-url
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password))
         BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/persistence/load-test-data
@@ -1289,8 +1101,8 @@ jobs:
       - name: bosh-lite-info
       params:
         ENV_TARGET_FILE: bosh-lite-info/external-ip
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password))
         BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/bootstrap/break-mysql-cluster
@@ -1303,8 +1115,8 @@ jobs:
       - name: cf-mysql-ci
       params:
         BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password))
         ENV_TARGET_FILE: bosh-lite-info/director-url
         BOSH_DEPLOYMENT: cf-mysql
         ERRAND: bootstrap
@@ -1328,6 +1140,7 @@ jobs:
 
 ### DATA LOSS
 - name: test-interruptor-prevents-data-loss
+  serial_groups: [boshlite]
   plan:
   - *ondemand-setup
   - task: make-manifest-with-interruptor-enabled
@@ -1335,6 +1148,7 @@ jobs:
     params:
       ENABLE_INTERRUPTOR: true
       ENABLE_REMOTE_ADMIN_ACCESS: true
+      NETWORK_DEF: true
   - *ondemand-deploy-manifest
   - task: run-data-loss-tests
     config:
@@ -1346,8 +1160,8 @@ jobs:
         - name: cf-mysql-release
       params:
         ENV_TARGET_FILE: bosh-lite-info/director-url
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password))
         BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/data-loss/force-sst-test
@@ -1360,8 +1174,8 @@ jobs:
         - name: bosh-lite-info
       params:
         BOSH_CA_CERT_PATH: bosh-lite-info/ca-cert
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password))
         ENV_TARGET_FILE: bosh-lite-info/director-url
         BOSH_DEPLOYMENT: cf-mysql
         ERRAND: rejoin-unsafe
@@ -1371,6 +1185,7 @@ jobs:
 
 ### DISABLE AUTO SST
 - name: test-interruptor-can-be-disabled
+  serial_groups: [boshlite]
   plan:
   - *ondemand-setup
   - task: make-manifest-with-interruptor-enabled
@@ -1378,6 +1193,7 @@ jobs:
     params:
       ENABLE_INTERRUPTOR: true
       ENABLE_REMOTE_ADMIN_ACCESS: true
+      NETWORK_DEF: true
   - *ondemand-deploy-manifest
   - task: run-data-loss-tests # leaves cluster in broken state with node z2 down
     config:
@@ -1389,8 +1205,8 @@ jobs:
         - name: cf-mysql-release
       params:
         ENV_TARGET_FILE: bosh-lite-info/director-url
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password))
         BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/data-loss/force-sst-test
@@ -1398,6 +1214,7 @@ jobs:
     file: cf-mysql-ci/ci/tasks/make-manifest.yml
     params:
       ENABLE_REMOTE_ADMIN_ACCESS: true
+      NETWORK_DEF: true
   - *ondemand-deploy-manifest
   - task: restart-broken-node
     attempts: 5
@@ -1409,8 +1226,8 @@ jobs:
         - name: bosh-lite-info
       params:
         ENV_TARGET_FILE: bosh-lite-info/director-url
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password))
         BOSH_DEPLOYMENT: cf-mysql
       run:
         path: cf-mysql-ci/scripts/data-loss/restart-broken-node
@@ -1418,6 +1235,7 @@ jobs:
 
 ### VERIFY CLUSTER SCHEMAS
 - name: test-verify-cluster-schemas
+  serial_groups: [boshlite]
   plan:
   - *ondemand-setup
   - task: make-manifest
@@ -1425,6 +1243,7 @@ jobs:
     params:
       TINY_GCACHE: true #TODO: do we need this?
       ENABLE_REMOTE_ADMIN_ACCESS: true
+      NETWORK_DEF: true
   - *ondemand-deploy-manifest
   - task: run-verify-cluster-schemas-tests
     config:
@@ -1438,8 +1257,8 @@ jobs:
         MYSQL_TUNNEL_USERNAME: jumpbox
         ENV_TARGET_FILE: bosh-lite-info/director-url
         DIRECTOR_IP: bosh-lite-info/external-ip
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password))
         SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
         BOSH_DEPLOYMENT: cf-mysql
         BOSH_CA_CERT: bosh-lite-info/ca-cert
@@ -1449,6 +1268,7 @@ jobs:
 
 ### VERIFY NO REMOTE ACCESS
 - name: test-verify-no-remote-access
+  serial_groups: [boshlite]
   plan:
   - do:
     - aggregate:
@@ -1462,8 +1282,6 @@ jobs:
       - get: compiled-release-tarball
         resource: cf-mysql-compiled-release
         passed: [create-and-compile-release]
-      - get: bosh-deployment
-        resource: bosh-deployment-repo
       - get: deployments
         resource: deployments-configuration
       - get: stemcell
@@ -1478,19 +1296,12 @@ jobs:
         params:
           ENABLE_REMOTE_ADMIN_ACCESS: false
           MINIMAL_MODE: true
-      - task: apply-terraform
-        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
-    - task: create-bosh-lite
-      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
-      input_mapping: {deployments: deployments-terraformed}
+    - task: bosh-lite-env
+      file: cf-mysql-ci/ci/tasks/orange/bosh-lite-env.yml
       params:
-        PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
-        ZONE: ((core-services-ci-credentials/Notes/gcp-bosh-lite-zone))
-        NETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-network))
-        SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-    - task: delete-stemcell
-      file: cf-mysql-ci/ci/tasks/delete-stemcell/task.yml
+        BOSH_LITE_REPO: deployments/bosh-lite
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password)) 
   - *ondemand-deploy-manifest
   - task: run-verify-no-remote-access
     config:
@@ -1501,6 +1312,8 @@ jobs:
         - name: bosh-lite-info
       params:
         MYSQL_TUNNEL_USERNAME: jumpbox
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password))
         ENV_TARGET_FILE: bosh-lite-info/external-ip
         SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
       run:
@@ -1509,6 +1322,7 @@ jobs:
 
 ### VERIFY TUNING WORKS
 - name: test-verify-tuning
+  serial_groups: [boshlite]
   plan:
   - do:
     - aggregate:
@@ -1522,8 +1336,6 @@ jobs:
       - get: compiled-release-tarball
         resource: cf-mysql-compiled-release
         passed: [create-and-compile-release]
-      - get: bosh-deployment
-        resource: bosh-deployment-repo
       - get: deployments
         resource: deployments-configuration
       - get: stemcell
@@ -1538,19 +1350,12 @@ jobs:
         params:
           ENABLE_REMOTE_ADMIN_ACCESS: true
           MINIMAL_MODE: true
-      - task: apply-terraform
-        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
-    - task: create-bosh-lite
-      file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
-      input_mapping: {deployments: deployments-terraformed}
+    - task: bosh-lite-env
+      file: cf-mysql-ci/ci/tasks/orange/bosh-lite-env.yml
       params:
-        PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
-        ZONE: ((core-services-ci-credentials/Notes/gcp-bosh-lite-zone))
-        NETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-network))
-        SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-    - task: delete-stemcell
-      file: cf-mysql-ci/ci/tasks/delete-stemcell/task.yml
+        BOSH_LITE_REPO: deployments/bosh-lite
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password))  
   - *ondemand-deploy-manifest
   - task: run-verify-tuning
     config:
@@ -1564,8 +1369,8 @@ jobs:
       params:
         MYSQL_TUNNEL_USERNAME: jumpbox
         ENV_TARGET_FILE: bosh-lite-info/external-ip
-        BOSH_CLIENT: ((core-services-ci-credentials/Notes/bosh-lite-username))
-        BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
+        BOSH_CLIENT: ((bosh-lite.user))
+        BOSH_CLIENT_SECRET: ((bosh-lite.password))
         SSH_KEY_FILE: bosh-lite-info/jumpbox-private-key
         BOSH_DEPLOYMENT: cf-mysql
         MINIMAL_MODE: true
@@ -1576,6 +1381,7 @@ jobs:
 
 ### XENIAL
 - name: test-xenial
+  serial_groups: [boshlite]
   plan:
   - aggregate:
     - get: bpm-release
@@ -1585,8 +1391,6 @@ jobs:
       passed: [create-and-compile-release]
       trigger: true
     - get: cf-mysql-ci
-    - get: bosh-deployment
-      resource: bosh-deployment-repo
     - get: deployments
       resource: deployments-configuration
     - get: stemcell
@@ -1601,19 +1405,12 @@ jobs:
     file: cf-mysql-ci/ci/tasks/create-and-compile-release/gate-on-stemcells.yml
   - aggregate:
     - do:
-      - task: apply-terraform
-        file: cf-mysql-ci/ci/tasks/apply-bosh-lite-terraform/task.yml
-      - task: create-bosh-lite
-        file: cf-mysql-ci/ci/tasks/create-bosh-lite.yml
-        input_mapping: {deployments: deployments-terraformed}
+      - task: bosh-lite-env
+        file: cf-mysql-ci/ci/tasks/orange/bosh-lite-env.yml
         params:
-          PROJECT_ID: ((core-services-ci-credentials/Notes/gcp-bosh-lite-project-id))
-          ZONE: ((core-services-ci-credentials/Notes/gcp-bosh-lite-zone))
-          NETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-network))
-          SUBNETWORK: ((core-services-ci-credentials/Notes/gcp-bosh-lite-subnetwork))
-          BOSH_CLIENT_SECRET: ((core-services-ci-credentials/Notes/bosh-lite-password))
-      - task: delete-stemcell
-        file: cf-mysql-ci/ci/tasks/delete-stemcell/task.yml
+          BOSH_LITE_REPO: deployments/bosh-lite
+          BOSH_CLIENT: ((bosh-lite.user))
+          BOSH_CLIENT_SECRET: ((bosh-lite.password))     
     - do:
       - *create-release
       - put: compiled-packages-lock
@@ -1630,12 +1427,12 @@ jobs:
           outputs:
           - name: compiled-release-tarball
           params:
-            BOSH_CLIENT: ((concourse-compilation-director/Notes/BOSH_CLIENT))
-            BOSH_CLIENT_SECRET: ((concourse-compilation-director/Notes/BOSH_CLIENT_SECRET))
-            BOSH_ENVIRONMENT: ((concourse-compilation-director/Notes/BOSH_ENVIRONMENT))
-            BOSH_CA_CERT: ((concourse-compilation-director/Notes/BOSH_CA_CERT))
-            BOSH_ALL_PROXY: ((concourse-compilation-director/Notes/BOSH_ALL_PROXY))
-            BOSH_JUMPBOX_PRIVATE_KEY: ((concourse-compilation-director/Notes/BOSH_JUMPBOX_PRIVATE_KEY))
+            BOSH_CLIENT: ((bosh-server.user))
+            BOSH_CLIENT_SECRET: ((bosh-server.password))
+            BOSH_ENVIRONMENT: ((bosh-server.ip))
+            BOSH_CA_CERT: ((bosh-server.ca))
+            BOSH_ALL_PROXY: ((bosh-server.all_proxy))
+            BOSH_JUMPBOX_PRIVATE_KEY: ((bosh-server.jumpbox_private_key))
             STEMCELL_LINE: ubuntu-xenial
           run:
             path: cf-mysql-ci/scripts/compile_release

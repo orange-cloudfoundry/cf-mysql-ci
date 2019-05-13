@@ -1,0 +1,29 @@
+#!/bin/bash
+set -eux
+
+my_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+ci_dir="$( cd "${my_dir}/../../" && pwd )"
+WORKSPACE_DIR="$( cd "${ci_dir}/../" && pwd )"
+
+source "${ci_dir}/scripts/utils.sh"
+
+: "${ENV_TARGET_FILE:?}"
+
+BOSH_ENVIRONMENT="$(cat "${ENV_TARGET_FILE}")"
+BOSH_ENVIRONMENT="$(sslip_from_ip "${BOSH_ENVIRONMENT}")"
+export BOSH_ENVIRONMENT
+
+BOSH_CLIENT=${BOSH_CLIENT:-"$(jq_val "bosh_user" "${ENV_METADATA}")"}
+export BOSH_CLIENT
+
+BOSH_CLIENT_SECRET=${BOSH_CLIENT_SECRET:-"$(jq_val "bosh_password" "${ENV_METADATA}")"}
+export BOSH_CLIENT_SECRET
+
+BOSH_CA_CERT=${BOSH_CA_CERT_PATH:-"${WORKSPACE_DIR}/${ENV_REPO}/$(jq_val "env" "${ENV_METADATA}")/certs/rootCA.pem"}
+export BOSH_CA_CERT
+
+pushd "${WORKSPACE_DIR}/bosh-lite-info" > /dev/null
+bosh -n cc > cloud-config-ori.yml
+bosh int cloud-config-ori.yml -o ./cloud-config-operation.yml > cloud-config.yml
+bosh -n ucc cloud-config.yml
+
