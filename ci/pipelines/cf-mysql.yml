@@ -133,7 +133,7 @@ resources:
   type: git
   source:
     uri: https://github.com/cloudfoundry/cf-mysql-deployment.git
-    branch: develop
+    branch: master
     username: ((git-username))
     password: ((git-password))
 
@@ -159,8 +159,8 @@ resources:
 - name: cf-mysql-release
   type: git
   source:
-    uri: https://github.com/cloudfoundry/cf-mysql-release.git
-    branch: develop
+    uri: https://github.com/orange-cloudfoundry/cf-mysql-release.git
+    branch: develop-pla
     username: ((git-username))
     password: ((git-password))
 
@@ -466,7 +466,7 @@ jobs:
           SKIP_IF_NO_DEPLOYMENT: true
           BOSH_DEPLOYMENT: cf-mysql
         run:
-          path: cf-mysql-ci/scripts/bosh/run_errand_gcp
+          path: cf-mysql-ci/scripts/bosh-lite-orange/run_errand_gcp
   - task: delete-deployment
     config:
       platform: linux
@@ -529,7 +529,7 @@ jobs:
         ERRAND: broker-registrar
         BOSH_DEPLOYMENT: cf-mysql
       run:
-        path: cf-mysql-ci/scripts/bosh/run_errand_gcp
+        path: cf-mysql-ci/scripts/bosh-lite-orange/run_errand_gcp
   - task: run-smoke-tests
     config:
       platform: linux
@@ -562,7 +562,7 @@ jobs:
       params:
         TEST_TYPE: acceptance
       run:
-        path: cf-mysql-ci/scripts/acceptance-tests
+        path: cf-mysql-ci/scripts/bosh-lite-orange/acceptance-tests
   - try:
       task: run-deregister-and-purge-instances
       config:
@@ -580,7 +580,7 @@ jobs:
           SKIP_IF_NO_DEPLOYMENT: true
           BOSH_DEPLOYMENT: cf-mysql
         run:
-          path: cf-mysql-ci/scripts/bosh/run_errand_gcp
+          path: cf-mysql-ci/scripts/bosh-lite-orange/run_errand_gcp
   - task: delete-deployment
     config:
       platform: linux
