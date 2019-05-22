@@ -6,8 +6,8 @@ set -eux
 sed -e "/^nameserver 8.8.8.8/d" /etc/resolv.conf > /tmp/resolv.conf
 cat /tmp/resolv.conf > /etc/resolv.conf
 MY_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-CI_DIR="$( cd "${MY_DIR}/../" && pwd )"
-WORKSPACE_DIR="$( cd "${MY_DIR}/../../" && pwd )"
+CI_DIR="$( cd "${MY_DIR}/../../" && pwd )"
+WORKSPACE_DIR="$( cd "${MY_DIR}/../../../" && pwd )"
 RELEASE_DIR="$(cd "${WORKSPACE_DIR}/cf-mysql-release" && pwd )"
 
 export PATH=$PATH:/usr/lib/chromium-browser/
